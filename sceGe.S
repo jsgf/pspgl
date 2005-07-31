@@ -1,0 +1,23 @@
+	.set noreorder
+
+#include "sceStub.s"
+
+	STUB_START	"sceGe_user",0x40010000,0x00110005
+	STUB_FUNC	0x1F6752AD,sceGeEdramGetSize
+	STUB_FUNC	0xE47E40E4,sceGeEdramGetAddr
+	STUB_FUNC	0xB77905EA,sceGeEdramSetAddrTranslation
+	STUB_FUNC	0xDC93CFEF,sceGeGetCmd
+	STUB_FUNC	0x57C8945B,sceGeGetMtx
+	STUB_FUNC	0x438A385A,sceGeSaveContext
+	STUB_FUNC	0x0BF608FB,sceGeRestoreContext
+	STUB_FUNC	0xAB49E76A,sceGeListEnQueue
+	STUB_FUNC	0x1C0D95A6,sceGeListEnQueueHead
+	STUB_FUNC	0x5FB86AB0,sceGeListDeQueue
+	STUB_FUNC	0xE0D68148,sceGeListUpdateStallAddr
+	STUB_FUNC	0x03444EB4,sceGeListSync
+	STUB_FUNC	0xB287BD61,sceGeDrawSync
+	STUB_FUNC	0xB448EC0D,sceGeBreak
+	STUB_FUNC	0x4C06E472,sceGeContinue
+	STUB_FUNC	0xA4FC06A4,sceGeSetCallback
+	STUB_FUNC	0x05DB22CE,sceGeUnsetCallback
+	STUB_END
