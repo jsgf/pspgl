@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
+#include <pspge.h>
 #include "pspgl_internal.h"
-#include "sceGe.h"
 
 static unsigned long ge_queue_id;
 
@@ -96,7 +96,7 @@ struct pspgl_dlist* pspgl_dlist_swap (struct pspgl_dlist *thiz)
 	}
 
 	/* wait until backbuffer stall is reached (backbuffer is 'next'). now we can reuse it... */
-	sceGeListSync(ge_queue_id, GE_LIST_STALL_REACHED);
+	sceGeListSync(ge_queue_id, PSP_GE_LIST_STALL_REACHED);
 
 	/* reuse backbuffer and swap */
 	pspgl_dlist_jump_next(thiz, next);
@@ -129,8 +129,8 @@ void pspgl_dlist_submit (struct pspgl_dlist *d)
 
 void pspgl_dlist_await_completion (void)
 {
-	sceGeListSync(ge_queue_id, GE_LIST_DONE);
-	sceGeDrawSync(GE_LIST_DONE);
+	sceGeListSync(ge_queue_id, PSP_GE_LIST_DONE);
+	sceGeDrawSync(PSP_GE_LIST_DONE);
 
 pspgl_ge_register_dump();
 pspgl_ge_matrix_dump();
@@ -147,7 +147,7 @@ void pspgl_dlist_reset (struct pspgl_dlist *d)
 void pspgl_dlist_cancel (void)
 {
 	sceGeListDeQueue(ge_queue_id);
-	sceGeListSync(ge_queue_id, GE_LIST_CANCEL_DONE);
+	sceGeListSync(ge_queue_id, PSP_GE_LIST_CANCEL_DONE);
 }
 
 

@@ -9,6 +9,8 @@
 #include <GLES/gl.h>
 
 
+PSP_MODULE_INFO("test_egl", 0, 1, 1);
+
 extern unsigned char logo_start[];
 
 struct Vertex
@@ -115,6 +117,33 @@ int done = 0;
 #endif
 
 
+static
+int exit_callback (int arg1, int arg2, void *common)
+{
+	eglTerminate(0);
+	sceKernelExitGame();
+	return 0;
+}
+
+static
+int update_thread (SceSize args, void *argp)
+{
+	int cbid = sceKernelCreateCallback("Exit Callback", exit_callback, NULL);
+	sceKernelRegisterExitCallback(cbid);
+	sceKernelSleepThreadCB();
+	return 0;
+}
+
+static
+void setup_callbacks (void)
+{
+	int id;
+
+	if ((id = sceKernelCreateThread("update_thread", update_thread, 0x11, 0xFA0, 0, 0)) >= 0)
+		sceKernelStartThread(id, 0, 0);
+}
+
+
 static const EGLint attrib_list [] = {
 	EGL_RED_SIZE, 8,
 	EGL_GREEN_SIZE, 8,
@@ -132,8 +161,10 @@ int main(int argc, char* argv[])
 	EGLint num_configs;
 	EGLContext ctx;
 	EGLSurface surface;
-	GLfloat angle = 0.0;
+	GLfloat angle = 0.0f;
 	SceCtrlData pad;
+
+	setup_callbacks();
 
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
@@ -169,7 +200,7 @@ int main(int argc, char* argv[])
 
 	GLCHK(glViewport(0, 0, 480, 272));
 	GLCHK(glScissor(0, 0, 480, 272));
-	GLCHK(glDepthRange(0.0, 1.0));
+	GLCHK(glDepthRange(0.0f, 1.0f));
 
 	while (!done) {
     		sceCtrlReadBufferPositive(&pad, 1); 
@@ -178,22 +209,22 @@ int main(int argc, char* argv[])
 			done = 1;
 
 		if (!(pad.Buttons & PSP_CTRL_CIRCLE))
-			angle += 1.0;
+			angle += 1.0f;
 
-		GLCHK(glClearColor(pad.Lx * 1.0/255, pad.Ly * 1.0/255, 1.0, 1.0));
-		GLCHK(glClearDepthf(1.0));
+		GLCHK(glClearColor(pad.Lx * 1.0f/255, pad.Ly * 1.0f/255, 1.0f, 1.0f));
+		GLCHK(glClearDepthf(1.0f));
 		GLCHK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
 		GLCHK(glMatrixMode(GL_PROJECTION));
 		GLCHK(glLoadIdentity());
-		gluPerspective(75.0, 16.0/9.0, 0.5, 1000.0);
+		gluPerspective(75.0f, 16.0f/9.0f, 0.5f, 1000.0f);
 
 		GLCHK(glMatrixMode(GL_MODELVIEW));
 		GLCHK(glLoadIdentity());
-		GLCHK(glTranslatef(0.0, 0.0, -2.5));
-		GLCHK(glRotatef(angle * 0.79, 1.0, 0.0, 0.0));
-		GLCHK(glRotatef(angle * 0.98, 0.0, 1.0, 0.0));
-		GLCHK(glRotatef(angle * 1.32, 0.0, 0.0, 1.0));
+		GLCHK(glTranslatef(0.0f, 0.0f, -2.5f));
+		GLCHK(glRotatef(angle * 0.79f, 1.0f, 0.0f, 0.0f));
+		GLCHK(glRotatef(angle * 0.98f, 0.0f, 1.0f, 0.0f));
+		GLCHK(glRotatef(angle * 1.32f, 0.0f, 0.0f, 1.0f));
 
 		/* setup texture */
 		GLCHK(glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE));
@@ -209,6 +240,7 @@ int main(int argc, char* argv[])
 	}
 
 	EGLCHK(eglTerminate(dpy));
+	sceKernelExitGame();
 	return 0;
 }
 

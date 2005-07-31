@@ -1,6 +1,6 @@
 #include <stdlib.h>
+#include <pspge.h>
 #include "pspgl_internal.h"
-#include "sceGe.h"
 
 
 EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx)
@@ -19,7 +19,7 @@ EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
 	if (pspgl_curctx) {
 		pspgl_dlist_finalize(pspgl_curctx->dlist_current);
 		pspgl_dlist_await_completion();
-		if (sceGeSaveContext(pspgl_curctx->ge_ctx) < 0) {
+		if (sceGeSaveContext((PspGeContext *) pspgl_curctx->ge_ctx) < 0) {
 			EGLERROR(EGL_BAD_ACCESS);
 			return EGL_FALSE;
 		}
@@ -33,7 +33,7 @@ EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
 	pspgl_dlist_submit(c->dlist_current);
 
 	if (c->initialized) {
-		if (sceGeRestoreContext(c->ge_ctx)) {
+		if (sceGeRestoreContext((PspGeContext *) c->ge_ctx)) {
 			EGLERROR(EGL_BAD_ACCESS);
 			return EGL_FALSE;
 		}

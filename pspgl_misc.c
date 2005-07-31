@@ -1,5 +1,5 @@
-#include <pspkernel.h>
-#include "sceGe.h"
+#include <pspuser.h>
+#include <pspge.h>
 
 #include <stdio.h>
 #include <stdarg.h>

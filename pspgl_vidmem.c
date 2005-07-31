@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
+#include <pspdisplay.h>
+#include <pspge.h>
 #include "pspgl_internal.h"
-#include "sceDisplay.h"
-#include "sceGe.h"
 
 
 /* PSP pixelformats */
@@ -52,7 +52,7 @@ void *vidmem_map_insert_new (unsigned long idx, unsigned long adr, unsigned long
 
 void* pspgl_vidmem_alloc (unsigned long size)
 {
-	unsigned long start = sceGeEdramGetAddr();
+	unsigned long start = (unsigned long) sceGeEdramGetAddr();
 	unsigned long adr = start;
 	unsigned long i;
 

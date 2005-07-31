@@ -5,8 +5,10 @@ CC = $(ARCH)gcc
 AR = $(ARCH)ar
 RANLIB = $(ARCH)ranlib
 RM = rm -f
-CFLAGS = -g -Wall -O0 -MD -I. -I $(PSPPATH)/include
-LFLAGS = -g -Wall -O0 -L $(PSPPATH)/lib
+CFLAGS = -g -Wall -O2 -G0 -fsingle-precision-constant -I. -I $(PSPPATH)/include
+LFLAGS = -g -Wall -O2 -G0 -L $(PSPPATH)/lib
+
+DEPDIR = .deps
 
 OBJS = \
 	eglChooseConfig.o \
@@ -82,18 +84,20 @@ OBJS = \
  	pspgl_ge_init.o \
  	pspgl_misc.o \
  	pspgl_varray.o \
- 	pspgl_vidmem.o \
-	sceCtrl.o \
-	sceDisplay.o \
-	sceGe.o
+ 	pspgl_vidmem.o
 
-libpspgl.a: $(OBJS)
+libpspgl.a: $(DEPDIR) GL $(OBJS)
 	$(RM) $@
 	$(AR) cru $@ $(OBJS)
 	$(RANLIB) $@
 
+$(DEPDIR):
+	mkdir $(DEPDIR)
+GL:
+	ln -s GLES GL
+
 .c.o:
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS) -MD -MF $(DEPDIR)/$*.d -c $<
 
 .S.o:
 	$(CC) $(CFLAGS) -c $<
@@ -102,10 +106,9 @@ tar: clean
 	( cd .. && tar cvfz pspgl-`date "+%Y-%m-%d"`.tar.gz pspgl --exclude "*.DS_Store" && cd - )
 
 clean:
-	$(RM) *.d *.o *.a
+	$(RM) -rf *.o *.a $(DEPDIR) GL
 	make -C tools clean
 	make -C test-egl clean
 	make -C test-glut clean
 
--include $(wildcard *.d) dummy
-
+-include $(wildcard $(DEPDIR)/*.d) dummy

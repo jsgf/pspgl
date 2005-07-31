@@ -9,6 +9,5 @@ EGLBoolean eglTerminate (EGLDisplay dpy)
 	if (pspgl_curctx)
 		pspgl_dlist_cancel();
 
-	sceKernelExitGame();
 	return EGL_TRUE;
 }

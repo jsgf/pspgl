@@ -2,8 +2,8 @@
 #include <GLES/egl.h>
 #include <GLES/glut.h>
 
-#include <pspkernel.h>
-#include "sceCtrl.h"
+#include <pspctrl.h>
+#include <psploadexec.h>
 
 
 static unsigned int glut_display_mode = 0;
@@ -94,6 +94,7 @@ static
 void cleanup (void)
 {
 	EGLCHK(eglTerminate(dpy));
+	sceKernelExitGame();
 }
 
 
@@ -214,13 +215,13 @@ void glutMainLoop (void)
 
 			sceCtrlReadLatch(&latch);
 
-			if (latch.Make == 0 && latch.Break == 0)
+			if (latch.uiMake == 0 && latch.uiBreak == 0)
 				break;
 
 			for (i=0; i<sizeof(keycode)/sizeof(keycode[0]); i++) {
-				if (latch.Make & (1 << i))
+				if (latch.uiMake & (1 << i))
 					key(keycode[i], 1);
-				if (latch.Break & (1 << i))
+				if (latch.uiBreak & (1 << i))
 					key(keycode[i], 0);
 			}
 		};

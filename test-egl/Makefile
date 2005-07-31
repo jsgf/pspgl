@@ -7,9 +7,9 @@ PACK_PBP = pack-pbp
 RM = rm -f
 
 PSPPATH := $(shell psp-config --pspsdk-path)
-PSPGL_LFLAGS = -lpspgl -lm -lpspdebug -lpspsdk -lpsplibc -lpspglue -lpspuser -lpspkernel
-CFLAGS = -g -Wall -O0 -MD -I$(PSPPATH)/include -I..
-LFLAGS = -g -Wall -O0 -L$(PSPPATH)/lib -L.. $(PSPGL_LFLAGS)
+PSPGL_LFLAGS = -lpspgl -lm -lpspdebug -lpspge -lpspdisplay -lpspctrl -lpspsdk -lpsplibc -lpspuser -lpspkernel
+CFLAGS = -g -Wall -O2 -MD -I$(PSPPATH)/include -I..
+LFLAGS = -g -Wall -O2 -L$(PSPPATH)/lib -L.. $(PSPGL_LFLAGS)
 
 TARGET = pspGL-cube
 OBJS = eglcube.o logo.o
