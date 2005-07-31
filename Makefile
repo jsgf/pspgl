@@ -1,4 +1,5 @@
 PSPPATH := $(shell psp-config --pspsdk-path)
+PSPDIR  := $(shell psp-config --psp-prefix)
 ARCH = psp-
 
 CC = $(ARCH)gcc
@@ -110,5 +111,14 @@ clean:
 	make -C tools clean
 	make -C test-egl clean
 	make -C test-glut clean
+
+# Install headers to both GL and GLES directories.  This is to workaround
+# platforms that don't support symbolic links.
+install: libpspgl.a
+	mkdir -p $(PSPDIR)/include $(PSPDIR)/lib
+	mkdir -p $(PSPDIR)/include/GL $(PSPDIR)/include/GLES
+	cp GLES/*.h $(PSPDIR)/include/GL
+	cp GLES/*.h $(PSPDIR)/include/GLES
+	cp libpspgl.a $(PSPDIR)/lib
 
 -include $(wildcard $(DEPDIR)/*.d) dummy
