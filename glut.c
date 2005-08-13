@@ -2,6 +2,7 @@
 #include <GLES/egl.h>
 #include <GLES/glut.h>
 
+#include <pspkerneltypes.h>
 #include <pspctrl.h>
 #include <psploadexec.h>
 
