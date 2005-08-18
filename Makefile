@@ -70,6 +70,7 @@ OBJS = \
 	glShadeModel.o \
 	glStencilFunc.o \
 	glStencilOp.o \
+	glTexCoord.o \
 	glTexCoordPointer.o \
 	glTexEnv.o \
 	glTexImage2D.o \

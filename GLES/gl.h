@@ -866,6 +866,8 @@ GLAPI void GL_APIENTRY glVertex3f (GLfloat x, GLfloat y, GLfloat z);
 GLAPI void GL_APIENTRY glColor4fv (const GLfloat *v);
 GLAPI void GL_APIENTRY glColor3f (GLfloat red, GLfloat green, GLfloat blue);
 
+GLAPI void GL_APIENTRY glTexCoord2f (GLfloat s, GLfloat t);
+
 
 /* Lighting */
 #define GL_LIGHT_MODEL_COLOR_CONTROL      0x81F8
