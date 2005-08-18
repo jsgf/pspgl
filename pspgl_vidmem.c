@@ -5,17 +5,6 @@
 #include "pspgl_internal.h"
 
 
-/* PSP pixelformats */
-#define GU_PSM_5650		(0) /* Display, Texture, Palette */
-#define GU_PSM_5551		(1) /* Display, Texture, Palette */
-#define GU_PSM_4444		(2) /* Display, Texture, Palette */
-#define GU_PSM_8888		(3) /* Display, Texture, Palette */
-#define GU_PSM_T4		(4) /* Texture */
-#define GU_PSM_T8		(5) /* Texture */
-
-#define VIDMEM_START 0x04000000
-#define VIDMEM_LEN   0x00200000
-
 GLint eglerror = EGL_SUCCESS;
 struct pspgl_context *pspgl_curctx = NULL;
 
@@ -65,7 +54,7 @@ void* pspgl_vidmem_alloc (unsigned long size)
 		}
 	}
 
-	if (adr + size > VIDMEM_START + sceGeEdramGetSize())
+	if (adr + size > start + sceGeEdramGetSize())
 		return NULL;
 
 	return vidmem_map_insert_new(vidmem_map_len, adr, size);
@@ -91,6 +80,15 @@ void  pspgl_vidmem_free (void * ptr)
 		}
 	}
 }
+
+
+/* PSP pixelformats */
+#define GU_PSM_5650		(0) /* Display, Texture, Palette */
+#define GU_PSM_5551		(1) /* Display, Texture, Palette */
+#define GU_PSM_4444		(2) /* Display, Texture, Palette */
+#define GU_PSM_8888		(3) /* Display, Texture, Palette */
+#define GU_PSM_T4		(4) /* Texture */
+#define GU_PSM_T8		(5) /* Texture */
 
 
 EGLBoolean pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s)
@@ -164,3 +162,4 @@ EGLBoolean pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s)
 
 	return EGL_TRUE;
 }
+

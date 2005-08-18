@@ -31,8 +31,8 @@ since they are passed directly to the DMA controller for maximum performance.
 
 Only a minimum set of the core GLUT functions is implemented.
 
-You find some debug functions to dump PSP GE command buffers, the GE register
-set and the GE matrix stack to the memory stick in pspgl_misc.[hc]. In the
+pspgl_misc.[hc] contains some debug functions to dump PSP GE command buffers, 
+the GE register set and the GE matrix stack to the memory stick. In the
 tools/ directory you find a rough disassembler for GE packets, maybe you find
 this useful to debug your problems. Please note that still a lot of commands
 are missing, please send patches if you enhance this functionality.

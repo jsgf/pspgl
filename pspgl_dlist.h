@@ -23,7 +23,7 @@ extern struct pspgl_dlist* pspgl_dlist_create (int compile_and_run,
 
 extern void pspgl_dlist_free (struct pspgl_dlist *d);
 
-/* flush and swap display list buffers in pspgl context. expect ctx in data. */
+/* flush and swap display list buffers in pspgl context. */
 extern struct pspgl_dlist* pspgl_dlist_swap (struct pspgl_dlist *thiz);
 
 /* start command queue with stall point d->cmd_buf[d->len-1]. */
@@ -67,3 +67,4 @@ struct pspgl_dlist * dlist_flush (struct pspgl_dlist *d)
 extern void pspgl_dlist_enqueue_cmd (struct pspgl_dlist *d, unsigned long cmd);
 
 #endif
+

@@ -33,7 +33,7 @@ extern void __psp_log (const char *fmt, ...);
 	#define psp_log(x...) do {} while (0)
 #endif
 
-/* enable EGLerror logging to "ms0:/pspgl.ge" */
+/* enable EGLerror logging to "ms0:/log.txt" */
 #if 1
 	#define EGLCHK(x)							\
 	do {									\
@@ -42,7 +42,8 @@ extern void __psp_log (const char *fmt, ...);
 		errcode = eglGetError();					\
 		if (errcode != EGL_SUCCESS) {					\
 			__psp_log("%s (%d): EGL error 0x%04x\n",		\
-				__FUNCTION__, __LINE__, (unsigned int) errcode);\
+				__FUNCTION__, __LINE__,				\
+				(unsigned int) errcode);			\
 		}								\
 	} while (0)
 #else
