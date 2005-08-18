@@ -115,5 +115,6 @@ void glBlendFunc (GLenum sfactor, GLenum dfactor)
 	pspgl_curctx->blend.sfactor = sfactor;
 	pspgl_curctx->blend.dfactor = dfactor;
 
-	sendCommandi(223, (equation << 8) | (srcfunc << 4) | dstfunc);
+	sendCommandi(223, (equation << 8) | (dstfunc << 4) | srcfunc);
 }
+
