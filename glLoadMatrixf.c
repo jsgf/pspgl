@@ -3,37 +3,16 @@
 
 void glLoadMatrixf (const GLfloat *m)
 {
-	int opcode, i, j, n;
-
-	switch (pspgl_curctx->matrix_mode) {
-#if 0
-	case GL_MODELVIEW:
-		n = 3;
-		opcode = 58;  /* World matrix */
-		break;
-#endif
-	case GL_MODELVIEW:
-		opcode = 60;
-		n = 3;
-		break;
-	case GL_PROJECTION:
-		opcode = 62;
-		n = 4;
-		break;
-	case GL_TEXTURE:
-		opcode = 64;
-		n = 3;
-		break;
-	default:
-		GLERROR(GL_INVALID_ENUM);
-		return;
-	}
-
-	sendCommandi(opcode, 0);
-	opcode++;
+	int matrix_id = pspgl_curctx->matrix_mode & 0x03;
+	int opcode = 60 + 2 * matrix_id;
+	int n = (opcode == 62) ? 4 : 3;
+	int i, j;
 
 	for (i=0; i<16; i++)
-		pspgl_curctx->current_matrix[i] = m[i];
+		pspgl_curctx->matrix[matrix_id][i] = m[i];
+
+	sendCommandi(opcode, pspgl_curctx->matrix_depth[matrix_id]);
+	opcode++;
 
 	for (j=0; j<4; j++) {
 		for (i=0; i<n; i++) {
@@ -41,3 +20,4 @@ void glLoadMatrixf (const GLfloat *m)
 		}
 	}
 }
+

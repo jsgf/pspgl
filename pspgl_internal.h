@@ -54,6 +54,8 @@ struct pspgl_context {
 		GLclampf color [4];
 		GLclampf depth;
 	} clear;
+
+	/* XXX IMPROVE Do we really need to store the viewport? it's a hardware state... */
 	struct {
 		GLint x, y, width, height;
 	} viewport;
@@ -63,10 +65,8 @@ struct pspgl_context {
 		GLint x, y, width, height;
 	} scissor_test;
 	GLenum matrix_mode;
-	GLfloat *current_matrix;
-	GLfloat modelview_matrix [16];
-	GLfloat projection_matrix [16];
-	GLfloat texture_matrix [16];
+	GLint matrix_depth[3];
+	GLfloat matrix [3][16];
 	struct {
 		GLenum equation;
 		GLenum sfactor, dfactor;

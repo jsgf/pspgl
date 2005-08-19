@@ -63,6 +63,8 @@ OBJS = \
 	glNormal.o \
 	glNormalPointer.o \
 	glOrtho.o \
+	glPopMatrix.o \
+	glPushMatrix.o \
 	glPolygonOffset.o \
 	glRotatef.o \
 	glScalef.o \

@@ -55,17 +55,22 @@ unsigned long ge_init_state [] =
 
 
 static
-void reset_matrices (void)
+void reset_matrices (struct pspgl_context *c)
 {
-	static const unsigned char opcode [] = { 58, 60, 62, 64 };
-	int i, j, m;
+	int i, j, opcode;
 
-	for (m=0; m<sizeof(opcode)/sizeof(opcode[0]); m++) {
-		sendCommandi(opcode[m], 0);
+	for (opcode=58; opcode<=64; opcode+=2) {
+		sendCommandi(opcode, 0);
 		for (j=0; j<4; j++) {
-			for (i=0; i<((opcode[m] == 62) ? 4 : 3); i++) {
-				sendCommandf(opcode[m]+1, (i == j) ? 1.0 : 0.0);
+			for (i=0; i<((opcode == 62) ? 4 : 3); i++) {
+				sendCommandf(opcode+1, (i == j) ? 1.0 : 0.0);
 			}
+		}
+	}
+
+	for (j=0; j<3; j++) {
+		for (i=0; i<4; i++) {
+			c->matrix[j][4*i+i] = 1.0;
 		}
 	}
 }
@@ -75,22 +80,12 @@ void pspgl_ge_init (struct pspgl_context *c)
 {
 	int i;
 
-//	sendCommandi(0x01, 0);
-//	sendCommandi(0x02, 0);
-//	sendCommandi(0x10, 0);
-//	sendCommandi(0x12, 0);
-//	sendCommandi(0x13, 0);
-
-//	for (i=0x15; i<=0xf9; i++)
-//		sendCommandi(i, 0);
-
 	for (i=0; i<sizeof(ge_init_state)/sizeof(ge_init_state[0]); i++)
 		pspgl_dlist_enqueue_cmd(c->dlist_current, ge_init_state[i]);
 
-	reset_matrices();
+	reset_matrices(c);
 
 	c->matrix_mode = GL_MODELVIEW;
-	c->current_matrix = c->modelview_matrix;
 	c->blend.equation = GL_ADD;
 	c->depth_offset = 0.0;
 	c->swap_interval = 1;
