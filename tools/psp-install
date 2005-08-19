@@ -1,0 +1,121 @@
+#!/bin/bash
+
+PSP_EBOOT_TITLE=""
+PSP_EBOOT_ICON="NULL"
+PSP_EBOOT_ICON1="NULL"
+PSP_EBOOT_UNKPNG="NULL"
+PSP_EBOOT_PIC1="NULL"
+PSP_EBOOT_SND0="NULL"
+PSP_EBOOT_PSAR="NULL"
+
+for opt do
+	case "$opt" in
+	--eboot-title=*) PSP_EBOOT_TITLE=`echo $opt | cut -d '=' -f 2`
+	;;
+	--eboot-icon=*) PSP_EBOOT_ICON=`echo $opt | cut -d '=' -f 2`
+	;;
+	--eboot-icon1=*) PSP_EBOOT_ICON1=`echo $opt | cut -d '=' -f 2`
+	;;
+	--eboot-unkpng=*) PSP_EBOOT_UNKPNG=`echo $opt | cut -d '=' -f 2`
+	;;
+	--eboot-pic1=*) PSP_EBOOT_PIC1=`echo $opt | cut -d '=' -f 2`
+	;;
+	--eboot-snd0=*) PSP_EBOOT_SND0=`echo $opt | cut -d '=' -f 2`
+	;;
+	--eboot-PSAR=*) PSP_EBOOT_PSAR=`echo $opt | cut -d '=' -f 2`
+	;;
+	--psp-revision=*) PSP_REVISION=`echo $opt | cut -d '=' -f 2`
+	;;
+	--help) help=yes
+	;;
+	*) IMAGE=$opt
+	;;
+	esac
+done
+
+
+if [ "$IMAGE" = ""  -o "$help" = "yes" ] ; then
+	echo "" 
+	echo "Install ELF image on the PSP memory stick. Generates PBP and exploits if required." 
+	echo "" 
+	echo "Usage:    psp-install [options] <image>" 
+	echo "Options:"
+	echo "	--psp-revision=1.0		install files for a rev1.0 PSP" 
+	echo "	--psp-revision=1.5		install files for a rev1.5 PSP" 
+	echo "	--eboot-title=<string>		TITLE for SFO (default=image)"
+	echo "	--eboot-icon=<file.png>		ICON file for EBOOT.PBP"
+	echo "	--eboot-icon1=<file.png>	ICON1 file for EBOOT.PBP"
+	echo "	--eboot-unkpng=<file.png>	UNKPNG file for EBOOT.PBP"
+	echo "	--eboot-pic1=<file>		PIC1 file for EBOOT.PBP"
+	echo "	--eboot-snd0=<file>		SND0 file for EBOOT.PBP"
+	echo "	--eboot-PASR=<file>		PSAR for EBOOT.PBP"
+	echo "" 
+	echo "Environment Variables:" 
+	echo "" 
+	echo "	PSP_MOUNTDIR=<dir>		define PSP mountpoint (required)"
+	echo "	PSP_REVISION=<1.0|1.5>		define PSP revision" 
+	echo "" 
+	echo "Usage Example:" 
+	echo "	PSP_MOUNTDIR=/Volumes/PSP PSP_REVISION=1.5 psp-install test.elf --eboot-title=test" 
+	echo "" 
+	exit 1
+fi
+
+
+if [ "$PSP_EBOOT_TITLE" = "" ] ; then
+	PSP_EBOOT_TITLE="$IMAGE"
+fi
+
+
+if [ "$PSP_REVISION" = "" ] ; then
+	echo "--------------------------------------------------------------------------------" 
+	echo "Please export a PSP_REVISION environment variable or specify --psp-revision=x.x!" 
+	echo "--------------------------------------------------------------------------------" 
+	exit 1
+fi
+
+if [ "$PSP_MOUNTDIR" = "" ] ; then
+	echo "--------------------------------------------------------------------------------" 
+	echo "Please export an PSP_MOUNTDIR environment variable (the PSP mount point)!" 
+	echo "--------------------------------------------------------------------------------" 
+	exit 2
+fi
+
+if test ! -d "$PSP_MOUNTDIR/PSP" ; then
+	echo "--------------------------------------------------------------------------------" 
+	echo "No PSP found at $PSP_MOUNTDIR! Please connect USB cable and enter USB mode!" 
+	echo "--------------------------------------------------------------------------------" 
+	exit 3
+fi
+
+DESTDIR="$PSP_MOUNTDIR/PSP/GAME/$IMAGE"
+
+echo "install $IMAGE on '$DESTDIR/'..."
+
+mksfo "$PSP_EBOOT_TITLE" $IMAGE.sfo
+psp-strip $IMAGE -o "$IMAGE".strip
+rm -rf "$DESTDIR"
+mkdir -p "$DESTDIR"
+
+if [ "$PSP_REVISION" = "1.0" ] ; then
+	pack-pbp "$DESTDIR"/EBOOT.PBP $IMAGE.sfo $PSP_EBOOT_ICON \
+		$PSP_EBOOT_ICON1 $PSP_EBOOT_UNKPNG $PSP_EBOOT_PIC1 \
+		$PSP_EBOOT_SND0  "$IMAGE".strip $PSP_EBOOT_PSAR
+elif [ "$PSP_REVISION" = "1.5" ] ; then
+	rm -rf "$DESTDIR%"
+	mkdir -p "$DESTDIR%"
+	cp "$IMAGE".strip "$DESTDIR/EBOOT.PBP"
+	pack-pbp "$DESTDIR%/EBOOT.PBP" $IMAGE.sfo $PSP_EBOOT_ICON \
+		$PSP_EBOOT_ICON1 $PSP_EBOOT_UNKPNG $PSP_EBOOT_PIC1 \
+		$PSP_EBOOT_SND0 NULL $PSP_EBOOT_PSAR
+else
+	echo "--------------------------------------------------------------------------------" 
+	echo "   unknown PSP_REVISION=$PSP_REVISION !" 
+	echo "--------------------------------------------------------------------------------" 
+	exit 3
+fi
+
+rm -f $IMAGE.sfo
+rm -f "$IMAGE".strip
+sync
+
