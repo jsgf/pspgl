@@ -1,6 +1,7 @@
 #include "pspgl_internal.h"
 
 
+static const
 struct {
 	unsigned int enable_texcoord : 1;
 	unsigned int enable_color : 1;
