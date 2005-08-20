@@ -3,11 +3,10 @@
 #include "pspgl_internal.h"
 
 
-//static const struct pspgl_context default_ctx;
-
-EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_list, const EGLint *attrib_list)
+EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint *attrib_list)
 {
 	struct pspgl_context *ctx = malloc(sizeof(struct pspgl_context));
+	int i;
 
 	if (!ctx) {
 		EGLERROR(EGL_BAD_ALLOC);
@@ -16,10 +15,13 @@ EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_
 
 	memset(ctx, 0, sizeof(*ctx));
 
-	ctx->dlist[0] = pspgl_dlist_create(1, pspgl_dlist_swap);
-	ctx->dlist[1] = pspgl_dlist_create(1, pspgl_dlist_swap);
+	for(i = 0; i < NUM_CMDLISTS; i++)
+		ctx->dlist[i] = pspgl_dlist_create(1, pspgl_dlist_swap);
 
 	ctx->dlist_current = ctx->dlist[0];
+	ctx->dlist_idx = 0;
 
 	return (EGLContext) ctx;
 }
+
+

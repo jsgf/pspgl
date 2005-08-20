@@ -8,12 +8,14 @@
 
 
 struct pspgl_dlist {
-	struct pspgl_dlist *first;
 	struct pspgl_dlist *next;
 	struct pspgl_dlist * (*done) (struct pspgl_dlist *thiz);
 	unsigned long *cmd_buf;
 	unsigned long len;
 	int compile_and_run;
+	int qid;
+
+	unsigned long __attribute__((aligned(16))) _cmdbuf[DLIST_SIZE + 8];
 };
 
 
@@ -26,8 +28,8 @@ extern void pspgl_dlist_free (struct pspgl_dlist *d);
 /* flush and swap display list buffers in pspgl context. */
 extern struct pspgl_dlist* pspgl_dlist_swap (struct pspgl_dlist *thiz);
 
-/* start command queue with stall point d->cmd_buf[d->len-1]. */
-extern void pspgl_dlist_submit (struct pspgl_dlist *d);
+/* issue an entire dlist list */
+extern void pspgl_dlist_submit(struct pspgl_dlist *d);
 
 /* wait until all commands in currently queued dlist are executed and drawn. */
 extern void pspgl_dlist_await_completion (void);

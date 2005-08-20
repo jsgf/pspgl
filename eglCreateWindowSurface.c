@@ -2,7 +2,7 @@
 #include "pspgl_internal.h"
 
 
-//static inline unsigned long align512 (unsigned long x) { return (x + 0xff) & ~0xff; }
+//static inline unsigned long align256 (unsigned long x) { return (x + 0xff) & ~0xff; }
 /* XXX do we really need 512 byte alignments?!? are 256 enough? */
 static inline unsigned long align512 (unsigned long x) { return (x + 0x1ff) & ~0x1ff; }
 
@@ -51,11 +51,6 @@ int has_stencilbuffer = 1;
 
 	if (has_depthbuffer) {
 		if (!(s->depth_buffer = pspgl_vidmem_alloc(bufferlen)))
-			goto bad_alloc;
-	}
-
-	if (has_stencilbuffer) {
-		if (!(s->stencil_buffer = pspgl_vidmem_alloc(bufferlen)))
 			goto bad_alloc;
 	}
 

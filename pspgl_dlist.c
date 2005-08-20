@@ -1,13 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
+#include <malloc.h>
 #include <pspge.h>
 #include "pspgl_internal.h"
 
-static unsigned long ge_queue_id;
-
-
-static void pspgl_dlist_jump_next (struct pspgl_dlist *d, struct pspgl_dlist *next);
-
+/* Just for documentation */
+#define assert(x)
 
 void pspgl_dlist_enqueue_cmd (struct pspgl_dlist *d, unsigned long cmd)
 {
@@ -20,6 +18,31 @@ void pspgl_dlist_enqueue_cmd (struct pspgl_dlist *d, unsigned long cmd)
 	d->len++;
 }
 
+static int pspgl_dlist_finish(struct pspgl_dlist *d)
+{
+	assert(d->len+2 < DLIST_SIZE);
+
+	if (d->len >= DLIST_SIZE - 2) {
+		/* XXX should be an assertion */
+		GLERROR(GL_OUT_OF_MEMORY);
+		return 1;
+	}
+
+	d->cmd_buf[d->len++] = 0x0f000000;	/* FINISH */
+	d->cmd_buf[d->len++] = 0x0c000000;	/* END */
+
+	return 0;
+}
+
+void pspgl_dlist_finalize(struct pspgl_dlist *d)
+{
+	assert(d->qid == -1);
+
+	if (pspgl_dlist_finish(d))
+		return;
+
+	d->qid = sceGeListEnQueue(d->cmd_buf, &d->cmd_buf[d->len], 0, NULL);
+}
 
 void sendCommandi(unsigned long cmd, unsigned long argi) 
 {
@@ -42,9 +65,8 @@ struct pspgl_dlist* pspgl_dlist_finalize_and_clone (struct pspgl_dlist *thiz)
 	if (!next)
 		return NULL;
 
-	next->first = thiz->first;
+	pspgl_dlist_finish(thiz);
 	pspgl_curctx->dlist_current = thiz->next = next;
-	pspgl_dlist_jump_next(thiz, next);
 
 	return next;
 }
@@ -62,7 +84,7 @@ struct pspgl_dlist* pspgl_dlist_finalize_and_clone (struct pspgl_dlist *thiz)
 struct pspgl_dlist* pspgl_dlist_create (int compile_and_run,
 					struct pspgl_dlist * (*done) (struct pspgl_dlist *thiz))
 {
-	struct pspgl_dlist *d = malloc(4 * DLIST_SIZE + sizeof(struct pspgl_dlist) + 0x1f + 2 * 32);
+	struct pspgl_dlist *d = memalign(16, sizeof(struct pspgl_dlist));
 
 	psp_log("\n");
 
@@ -71,11 +93,11 @@ struct pspgl_dlist* pspgl_dlist_create (int compile_and_run,
 		return NULL;
 	}
 
-	d->first = d;
 	d->next = NULL;
 	d->done = done ? done : pspgl_dlist_finalize_and_clone;
 	d->compile_and_run = compile_and_run;
-	d->cmd_buf = ptr_align16_uncached((unsigned long) d + 32 + sizeof(struct pspgl_dlist));
+	d->cmd_buf = ptr_align16_uncached((unsigned long) d->_cmdbuf);
+	d->qid = -1;
 	pspgl_dlist_reset(d);
 
 	return d;
@@ -89,47 +111,50 @@ struct pspgl_dlist* pspgl_dlist_swap (struct pspgl_dlist *thiz)
 {
 	struct pspgl_dlist* next;
 
-	if (pspgl_curctx->dlist_current == pspgl_curctx->dlist[0]) {
-		next = pspgl_curctx->dlist[1];
-	} else  /* if (pspgl_curctx->dlist_current == pspgl_curctx->dlist[1])*/ {
-		next = pspgl_curctx->dlist[0];
+	assert(thiz == pspgl->curctx->dlist[pspgl->curctx->dlist_idx])
+
+	pspgl_dlist_finalize(thiz);
+
+	if (++pspgl_curctx->dlist_idx >= NUM_CMDLISTS)
+		pspgl_curctx->dlist_idx = 0;
+	next = pspgl_curctx->dlist[pspgl_curctx->dlist_idx];
+
+	/* wait until next is done */
+	if (next->qid != -1) {
+		sceGeListSync(next->qid, PSP_GE_LIST_DONE);
+		next->qid = -1;
 	}
-
-	/* wait until backbuffer stall is reached (backbuffer is 'next'). now we can reuse it... */
-	sceGeListSync(ge_queue_id, PSP_GE_LIST_STALL_REACHED);
-
-	/* reuse backbuffer and swap */
-	pspgl_dlist_jump_next(thiz, next);
+	pspgl_dlist_reset(next);
 
 	pspgl_curctx->dlist_current = next;
 
-	return pspgl_curctx->dlist_current;
+	return next;
 }
 
-
-void pspgl_dlist_submit (struct pspgl_dlist *d)
+void pspgl_dlist_submit(struct pspgl_dlist *d)
 {
-	void *stall_adr;
-
-	/* find last chunk and determine STALL address */
-	while (d->next)
-		d = d->next;
-
-	if (d->len == 0)
-		d->cmd_buf[d->len++] = 0x00000000;	/* insert STALL point: NOP */
-
-	stall_adr = &d->cmd_buf[d->len-1];
-
-	/* always use head of connected dlists, following chunks are connected by JUMP cmds */
-	d = d->first;
-
-	ge_queue_id = sceGeListEnQueue(d->cmd_buf, stall_adr, 0, NULL);
+	for(; d != NULL; d = d->next) {
+		if (d->qid != -1)
+			sceGeListSync(d->qid, PSP_GE_LIST_DONE);
+		d->qid = sceGeListEnQueue(d->cmd_buf, &d->cmd_buf[d->len], 0, NULL);
+	}
 }
 
 
 void pspgl_dlist_await_completion (void)
 {
-	sceGeListSync(ge_queue_id, PSP_GE_LIST_DONE);
+	int i;
+
+	for(i = 0; i < NUM_CMDLISTS; i++) {
+		struct pspgl_dlist *d = pspgl_curctx->dlist[i];
+
+		if (d->qid != -1) {
+			sceGeListSync(d->qid, PSP_GE_LIST_DONE);
+			d->qid = -1;
+			pspgl_dlist_reset(d);
+		}
+	}
+
 	sceGeDrawSync(PSP_GE_LIST_DONE);
 
 pspgl_ge_register_dump();
@@ -139,15 +164,23 @@ pspgl_ge_matrix_dump();
 
 void pspgl_dlist_reset (struct pspgl_dlist *d)
 {
-	d->cmd_buf[0] = 0x00000000; /* NOP, required as STALL point */
-	d->len = 1;
+	assert(d->qid == -1);
+	d->len = 0;
 }
 
 
 void pspgl_dlist_cancel (void)
 {
-	sceGeListDeQueue(ge_queue_id);
-	sceGeListSync(ge_queue_id, PSP_GE_LIST_CANCEL_DONE);
+	int i;
+
+	for(i = 0; i < NUM_CMDLISTS; i++) {
+		struct pspgl_dlist *d = pspgl_curctx->dlist[i];
+
+		if (d->qid != -1) {
+			sceGeListDeQueue(d->qid);
+			sceGeListSync(d->qid, PSP_GE_LIST_CANCEL_DONE);
+		}
+	}
 }
 
 
@@ -155,54 +188,12 @@ void pspgl_dlist_free (struct pspgl_dlist *d)
 {
 	while (d) {
 		struct pspgl_dlist *next = d->next;
+		assert(d->qid == -1);
 		free(d);
 		d = next;
 	}
 }
 
-
-static
-void pspgl_dlist_jump_next (struct pspgl_dlist *d, struct pspgl_dlist *next)
-{
-	unsigned long adr = (unsigned long) next->cmd_buf;
-
-	if (d->len >= DLIST_SIZE - 2) {
-		GLERROR(GL_OUT_OF_MEMORY);
-		return;
-	}
-
-	pspgl_dlist_reset(next);
-
-	d->cmd_buf[d->len++] = (16 << 24) | ((adr >> 8) & 0xf0000);	/* BASE */
-	d->cmd_buf[d->len++] =  (8 << 24) | (adr & 0xffffff);		/* JUMP */
-
-	psp_log("cmd 0x%08x\n", d->cmd_buf[d->len-2]);
-	psp_log("cmd 0x%08x\n", d->cmd_buf[d->len-1]);
-
-pspgl_dlist_dump(d->cmd_buf, d->len);
-
-	if (d->compile_and_run)
-		sceGeListUpdateStallAddr(ge_queue_id, (void *) adr);
-}
-
-
-void pspgl_dlist_finalize (struct pspgl_dlist *d)
-{
-	if (d->len >= DLIST_SIZE - 4) {
-		GLERROR(GL_OUT_OF_MEMORY);
-		return;
-	}
-
-	d->cmd_buf[d->len++] = 0x0f000000;	/* FINISH */
-	d->cmd_buf[d->len++] = 0x0c000000;	/* END */
-	d->cmd_buf[d->len++] = 0x00000000;	/* NOP */
-	d->cmd_buf[d->len++] = 0x00000000;
-
-pspgl_dlist_dump(d->cmd_buf, d->len);
-
-	if (d->compile_and_run)
-		sceGeListUpdateStallAddr(ge_queue_id, &d->cmd_buf[d->len-1]);
-}
 
 
 unsigned long * pspgl_dlist_insert_space (struct pspgl_dlist *d, unsigned long size)

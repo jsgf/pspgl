@@ -10,6 +10,8 @@ typedef unsigned long uint32_t;
 #include "pspgl_misc.h"
 
 
+#define NUM_CMDLISTS	4
+
 struct pspgl_context {
 	uint32_t ge_ctx [512];
 
@@ -108,8 +110,9 @@ struct pspgl_context {
 	struct pspgl_surface *read;
 	struct pspgl_surface *draw;
 	
-	struct pspgl_dlist *dlist[2];
+	struct pspgl_dlist *dlist[NUM_CMDLISTS];
 	struct pspgl_dlist *dlist_current;
+	int dlist_idx;
 
 	GLenum glerror;
 	unsigned int swap_interval;
@@ -117,6 +120,7 @@ struct pspgl_context {
 	int refcount;
 };
 
+#define NUM_CMDLISTS	4
 
 struct pspgl_surface {
 	GLint pixelformat;

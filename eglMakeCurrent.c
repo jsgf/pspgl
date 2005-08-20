@@ -28,10 +28,6 @@ EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
 
 	pspgl_curctx = c;
 
-	/* start new command queue, stalled state */
-	pspgl_dlist_reset(c->dlist_current);
-	pspgl_dlist_submit(c->dlist_current);
-
 	if (c->initialized) {
 		if (sceGeRestoreContext((PspGeContext *) c->ge_ctx)) {
 			EGLERROR(EGL_BAD_ACCESS);
