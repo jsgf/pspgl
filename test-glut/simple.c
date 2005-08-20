@@ -1,60 +1,27 @@
 #include <stdlib.h>
-#include <pspuser.h>
 #include <GL/glut.h>
 
 
-PSP_MODULE_INFO("test_glut", 0, 1, 1);
-
+/******* PSP specific debugging ********************************************/
 extern void __psp_log (const char *fmt, ...);
-
-/* disable verbose logging to "ms0:/pspgl.ge" */
-#if 1
-	#define psp_log(x...) __psp_log(x)
-#else
-	#define psp_log(x...) do {} while (0)
-#endif
 
 /* enable GLerror logging to "ms0:/log.txt" */
 #if 1
-	#define GLCHK(x)							\
-	do {									\
-		GLint errcode;							\
-		x;								\
-		errcode = glGetError();						\
-		if (errcode != GL_NO_ERROR) {					\
-			__psp_log("%s (%d): GL error 0x%04x\n",			\
-				__FUNCTION__, __LINE__, (unsigned int) errcode);\
-		}								\
+	#define GLCHK(x)						\
+	do {								\
+		GLint errcode;						\
+		x;							\
+		errcode = glGetError();					\
+		if (errcode != GL_NO_ERROR) {				\
+			__psp_log("%s (%d): GL error 0x%04x\n",		\
+				__FUNCTION__, __LINE__,			\
+				(unsigned int) errcode);		\
+		}							\
 	} while (0)
 #else
 	#define GLCHK(x) x
 #endif
-
-
-static
-int exit_callback (int arg1, int arg2, void *common)
-{
-	sceKernelExitGame();
-	return 0;
-}
-
-static
-int update_thread (SceSize args, void *argp)
-{
-	int cbid = sceKernelCreateCallback("Exit Callback", exit_callback, NULL);
-	sceKernelRegisterExitCallback(cbid);
-	sceKernelSleepThreadCB();
-	return 0;
-}
-
-static
-void setup_callbacks (void)
-{
-	int id;
-
-	if ((id = sceKernelCreateThread("update_thread", update_thread, 0x11, 0xFA0, 0, 0)) >= 0)
-		sceKernelStartThread(id, 0, 0);
-}
+/******* end of PSP specific debugging *************************************/
 
 
 static
@@ -139,9 +106,6 @@ void joystick (unsigned int buttonMask, int x, int y, int z)
 
 int main(int argc, char* argv[])
 {
-	/* XXX: stefan: Perhaps this should go into glut? */
-	setup_callbacks();
-
 	glutInit(&argc, argv);
 	glutCreateWindow( __FILE__ );
 	glutKeyboardFunc(keydown);

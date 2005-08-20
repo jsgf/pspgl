@@ -1,4 +1,3 @@
-#include <pspkernel.h>
 #include <pspctrl.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -8,8 +7,6 @@
 #include <GLES/egl.h>
 #include <GLES/gl.h>
 
-
-PSP_MODULE_INFO("test_egl", 0, 1, 1);
 
 extern unsigned char logo_start[];
 
@@ -117,32 +114,6 @@ int done = 0;
 #endif
 
 
-static
-int exit_callback (int arg1, int arg2, void *common)
-{
-	eglTerminate(0);
-	sceKernelExitGame();
-	return 0;
-}
-
-static
-int update_thread (SceSize args, void *argp)
-{
-	int cbid = sceKernelCreateCallback("Exit Callback", exit_callback, NULL);
-	sceKernelRegisterExitCallback(cbid);
-	sceKernelSleepThreadCB();
-	return 0;
-}
-
-static
-void setup_callbacks (void)
-{
-	int id;
-
-	if ((id = sceKernelCreateThread("update_thread", update_thread, 0x11, 0xFA0, 0, 0)) >= 0)
-		sceKernelStartThread(id, 0, 0);
-}
-
 
 static const EGLint attrib_list [] = {
 	EGL_RED_SIZE, 8,
@@ -163,8 +134,6 @@ int main(int argc, char* argv[])
 	EGLSurface surface;
 	GLfloat angle = 0.0f;
 	SceCtrlData pad;
-
-	setup_callbacks();
 
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
@@ -240,7 +209,6 @@ int main(int argc, char* argv[])
 	}
 
 	EGLCHK(eglTerminate(dpy));
-	sceKernelExitGame();
 	return 0;
 }
 

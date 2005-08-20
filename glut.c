@@ -96,7 +96,6 @@ static
 void cleanup (void)
 {
 	EGLCHK(eglTerminate(dpy));
-	sceKernelExitGame();
 }
 
 
