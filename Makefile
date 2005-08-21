@@ -82,6 +82,7 @@ OBJS = \
 	glVertexi.o \
 	glVertexPointer.o \
 	glViewport.o \
+	gluLookAt.o \
 	gluPerspective.o \
 	glut.o \
  	pspgl_dlist.o \

@@ -921,9 +921,12 @@ GLAPI void GL_APIENTRY glInterleavedArrays (GLenum format, GLsizei stride, const
 GLAPI void GL_APIENTRY glBlendEquation (GLenum mode);
 
 
-/******* GLU *********/
+/******* GLU -- should we move this to glu.h ? *********/
 GLAPI void GL_APIENTRY gluPerspective (GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar);
 
+GLAPI void GL_APIENTRY gluLookAt (GLfloat eyeX, GLfloat eyeY, GLfloat eyeZ,
+				  GLfloat centerX, GLfloat centerY, GLfloat centerZ,
+				  GLfloat upX, GLfloat upY, GLfloat upZ);
 
 #endif
 
