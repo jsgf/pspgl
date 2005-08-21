@@ -40,8 +40,9 @@ if [ "$IMAGE" = ""  -o "$help" = "yes" ] ; then
 	echo "" 
 	echo "Usage:    psp-install [options] <image>" 
 	echo "Options:"
-	echo "	--psp-revision=1.0		install files for a rev1.0 PSP" 
-	echo "	--psp-revision=1.5		install files for a rev1.5 PSP" 
+	echo "	--psp-revision=1.00		install files for a rev1.0 PSP" 
+	echo "	--psp-revision=1.50		install files for a rev1.5 PSP" 
+	echo "	--psp-revision=all		install files for a all PSPs" 
 	echo "	--eboot-title=<string>		TITLE for SFO (default=image)"
 	echo "	--eboot-icon=<file.png>		ICON file for EBOOT.PBP"
 	echo "	--eboot-icon1=<file.png>	ICON1 file for EBOOT.PBP"
@@ -53,7 +54,7 @@ if [ "$IMAGE" = ""  -o "$help" = "yes" ] ; then
 	echo "Environment Variables:" 
 	echo "" 
 	echo "	PSP_MOUNTDIR=<dir>		define PSP mountpoint (required)"
-	echo "	PSP_REVISION=<1.0|1.5>		define PSP revision" 
+	echo "	PSP_REVISION=<1.00|1.50|all>	define PSP revision" 
 	echo "" 
 	echo "Usage Example:" 
 	echo "	PSP_MOUNTDIR=/Volumes/PSP PSP_REVISION=1.5 psp-install test.elf --eboot-title=test" 
@@ -69,7 +70,7 @@ fi
 
 if [ "$PSP_REVISION" = "" ] ; then
 	echo "--------------------------------------------------------------------------------" 
-	echo "Please export a PSP_REVISION environment variable or specify --psp-revision=x.x!" 
+	echo "Please export a PSP_REVISION environment variable or specify --psp-revision=x.xx!" 
 	echo "--------------------------------------------------------------------------------" 
 	exit 1
 fi
@@ -88,27 +89,39 @@ if test ! -d "$PSP_MOUNTDIR/PSP" ; then
 	exit 3
 fi
 
-DESTDIR="$PSP_MOUNTDIR/PSP/GAME/$IMAGE"
-
-echo "install $IMAGE on '$DESTDIR/'..."
-
 mksfo "$PSP_EBOOT_TITLE" $IMAGE.sfo
 psp-strip $IMAGE -o "$IMAGE".strip
-rm -rf "$DESTDIR"
-mkdir -p "$DESTDIR"
 
-if [ "$PSP_REVISION" = "1.0" ] ; then
+
+if [ "$PSP_REVISION" = "1.00" -o "$PSP_REVISION" == "all" ] ; then
+	DESTDIR="$PSP_MOUNTDIR/PSP/GAME/$IMAGE"
+	echo "install $IMAGE for rev1.00 on '$DESTDIR/'..."
+	rm -rf "$DESTDIR"
+	mkdir -p "$DESTDIR"
 	pack-pbp "$DESTDIR"/EBOOT.PBP $IMAGE.sfo $PSP_EBOOT_ICON \
 		$PSP_EBOOT_ICON1 $PSP_EBOOT_UNKPNG $PSP_EBOOT_PIC1 \
 		$PSP_EBOOT_SND0  "$IMAGE".strip $PSP_EBOOT_PSAR
-elif [ "$PSP_REVISION" = "1.5" ] ; then
-	rm -rf "$DESTDIR%"
-	mkdir -p "$DESTDIR%"
-	cp "$IMAGE".strip "$DESTDIR/EBOOT.PBP"
-	pack-pbp "$DESTDIR%/EBOOT.PBP" $IMAGE.sfo $PSP_EBOOT_ICON \
+fi
+
+if [ "$PSP_REVISION" = "1.50" -o "$PSP_REVISION" == "all" ] ; then
+	LONG="$IMAGE"_________________________________1
+	BASE=`echo "$LONG" | sed -e "s/\(.\{6\}\).*/\1/"`
+	SHORT="$BASE"~1%
+	DESTDIR="$PSP_MOUNTDIR/PSP/GAME"
+	LONG=$DESTDIR/$LONG
+	SHORT=$DESTDIR/$SHORT
+	echo "install $IMAGE for rev1.50 on '$DESTDIR/$IMAGE/'..."
+	rm -rf "$LONG"
+	rm -rf "$SHORT"
+	mkdir -p "$LONG"
+	cp "$IMAGE".strip "$LONG"/EBOOT.PBP
+	mkdir -p "$SHORT"
+	pack-pbp "$SHORT"/EBOOT.PBP $IMAGE.sfo $PSP_EBOOT_ICON \
 		$PSP_EBOOT_ICON1 $PSP_EBOOT_UNKPNG $PSP_EBOOT_PIC1 \
 		$PSP_EBOOT_SND0 NULL $PSP_EBOOT_PSAR
-else
+fi
+
+if [ "$PSP_REVISION" != "1.00" -a "$PSP_REVISION" != "1.50" -a "$PSP_REVISION" != "all" ] ; then
 	echo "--------------------------------------------------------------------------------" 
 	echo "   unknown PSP_REVISION=$PSP_REVISION !" 
 	echo "--------------------------------------------------------------------------------" 
