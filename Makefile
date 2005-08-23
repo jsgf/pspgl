@@ -11,7 +11,10 @@ LFLAGS = -g -Wall -O2 -G0 -L $(PSPPATH)/lib
 
 DEPDIR = .deps
 
-OBJS = \
+all: libGL.a libGLU.a libglut.a
+
+
+libGL.a_OBJS = \
 	eglChooseConfig.o \
 	eglCreateContext.o \
 	eglCreateWindowSurface.o \
@@ -82,18 +85,22 @@ OBJS = \
 	glVertexi.o \
 	glVertexPointer.o \
 	glViewport.o \
-	gluLookAt.o \
-	gluPerspective.o \
-	glut.o \
  	pspgl_dlist.o \
  	pspgl_ge_init.o \
  	pspgl_misc.o \
  	pspgl_varray.o \
  	pspgl_vidmem.o
 
-libGL.a: $(DEPDIR) $(OBJS)
+libGLU.a_OBJS = \
+	gluLookAt.o \
+	gluPerspective.o
+
+libglut.a_OBJS = \
+	glut.o
+
+%.a: $(DEPDIR) $(libGL.a_OBJS) $(libGLU.a_OBJS) $(libglut.a_OBJS)
 	$(RM) $@
-	$(AR) cru $@ $(OBJS)
+	$(AR) cru $@ $($@_OBJS)
 	$(RANLIB) $@
 
 $(DEPDIR):
@@ -120,6 +127,8 @@ install: libGL.a
 	cp GL/*.h $(PSPDIR)/include/GL
 	cp GLES/*.h $(PSPDIR)/include/GLES
 	cp libGL.a $(PSPDIR)/lib
+	cp libGLU.a $(PSPDIR)/lib
+	cp libglut.a $(PSPDIR)/lib
 
 -include $(wildcard $(DEPDIR)/*.d) dummy
 
