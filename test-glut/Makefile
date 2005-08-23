@@ -4,7 +4,7 @@ PSP_INSTALL = ../tools/psp-install
 RM = rm -f
 
 PSPPATH := $(shell psp-config --pspsdk-path)
-PSPGL_LFLAGS = -lpspgl -lm -lpspdebug -lpspge -lpspdisplay -lpspctrl -lpspsdk -lpsplibc -lpspuser -lpspkernel
+PSPGL_LFLAGS = -lGL -lm -lpspdebug -lpspge -lpspdisplay -lpspctrl -lpspsdk -lpsplibc -lpspuser -lpspkernel
 CFLAGS = -g -Wall -O2 -MD -I$(PSPPATH)/include -I..
 LFLAGS = -g -Wall -O2 -DMODULE_NAME="test-glut" psp-setup.c -L$(PSPPATH)/lib -L.. $(PSPGL_LFLAGS)
 

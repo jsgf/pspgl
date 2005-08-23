@@ -91,15 +91,13 @@ OBJS = \
  	pspgl_varray.o \
  	pspgl_vidmem.o
 
-libpspgl.a: $(DEPDIR) GL $(OBJS)
+libGL.a: $(DEPDIR) $(OBJS)
 	$(RM) $@
 	$(AR) cru $@ $(OBJS)
 	$(RANLIB) $@
 
 $(DEPDIR):
 	mkdir $(DEPDIR)
-GL:
-	ln -s GLES GL
 
 .c.o:
 	$(CC) $(CFLAGS) -MD -MF $(DEPDIR)/$*.d -c $<
@@ -111,18 +109,17 @@ tar: clean
 	( cd .. && tar cvfz pspgl-`date "+%Y-%m-%d"`.tar.gz pspgl --exclude "*.DS_Store" && cd - )
 
 clean:
-	$(RM) -rf *.o *.a $(DEPDIR) GL
+	$(RM) -rf *.o *.a $(DEPDIR)
 	make -C tools clean
 	make -C test-egl clean
 	make -C test-glut clean
 
-# Install headers to both GL and GLES directories.  This is to workaround
-# platforms that don't support symbolic links.
-install: libpspgl.a
+install: libGL.a
 	mkdir -p $(PSPDIR)/include $(PSPDIR)/lib
 	mkdir -p $(PSPDIR)/include/GL $(PSPDIR)/include/GLES
-	cp GLES/*.h $(PSPDIR)/include/GL
+	cp GL/*.h $(PSPDIR)/include/GL
 	cp GLES/*.h $(PSPDIR)/include/GLES
-	cp libpspgl.a $(PSPDIR)/lib
+	cp libGL.a $(PSPDIR)/lib
 
 -include $(wildcard $(DEPDIR)/*.d) dummy
+
