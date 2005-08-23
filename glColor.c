@@ -22,3 +22,10 @@ void glColor3f (GLfloat red, GLfloat green, GLfloat blue)
 {
 	glColor4f(red, green, blue, 1.0);
 }
+
+
+void glColor4ubv (const GLubyte *c)
+{
+	pspgl_curctx->current.color = (c[3] << 24) | (c[2] << 16) | (c[1] << 8) | c[0];
+}
+

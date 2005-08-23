@@ -62,3 +62,15 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 	}
 }
 
+
+void glVertex2f (GLfloat x, GLfloat y)
+{
+	glVertex3f(x, y, 0.0);
+}
+
+
+void glVertex3fv (const GLfloat *v)
+{
+	glVertex3f(v[0], v[1], v[2]);
+}
+

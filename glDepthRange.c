@@ -18,3 +18,10 @@ void glDepthRangef (GLclampf zNear, GLclampf zFar)
 	sendCommandi(215, (int) zFar);
 }
 
+
+
+void glDepthRange (GLclampd zNear, GLclampd zFar)
+{
+	glDepthRangef(zNear, zFar);
+}
+

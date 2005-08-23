@@ -82,20 +82,10 @@ void  pspgl_vidmem_free (void * ptr)
 }
 
 
-/* PSP pixelformats */
-#define GU_PSM_5650		(0) /* Display, Texture, Palette */
-#define GU_PSM_5551		(1) /* Display, Texture, Palette */
-#define GU_PSM_4444		(2) /* Display, Texture, Palette */
-#define GU_PSM_8888		(3) /* Display, Texture, Palette */
-#define GU_PSM_T4		(4) /* Texture */
-#define GU_PSM_T8		(5) /* Texture */
-
-
 EGLBoolean pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s)
 {
 	unsigned long current_back = (s->color_buffer[1] == NULL) ? 0 : (s->current_front ^ 1);
 	unsigned long adr;
-	unsigned long pixfmt;
 	unsigned long i;
 
 	psp_log("current_front %d\n", s->current_front);
@@ -105,31 +95,11 @@ EGLBoolean pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s)
 		return EGL_FALSE;
 	}
 
-	psp_log("s->pixelformat = 0x%04x\n", s->pixelformat);
-
-	switch (s->pixelformat) {
-	case GL_UNSIGNED_SHORT_4_4_4_4:
-		pixfmt = GU_PSM_4444;
-		break;
-	case GL_UNSIGNED_SHORT_5_5_5_1:
-		pixfmt = GU_PSM_5551;
-		break;
-	case GL_UNSIGNED_SHORT_5_6_5:
-		pixfmt = GU_PSM_5650;
-		break;
-	case GL_RGBA:
-		pixfmt = GU_PSM_8888;
-		break;
-	default:
-		EGLERROR(EGL_BAD_SURFACE);
-		return EGL_FALSE;
-	}
-
-	psp_log("pixfmt %u\n", pixfmt);
+	psp_log("pixfmt %u\n", s->pixfmt);
 
 	/* XXX: ?!? how to set up the stencil buffer base ptr ?!? */
 
-	sendCommandi(210, pixfmt);
+	sendCommandi(210, s->pixfmt);
 
 	adr = (unsigned long) s->color_buffer[current_back];
 	psp_log("color buffer adr 0x%08x\n", adr);
@@ -156,7 +126,7 @@ EGLBoolean pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s)
 		sceDisplaySetMode(0, s->width, s->height);
 		sceDisplaySetFrameBuf(s->color_buffer[s->current_front],
 				      s->pixelperline,
-				      pixfmt,
+				      s->pixfmt,
 				      PSP_DISPLAY_SETBUF_NEXTFRAME);
 	}
 

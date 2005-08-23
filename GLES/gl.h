@@ -879,8 +879,6 @@ GLAPI void GL_APIENTRY glTexCoord2f (GLfloat s, GLfloat t);
 GLAPI void GL_APIENTRY glOrtho (GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
 GLAPI void GL_APIENTRY glFrustum (GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
 
-#define glDepthRange(zNear,zFar)		glDepthRangef(zNear, zFar)
-
 
 /* Vertex Array Setup */
 #define GL_V2F					0x2A20

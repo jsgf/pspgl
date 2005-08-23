@@ -1,5 +1,4 @@
 PSPPATH := $(shell psp-config --pspsdk-path)
-PSPDIR  := $(shell psp-config --psp-prefix)
 ARCH = psp-
 
 CC = $(ARCH)gcc
@@ -10,8 +9,6 @@ CFLAGS = -g -Wall -O2 -G0 -fsingle-precision-constant -I. -I $(PSPPATH)/include
 LFLAGS = -g -Wall -O2 -G0 -L $(PSPPATH)/lib
 
 DEPDIR = .deps
-
-all: libGL.a libGLU.a libglut.a
 
 
 libGL.a_OBJS = \
@@ -51,7 +48,9 @@ libGL.a_OBJS = \
 	glFlush.o \
 	glFog.o \
 	glFrontFace.o \
+	glFrustumf.o \
 	glFrustum.o \
+	glGetIntegerv.o \
 	glGetError.o \
 	glGetString.o \
 	glInterleavedArrays.o \
@@ -66,6 +65,7 @@ libGL.a_OBJS = \
 	glNormal.o \
 	glNormalPointer.o \
 	glOrtho.o \
+	glOrthof.o \
 	glPopMatrix.o \
 	glPushMatrix.o \
 	glPolygonOffset.o \
@@ -98,7 +98,10 @@ libGLU.a_OBJS = \
 libglut.a_OBJS = \
 	glut.o
 
-%.a: $(DEPDIR) $(libGL.a_OBJS) $(libGLU.a_OBJS) $(libglut.a_OBJS)
+all: $(DEPDIR) $(libGL.a_OBJS) $(libGLU.a_OBJS) $(libglut.a_OBJS) libGL.a libGLU.a libglut.a
+
+
+%.a: $(libGL.a_OBJS) $(libGLU.a_OBJS) $(libglut.a_OBJS)
 	$(RM) $@
 	$(AR) cru $@ $($@_OBJS)
 	$(RANLIB) $@
@@ -122,13 +125,13 @@ clean:
 	make -C test-glut clean
 
 install: libGL.a
-	mkdir -p $(PSPDIR)/include $(PSPDIR)/lib
-	mkdir -p $(PSPDIR)/include/GL $(PSPDIR)/include/GLES
-	cp GL/*.h $(PSPDIR)/include/GL
-	cp GLES/*.h $(PSPDIR)/include/GLES
-	cp libGL.a $(PSPDIR)/lib
-	cp libGLU.a $(PSPDIR)/lib
-	cp libglut.a $(PSPDIR)/lib
+	mkdir -p $(PSPPATH)/include $(PSPPATH)/lib
+	mkdir -p $(PSPPATH)/include/GL $(PSPPATH)/include/GLES
+	cp GL/*.h $(PSPPATH)/include/GL
+	cp GLES/*.h $(PSPPATH)/include/GLES
+	cp libGL.a $(PSPPATH)/lib
+	cp libGLU.a $(PSPPATH)/lib
+	cp libglut.a $(PSPPATH)/lib
 
 -include $(wildcard $(DEPDIR)/*.d) dummy
 

@@ -1,7 +1,7 @@
 #ifndef __pspgl_internal_h__
 #define __pspgl_internal_h__
 
-#include <GLES/gl.h>
+#include <GL/gl.h>
 #include <GLES/egl.h>
 
 typedef unsigned long uint32_t;
@@ -123,7 +123,7 @@ struct pspgl_context {
 #define NUM_CMDLISTS	4
 
 struct pspgl_surface {
-	GLint pixelformat;
+	int pixfmt;
 	unsigned long width;
 	unsigned long height;
 	unsigned long pixelperline;

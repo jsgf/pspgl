@@ -24,7 +24,9 @@ typedef int NativePixmapType;
 #define EGL_NO_DISPLAY ((EGLDisplay)0)
 #define EGL_NO_SURFACE ((EGLSurface)0)
 
+#ifndef APIENTRY
 #define APIENTRY
+#endif
 
 #endif
 

@@ -17,14 +17,15 @@ LFLAGS = -g -Wall -O0
 
 
 ifeq ($(ARCH),psp-)
-	PSPPATH := $(shell psp-config --pspsdk-path)
+	SDKPATH := $(shell psp-config --pspsdk-path)
 	# XXX FIXME: Toolchain quirk: this should get set by the compiler!!
 	CFLAGS += -D__LITTLE_ENDIAN__
+	CFLAGS += -I$(SDKPATH)/include -I$(SDKPATH)/include/GL
 	# XXX FIXME: Do we still need -G0 ??
 	CFLAGS += -G0 -fsingle-precision-constant
 	LFLAGS += -DMODULE_NAME="Quake3" psp-setup.c
+	LFLAGS += -L$(SDKPATH)/lib -lGL -lGLU -lglut
 	LFLAGS += -lm -lpspdebug -lpspge -lpspdisplay -lpspctrl -lpspsdk -lpsplibc -lpspuser -lpspkernel
-	LFLAGS += -L$(PSPPATH)/lib -lGL -lGLU -lglut
 else
 	ifeq ($(shell uname),Darwin)
         	CFLAGS += -F OpenGL -I/System/Library/Frameworks/OpenGL.framework/Headers/ 
