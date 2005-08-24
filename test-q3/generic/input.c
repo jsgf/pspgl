@@ -21,11 +21,26 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 #include "../quake3-1.32b/code/client/client.h"
 
-void IN_Init (void) { }
+void IN_Init (void)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+}
 
-void IN_Frame (void) { }
 
-void IN_Shutdown (void) { }
+void IN_Frame (void)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+}
 
-void Sys_SendKeyEvents (void) { }
+
+void IN_Shutdown (void)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+}
+
+
+void Sys_SendKeyEvents (void)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+}
 

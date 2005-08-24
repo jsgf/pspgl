@@ -27,23 +27,28 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 qboolean SNDDMA_Init(void)
 {
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
 	return qfalse;
 }
 
-int	SNDDMA_GetDMAPos(void)
+int SNDDMA_GetDMAPos(void)
 {
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
 	return 0;
 }
 
 void SNDDMA_Shutdown(void)
 {
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
 }
 
 void SNDDMA_BeginPainting (void)
 {
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
 }
 
 void SNDDMA_Submit(void)
 {
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
 }
 

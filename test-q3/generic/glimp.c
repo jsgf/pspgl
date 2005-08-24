@@ -32,7 +32,14 @@ void ( * qglLockArraysEXT)( int, int);
 void ( * qglUnlockArraysEXT) ( void );
 */
 
-void GLimp_EndFrame (void) { printf("%s (%d):\n", __FUNCTION__, __LINE__); }
+#include <glut.h>
+
+void GLimp_EndFrame (void)
+{
+	glutSwapBuffers();
+	glutPostRedisplay();
+}
+
 
 void GLimp_Init (void)
 {
@@ -69,7 +76,7 @@ void GLimp_Init (void)
 	if (*glConfig.renderer_string && glConfig.renderer_string[strlen(glConfig.renderer_string) - 1] == '\n')
 		glConfig.renderer_string[strlen(glConfig.renderer_string) - 1] = 0;
 
-	ri.Cvar_Set( "r_lastValidRenderer", glConfig.renderer_string );
+	ri.Cvar_Set("r_lastValidRenderer", glConfig.renderer_string);
 
 	printf("%s (%d):\n", __FUNCTION__, __LINE__);
 }
@@ -79,7 +86,7 @@ void GLimp_Shutdown (void) { printf("%s (%d):\n", __FUNCTION__, __LINE__); }
 
 void GLimp_EnableLogging (qboolean enable) { printf("%s (%d):\n", __FUNCTION__, __LINE__); }
 
-void GLimp_LogComment (char *comment) { printf("%s (%d):\n", __FUNCTION__, __LINE__); }
+void GLimp_LogComment (char *comment) { /* printf("%s", comment); */ }
 
 void *GLimp_RendererSleep (void) { printf("%s (%d):\n", __FUNCTION__, __LINE__); return NULL; }
 

@@ -39,11 +39,15 @@ void Sys_BeginProfiling (void) { }
 
 void Sys_BeginStreamedFile (fileHandle_t f, int readahead)
 {
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
 }
+
 
 void Sys_EndStreamedFile (fileHandle_t f)
 {
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
 }
+
 
 int Sys_StreamedRead (void *buffer, int size, int count, fileHandle_t f)
 {
@@ -235,18 +239,30 @@ char *Sys_DefaultInstallPath(void)
 	return Sys_Cwd();
 }
 
-char *Sys_DefaultHomePath(void) { return NULL; }
 
-char *Sys_DefaultCDPath (void) { return ""; }
+char *Sys_DefaultHomePath(void)
+{
+	return NULL;
+}
+
+
+char *Sys_DefaultCDPath (void)
+{
+	return "";
+}
+
 
 qboolean Sys_CheckCD (void)
 {
 	return qtrue;
 }
 
+
 void Sys_Mkdir (const char *path)
 {
+	printf("%s (%d): path '%s'\n", __FUNCTION__, __LINE__, path);
 }
+
 
 sysEvent_t Sys_GetEvent (void)
 {
@@ -255,6 +271,7 @@ sysEvent_t Sys_GetEvent (void)
 	ev.evTime = Sys_Milliseconds();;
 	return ev;
 }
+
 
 void Sys_Error (const char *error, ...)
 {
@@ -271,18 +288,26 @@ void Sys_Error (const char *error, ...)
 
 void Sys_Quit (void)
 {
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
 	exit(0);
 }
 
-void Sys_UnloadGame (void) { }
+
+void Sys_UnloadGame (void)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+}
+
 
 void *Sys_GetGameAPI (void *parms)
 {
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
 	return NULL;
 }
 
 char *Sys_GetClipboardData (void)
 {
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
 	return NULL;
 }
 
@@ -303,17 +328,27 @@ int Sys_Milliseconds (void)
 
 char *Sys_FindFirst (char *path, unsigned musthave, unsigned canthave)
 {
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
 	return NULL;
 }
 
 char *Sys_FindNext (unsigned musthave, unsigned canthave)
 {
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
 	return NULL;
 }
 
-void Sys_FindClose (void) { }
+void Sys_FindClose (void)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+}
 
-void Sys_Init (void) { }
+
+void Sys_Init (void)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+}
+
 
 void *Sys_LoadDll (const char *name, char *fqpath ,
                    int (**entryPoint)(int, ...),
@@ -322,27 +357,54 @@ void *Sys_LoadDll (const char *name, char *fqpath ,
 	return NULL;
 }
 
-void Sys_UnloadDll (void *dllHandle) { }
+void Sys_UnloadDll (void *dllHandle)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+}
+
 
 void Sys_EarlyOutput (char *string)
 {
 	printf("%s", string);
 }
 
+
 void  Sys_Print (const char *msg)
 {
 	printf("%s", msg);
 }
 
-void Sys_ShowConsole (int visLevel, qboolean quitOnClose) { printf("%s (%d):\n", __FUNCTION__, __LINE__); }
 
-qboolean Sys_LowPhysicalMemory (void) { printf("%s (%d):\n", __FUNCTION__, __LINE__); return qfalse; }
+void Sys_ShowConsole (int visLevel, qboolean quitOnClose)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+}
 
-void Sys_SnapVector( float *v ) { }
 
-int VM_CallCompiled (vm_t *vm, int *args) { return 0; }
+qboolean Sys_LowPhysicalMemory (void)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+	return qfalse;
+}
 
-void VM_Compile (vm_t *vm, vmHeader_t *header) { }
+
+void Sys_SnapVector (float *v)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+}
+
+
+int VM_CallCompiled (vm_t *vm, int *args)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+	return 0;
+}
+
+
+void VM_Compile (vm_t *vm, vmHeader_t *header)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+}
 
 #include <glut.h>
 
@@ -352,14 +414,11 @@ void display (void)
 	static char *cmdline = "";
 	static int initialized = 0;
 
-	printf("%s (%d):\n", __FUNCTION__, __LINE__);
-
 	if (!initialized) {
 		Com_Init(cmdline);
 		initialized = 1;
 	}
 
-	printf("%s (%d):\n", __FUNCTION__, __LINE__);
 	Com_Frame();
 }
 

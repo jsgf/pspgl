@@ -24,17 +24,41 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 #include "../quake3-1.32b/code/qcommon/qcommon.h"
 
 
-qboolean Sys_StringToAdr (const char *s, netadr_t *a) { return qtrue; }
+qboolean Sys_StringToAdr (const char *s, netadr_t *a)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+	return qtrue;
+}
 
-qboolean Sys_IsLANAddress (netadr_t adr) { return qtrue; }
 
-void Sys_ShowIP (void) { }
+qboolean Sys_IsLANAddress (netadr_t adr)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+	return qtrue;
+}
 
-void Sys_SendPacket (int length, const void *data, netadr_t to) { }
+
+void Sys_ShowIP (void)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+}
+
+
+void Sys_SendPacket (int length, const void *data, netadr_t to)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+}
 
 /* Never called by the game logic, just the system event queing */
-qboolean Sys_GetPacket (netadr_t *net_from, msg_t *net_message) { return qfalse; }
+qboolean Sys_GetPacket (netadr_t *net_from, msg_t *net_message)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+	return qfalse;
+}
 
 
-void NET_Sleep (int msec) { }
+void NET_Sleep (int msec)
+{
+	printf("%s (%d):\n", __FUNCTION__, __LINE__);
+}
 
