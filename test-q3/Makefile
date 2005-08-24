@@ -23,8 +23,10 @@ ifeq ($(ARCH),psp-)
 	CFLAGS += -I$(SDKPATH)/include -I$(SDKPATH)/include/GL
 	# XXX FIXME: Do we still need -G0 ??
 	CFLAGS += -G0 -fsingle-precision-constant
+	# we place all missing libc bits in generic/...
+	CFLAGS += -I ./generic
 	LFLAGS += -DMODULE_NAME="Quake3" psp-setup.c
-	LFLAGS += -L$(SDKPATH)/lib -lGL -lGLU -lglut
+	LFLAGS += -L$(SDKPATH)/lib -lglut -lGL
 	LFLAGS += -lm -lpspdebug -lpspge -lpspdisplay -lpspctrl -lpspsdk -lpsplibc -lpspuser -lpspkernel
 else
 	ifeq ($(shell uname),Darwin)
