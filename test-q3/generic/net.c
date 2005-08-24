@@ -26,15 +26,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 qboolean Sys_StringToAdr (const char *s, netadr_t *a)
 {
-	printf("%s (%d):\n", __FUNCTION__, __LINE__);
-	return qtrue;
+	printf("%s (%d): %s\n", __FUNCTION__, __LINE__, s);
+	return qfalse;
 }
 
 
 qboolean Sys_IsLANAddress (netadr_t adr)
 {
 	printf("%s (%d):\n", __FUNCTION__, __LINE__);
-	return qtrue;
+	return qfalse;
 }
 
 

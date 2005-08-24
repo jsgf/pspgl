@@ -1,6 +1,6 @@
-diff -rpu quake3-1.32b.orig/code/bspc/l_utils.h quake3-1.32b/code/bspc/l_utils.h
---- quake3-1.32b.orig/code/bspc/l_utils.h	2005-08-19 20:06:22.000000000 +0200
-+++ quake3-1.32b/code/bspc/l_utils.h	2005-08-23 00:43:04.000000000 +0200
+diff -rpu --strip-trailing-cr quake3-1.32b.orig/code/bspc/l_utils.h quake3-1.32b/code/bspc/l_utils.h
+--- quake3-1.32b.orig/code/bspc/l_utils.h	2005-08-24 00:22:29.000000000 +0200
++++ quake3-1.32b/code/bspc/l_utils.h	2005-08-24 00:27:40.000000000 +0200
 @@ -49,6 +49,10 @@ Foundation, Inc., 51 Franklin St, Fifth 
  //absolute value
  #define FloatAbs(x)		(*(float *) &((* (int *) &(x)) & 0x7FFFFFFF))
@@ -12,19 +12,16 @@ diff -rpu quake3-1.32b.orig/code/bspc/l_utils.h quake3-1.32b/code/bspc/l_utils.h
  //coordinates
  #define _X		0
  #define _Y		1
-diff -rpu quake3-1.32b.orig/code/client/cl_ui.c quake3-1.32b/code/client/cl_ui.c
---- quake3-1.32b.orig/code/client/cl_ui.c	2005-08-16 01:10:07.000000000 +0200
-+++ quake3-1.32b/code/client/cl_ui.c	2005-08-23 21:36:12.000000000 +0200
-@@ -1161,19 +1161,21 @@ void CL_InitUI( void ) {
+diff -rpu --strip-trailing-cr quake3-1.32b.orig/code/client/cl_ui.c quake3-1.32b/code/client/cl_ui.c
+--- quake3-1.32b.orig/code/client/cl_ui.c	2005-08-24 00:22:32.000000000 +0200
++++ quake3-1.32b/code/client/cl_ui.c	2005-08-24 01:18:17.000000000 +0200
+@@ -1161,19 +1161,9 @@ void CL_InitUI( void ) {
  
  	// sanity check
  	v = VM_Call( uivm, UI_GETAPIVERSION );
 -	if (v == UI_OLD_API_VERSION) {
-+// XXX FIXME: disable UI version checks for testing...
-+Com_Printf("User Interface is version %d, expected %d\n", v, UI_API_VERSION);
-+//	if (v == UI_OLD_API_VERSION) {
- //		Com_Printf(S_COLOR_YELLOW "WARNING: loading old Quake III Arena User Interface version %d\n", v );
- 		// init for this gamestate
+-//		Com_Printf(S_COLOR_YELLOW "WARNING: loading old Quake III Arena User Interface version %d\n", v );
+-		// init for this gamestate
 -		VM_Call( uivm, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE));
 -	}
 -	else if (v != UI_API_VERSION) {
@@ -32,23 +29,18 @@ diff -rpu quake3-1.32b.orig/code/client/cl_ui.c quake3-1.32b/code/client/cl_ui.c
 -		cls.uiStarted = qfalse;
 -	}
 -	else {
-+//		VM_Call( uivm, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE));
-+//	}
-+//	else if (v != UI_API_VERSION) {
-+//		Com_Error( ERR_DROP, "User Interface is version %d, expected %d", v, UI_API_VERSION );
-+//		cls.uiStarted = qfalse;
-+//	}
-+//	else {
- 		// init for this gamestate
- 		VM_Call( uivm, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
+-		// init for this gamestate
+-		VM_Call( uivm, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
 -	}
-+//	}
++
++	Com_Printf(S_COLOR_YELLOW "User Interface is version %d, expected %d\n", v, UI_API_VERSION);
++	VM_Call( uivm, UI_INIT, (cls.state >= CA_AUTHORIZING && cls.state < CA_ACTIVE) );
  }
  
  qboolean UI_usesUniqueCDKey() {
-diff -rpu quake3-1.32b.orig/code/game/q_shared.h quake3-1.32b/code/game/q_shared.h
---- quake3-1.32b.orig/code/game/q_shared.h	2005-08-16 01:10:07.000000000 +0200
-+++ quake3-1.32b/code/game/q_shared.h	2005-08-23 00:43:04.000000000 +0200
+diff -rpu --strip-trailing-cr quake3-1.32b.orig/code/game/q_shared.h quake3-1.32b/code/game/q_shared.h
+--- quake3-1.32b.orig/code/game/q_shared.h	2005-08-24 00:22:36.000000000 +0200
++++ quake3-1.32b/code/game/q_shared.h	2005-08-24 00:27:40.000000000 +0200
 @@ -324,8 +324,49 @@ static float LittleFloat (const float *l
  
  #endif
@@ -99,9 +91,9 @@ diff -rpu quake3-1.32b.orig/code/game/q_shared.h quake3-1.32b/code/game/q_shared
  typedef unsigned char 		byte;
  
  typedef enum {qfalse, qtrue}	qboolean;
-diff -rpu quake3-1.32b.orig/code/qcommon/common.c quake3-1.32b/code/qcommon/common.c
---- quake3-1.32b.orig/code/qcommon/common.c	2005-08-16 01:10:07.000000000 +0200
-+++ quake3-1.32b/code/qcommon/common.c	2005-08-23 00:43:04.000000000 +0200
+diff -rpu --strip-trailing-cr quake3-1.32b.orig/code/qcommon/common.c quake3-1.32b/code/qcommon/common.c
+--- quake3-1.32b.orig/code/qcommon/common.c	2005-08-24 00:22:42.000000000 +0200
++++ quake3-1.32b/code/qcommon/common.c	2005-08-24 00:27:40.000000000 +0200
 @@ -30,9 +30,11 @@ Foundation, Inc., 51 Franklin St, Fifth 
  #if defined(MACOS_X)
  #include <netinet/in.h>
@@ -114,38 +106,16 @@ diff -rpu quake3-1.32b.orig/code/qcommon/common.c quake3-1.32b/code/qcommon/comm
  
  int demo_protocols[] =
  { 66, 67, 68, 0 };
-diff -rpu quake3-1.32b.orig/code/qcommon/vm.c quake3-1.32b/code/qcommon/vm.c
---- quake3-1.32b.orig/code/qcommon/vm.c	2005-08-16 01:10:07.000000000 +0200
-+++ quake3-1.32b/code/qcommon/vm.c	2005-08-23 21:33:08.000000000 +0200
-@@ -64,9 +64,9 @@ VM_Init
- ==============
- */
- void VM_Init( void ) {
--	Cvar_Get( "vm_cgame", "2", CVAR_ARCHIVE );	// !@# SHIP WITH SET TO 2
--	Cvar_Get( "vm_game", "2", CVAR_ARCHIVE );	// !@# SHIP WITH SET TO 2
--	Cvar_Get( "vm_ui", "2", CVAR_ARCHIVE );		// !@# SHIP WITH SET TO 2
-+	Cvar_Get( "vm_cgame", "1", CVAR_ARCHIVE );	// !@# SHIP WITH SET TO 2
-+	Cvar_Get( "vm_game", "1", CVAR_ARCHIVE );	// !@# SHIP WITH SET TO 2
-+	Cvar_Get( "vm_ui", "1", CVAR_ARCHIVE );		// !@# SHIP WITH SET TO 2
- 
- 	Cmd_AddCommand ("vmprofile", VM_VmProfile_f );
- 	Cmd_AddCommand ("vminfo", VM_VmInfo_f );
-@@ -440,7 +440,8 @@ vm_t *VM_Create( const char *module, int
- 	int			dataLength;
+diff -rpu --strip-trailing-cr quake3-1.32b.orig/code/qcommon/vm.c quake3-1.32b/code/qcommon/vm.c
+--- quake3-1.32b.orig/code/qcommon/vm.c	2005-08-24 00:22:43.000000000 +0200
++++ quake3-1.32b/code/qcommon/vm.c	2005-08-24 00:27:40.000000000 +0200
+@@ -441,6 +441,9 @@ vm_t *VM_Create( const char *module, int
  	int			i, remaining;
  	char		filename[MAX_QPATH];
--
-+// XXX FIXME!!!
+ 
++/* XXX FIXME!!! we should rather solve this using #defines or config variables */
 +interpret = 1;
++
  	if ( !module || !module[0] || !systemCalls ) {
  		Com_Error( ERR_FATAL, "VM_Create: bad parms" );
  	}
-@@ -540,7 +541,7 @@ vm_t *VM_Create( const char *module, int
- 
- 	// copy or compile the instructions
- 	vm->codeLength = header->codeLength;
--
-+printf("###################### >>>>>>>>>> interpret == %d\n", interpret);
- 	if ( interpret >= VMI_COMPILED ) {
- 		vm->compiled = qtrue;
- 		VM_Compile( vm, header );

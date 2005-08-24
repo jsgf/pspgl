@@ -43,9 +43,17 @@ all: $(SOURCEDIR) $(TARGET)
 $(SOURCEDIR):
 	@test -e $(Q3ZIP) || ( echo "please copy $(Q3ZIP) into this directory!" ; exit 1 )
 	unzip $(Q3ZIP)
+	@echo "--------------------------------------------------------------------------"
+	@echo " Source Package unpacked. Removing DOS CR/LF... "
+	@echo "--------------------------------------------------------------------------"
+	# leaving them as-is would cause troubles when patching...
+	find $(SOURCEDIR) -iname "*.[hc]" -exec sh ./strip_cr.sh {} \;
+	@echo "--------------------------------------------------------------------------"
+	@echo " Patching... "
+	@echo "--------------------------------------------------------------------------"
 	patch -p0 < $(wildcard *.diff)
 	@echo "--------------------------------------------------------------------------"
-	@echo " Source Package unpacked. Compiling... "
+	@echo " Compiling... "
 	@echo "--------------------------------------------------------------------------"
 	@make
 
