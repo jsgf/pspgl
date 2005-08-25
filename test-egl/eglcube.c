@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
 
 	GLCHK(glViewport(0, 0, 480, 272));
 	GLCHK(glScissor(0, 0, 480, 272));
-	GLCHK(glDepthRange(0.0f, 1.0f));
+	GLCHK(glDepthRangef(0.0f, 1.0f));
 
 	while (!done) {
     		sceCtrlReadBufferPositive(&pad, 1); 
