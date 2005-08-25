@@ -55,8 +55,14 @@ void glGetIntegerv (GLenum pname, GLint *params)
 	case GL_ALPHA_BITS:
 		*params = colorfmt[s->pixfmt].alpha_bits;
 		break;
+	case GL_LINE_WIDTH:
+	case GL_ALIASED_LINE_WIDTH_RANGE:
+	case GL_SMOOTH_LINE_WIDTH_RANGE:
+	case GL_SMOOTH_LINE_WIDTH_GRANULARITY:
+		*params = 1;
+		break;
 	default:
-		;
+		GLERROR(GL_INVALID_ENUM);
 	}
 }
 

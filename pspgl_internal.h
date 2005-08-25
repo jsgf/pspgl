@@ -55,6 +55,7 @@ struct pspgl_context {
 	struct {
 		GLclampf color [4];
 		GLclampf depth;
+		GLint stencil;
 	} clear;
 
 	/* XXX IMPROVE Do we really need to store the viewport? it's a hardware state... */
@@ -129,7 +130,6 @@ struct pspgl_surface {
 	unsigned long pixelperline;
 	void *color_buffer [2];
 	void *depth_buffer;
-	void *stencil_buffer;
 	int current_front;
 	int displayed;
 };

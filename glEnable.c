@@ -31,7 +31,7 @@ void pspgl_enable_state (GLenum cap, int enable)
 		opcode = 32;
 		break;
 	case GL_STENCIL_TEST:
-		if (enable && pspgl_curctx->draw->stencil_buffer == 0) {
+		if (enable && pspgl_curctx->draw->pixfmt == 0) {   /* no room for stencil bits */
 			GLERROR(GL_INVALID_OPERATION);
 			enable = GL_FALSE;
 		}

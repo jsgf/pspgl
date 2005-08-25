@@ -19,9 +19,6 @@ EGLBoolean eglDestroySurface (EGLDisplay dpy, EGLSurface surface)
 	if (s->depth_buffer)
 		pspgl_vidmem_free(s->depth_buffer);
 
-	if (s->stencil_buffer)
-		pspgl_vidmem_free(s->stencil_buffer);
-
 	free(s);
 
 	return EGL_TRUE;

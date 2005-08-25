@@ -33,11 +33,15 @@ libGL.a_OBJS = \
 	glBlendFunc.o \
 	glClear.o \
 	glClearColor.o \
+	glClearDepth.o \
 	glClearDepthf.o \
+	glClearStencil.o \
 	glColor.o \
+	glColorMask.o \
 	glColorPointer.o \
 	glCullFace.o \
 	glDepthFunc.o \
+	glDepthMask.o \
 	glDepthRange.o \
 	glDrawArrays.o \
 	glDrawElements.o \
@@ -56,6 +60,7 @@ libGL.a_OBJS = \
 	glInterleavedArrays.o \
 	glLight.o \
 	glLightModel.o \
+	glLineWidth.o \
 	glLoadIdentity.o \
 	glLoadMatrixf.o \
 	glLogicOp.o \
@@ -68,6 +73,7 @@ libGL.a_OBJS = \
 	glOrthof.o \
 	glPopMatrix.o \
 	glPushMatrix.o \
+	glPolygonMode.o \
 	glPolygonOffset.o \
 	glRotatef.o \
 	glScalef.o \
