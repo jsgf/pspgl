@@ -9,8 +9,6 @@ struct clear_vertex {
 };
 
 
-static inline void * align16 (void *ptr) { return (void*) ((((unsigned long) ptr) + 0x0f) & ~0x0f); }
-
 void glClear (GLbitfield mask)
 {
 	struct pspgl_dlist *dlist = pspgl_curctx->dlist_current;
@@ -18,8 +16,8 @@ void glClear (GLbitfield mask)
 	unsigned long clearmask = COLOR4(pspgl_curctx->clear.color);
 	unsigned long cmd = 1;
 
-	/* make room for 2 embedded vertices in cmd_buf, align to 16byte boundary */
-	vbuf = align16(pspgl_dlist_insert_space(dlist, 16 + 2 * sizeof(struct clear_vertex)));
+	/* make room for 2 embedded vertices in cmd_buf, aligned to 16byte boundary */
+	vbuf = pspgl_dlist_insert_space(dlist, 2 * sizeof(struct clear_vertex));
 
 	if (!vbuf) {
 		GLERROR(GL_OUT_OF_MEMORY);

@@ -4,7 +4,7 @@
 void glEnd (void)
 {
 	if (pspgl_curctx->current.vertex_count > 0) {
-		unsigned long adr = pspgl_curctx->current.vbuf_adr;
+		unsigned long adr = (unsigned long) pspgl_curctx->current.vbuf_adr;
 		long prim = glprim2geprim(pspgl_curctx->current.primitive);
 
 		if (prim < 0) {

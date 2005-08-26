@@ -10,18 +10,13 @@ struct t2f_c4ub_n3f_v3f {
 };
 
 
-static inline unsigned long align16 (void *ptr) { return ((((unsigned long) ptr) + 0x0f) & ~0x0f); }
-
-
 void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 {
 	struct t2f_c4ub_n3f_v3f *vbuf;
 
 	if (pspgl_curctx->current.vertex_count == 0) {
 		struct pspgl_dlist *dlist = pspgl_curctx->dlist_current;
-		void *adr;
-		adr = pspgl_dlist_insert_space(dlist, 16 + 12 * sizeof(struct t2f_c4ub_n3f_v3f));
-		pspgl_curctx->current.vbuf_adr = align16(adr);
+		pspgl_curctx->current.vbuf_adr = pspgl_dlist_insert_space(dlist, 12 * sizeof(struct t2f_c4ub_n3f_v3f));
 	}
 
 	vbuf = (struct t2f_c4ub_n3f_v3f *) pspgl_curctx->current.vbuf_adr;
@@ -53,7 +48,7 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 		/* copy overhang */
 		pspgl_curctx->current.vertex_count = overhang[prim];
 
-		memcpy((void *) pspgl_curctx->current.vbuf_adr,
+		memcpy(pspgl_curctx->current.vbuf_adr,
 		       vbuf - overhang[prim],
 		       overhang[prim] * sizeof(struct t2f_c4ub_n3f_v3f));
 

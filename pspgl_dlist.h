@@ -50,9 +50,10 @@ extern void pspgl_dlist_reset (struct pspgl_dlist *d);
 
 /**
  *  check if dlist has room for (size) bytes embedded in cmd buf and advance cmd_buf pointer,
- *  useful e.g. for vertex data embedded in command stream
+ *  useful e.g. for vertex data embedded in command stream.
+ *  Returned memory pointer is aligned to 16-byte boundaries.
  */
-extern unsigned long * pspgl_dlist_insert_space (struct pspgl_dlist *d, unsigned long size);
+extern void * pspgl_dlist_insert_space (struct pspgl_dlist *d, unsigned long size);
 
 
 /**

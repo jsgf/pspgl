@@ -197,26 +197,28 @@ void pspgl_dlist_free (struct pspgl_dlist *d)
 }
 
 
+static inline unsigned long align16 (unsigned long val) { return ((((unsigned long) val) + 0x0f) & ~0x0f); }
 
-unsigned long * pspgl_dlist_insert_space (struct pspgl_dlist *d, unsigned long size)
+void * pspgl_dlist_insert_space (struct pspgl_dlist *d, unsigned long size)
 {
 	unsigned long len;
 	unsigned long adr;
 
-	size += 0x03 + 2 * sizeof(d->cmd_buf[0]);
-	size &= ~0x03;
+	size = align16(size + 2 * sizeof(d->cmd_buf[0]));
+	size /= sizeof(d->cmd_buf[0]);
 
-	if (d->len >= DLIST_SIZE - 4 - size/4) {
+	if (d->len >= DLIST_SIZE - 4 - size) {
 		d = d->done(d);
-		if (!d || (d->len >= DLIST_SIZE - 4 - size/4))
+		if (!d || (d->len >= DLIST_SIZE - 4 - size))
 			return NULL;
 	}
 
 	len = d->len;
-	d->len += size / sizeof(d->cmd_buf[0]);
+	d->len += size;
 	adr = (unsigned long) &d->cmd_buf[d->len];
 	d->cmd_buf[len] = (16 << 24) | ((adr >> 8) & 0xf0000);	/* BASE */
-	d->cmd_buf[len+1] = (8 << 24) | (adr & 0xffffff);		/* JUMP */
+	d->cmd_buf[len+1] = (8 << 24) | (adr & 0xffffff);	/* JUMP */
 
-	return (unsigned long*) (&d->cmd_buf[len+2]);
+	return ((void *) align16((unsigned long) &d->cmd_buf[len+2]));
 }
+

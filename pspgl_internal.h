@@ -18,7 +18,7 @@ struct pspgl_context {
 	struct {
 		GLenum primitive;
 		unsigned long vertex_count;
-		unsigned long vbuf_adr;
+		void *vbuf_adr;
 		GLfloat texcoord [4];
 		unsigned long color;
 		GLfloat normal [3];
