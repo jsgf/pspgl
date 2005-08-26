@@ -41,6 +41,8 @@ void pspgl_dlist_finalize(struct pspgl_dlist *d)
 	if (pspgl_dlist_finish(d))
 		return;
 
+	pspgl_dlist_dump(d->cmd_buf, d->len);
+
 	d->qid = sceGeListEnQueue(d->cmd_buf, &d->cmd_buf[d->len], 0, NULL);
 }
 
@@ -157,8 +159,8 @@ void pspgl_dlist_await_completion (void)
 
 	sceGeDrawSync(PSP_GE_LIST_DONE);
 
-pspgl_ge_register_dump();
-pspgl_ge_matrix_dump();
+	pspgl_ge_register_dump();
+	pspgl_ge_matrix_dump();
 }
 
 

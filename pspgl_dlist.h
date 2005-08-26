@@ -14,8 +14,10 @@ struct pspgl_dlist {
 	unsigned long len;
 	int compile_and_run;
 	int qid;
-
+	/* need to insert padding to avoid cached/uncached conflicts */
+	unsigned char pad_before [32];
 	unsigned long __attribute__((aligned(16))) _cmdbuf[DLIST_SIZE + 8];
+	unsigned char pad_after [32];
 };
 
 
