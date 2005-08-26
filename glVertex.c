@@ -12,7 +12,7 @@ struct t2f_c4ub_n3f_v3f {
 
 void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 {
-	struct t2f_c4ub_n3f_v3f *vbuf, *next_vbuf;
+	struct t2f_c4ub_n3f_v3f *vbuf;
 
 	if (pspgl_curctx->current.vertex_count == 0) {
 		struct pspgl_dlist *dlist = pspgl_curctx->dlist_current;
@@ -54,13 +54,7 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 
 		/* reset primitive type, was cleared by glEnd() */
 		pspgl_curctx->current.primitive = prim;
-		next_vbuf = ((struct t2f_c4ub_n3f_v3f *) pspgl_curctx->current.vbuf_adr) + overhang[prim];
-	} else {
-		next_vbuf = vbuf + 1;
 	}
-
-	/* preinitialize next vertex using current attributes as default */
-	memcpy(next_vbuf, vbuf, sizeof(*vbuf));
 }
 
 
