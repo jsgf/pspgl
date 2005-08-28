@@ -876,8 +876,8 @@ GLAPI void GL_APIENTRY glTexCoord2f (GLfloat s, GLfloat t);
 
 
 /* Projection */
-GLAPI void GL_APIENTRY glOrtho (GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
-GLAPI void GL_APIENTRY glFrustum (GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
+GLAPI void GL_APIENTRY glOrthof (GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
+GLAPI void GL_APIENTRY glFrustumf (GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
 
 
 /* Vertex Array Setup */
@@ -920,11 +920,11 @@ GLAPI void GL_APIENTRY glBlendEquation (GLenum mode);
 
 
 /******* GLU -- should we move this to glu.h ? *********/
-GLAPI void GL_APIENTRY gluPerspective (GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar);
+GLAPI void GL_APIENTRY gluPerspectivef (GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar);
 
-GLAPI void GL_APIENTRY gluLookAt (GLfloat eyeX, GLfloat eyeY, GLfloat eyeZ,
-				  GLfloat centerX, GLfloat centerY, GLfloat centerZ,
-				  GLfloat upX, GLfloat upY, GLfloat upZ);
+GLAPI void GL_APIENTRY gluLookAtf (GLfloat eyeX, GLfloat eyeY, GLfloat eyeZ,
+				   GLfloat centerX, GLfloat centerY, GLfloat centerZ,
+				   GLfloat upX, GLfloat upY, GLfloat upZ);
 
 #endif
 
