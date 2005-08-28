@@ -53,13 +53,6 @@ void sendCommandi(unsigned long cmd, unsigned long argi)
 
 
 static
-void * ptr_align16_uncached (unsigned long ptr)
-{
-	return (void *) (((ptr + 0x0f) & ~0x0f) | 0x40000000);
-}
-
-
-static
 struct pspgl_dlist* pspgl_dlist_finalize_and_clone (struct pspgl_dlist *thiz)
 {
 	struct pspgl_dlist *next = pspgl_dlist_create(thiz->compile_and_run, NULL);
@@ -98,8 +91,11 @@ struct pspgl_dlist* pspgl_dlist_create (int compile_and_run,
 	d->next = NULL;
 	d->done = done ? done : pspgl_dlist_finalize_and_clone;
 	d->compile_and_run = compile_and_run;
-	d->cmd_buf = ptr_align16_uncached((unsigned long) d->_cmdbuf);
 	d->qid = -1;
+
+	/* use uncached accesses for cmd_buf (place the pointer in high memory) */
+	d->cmd_buf = (unsigned long *) (((unsigned long) d->_cmdbuf) | 0x40000000);
+
 	pspgl_dlist_reset(d);
 
 	return d;

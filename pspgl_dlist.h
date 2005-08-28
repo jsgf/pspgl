@@ -4,20 +4,18 @@
 #include "pspgl_misc.h"
 
 
-#define DLIST_SIZE 1024		/* command words (32bit) */
+#define DLIST_SIZE 1024		/* command words (32bit). needs to be a multiple of 32. */
 
 
 struct pspgl_dlist {
 	struct pspgl_dlist *next;
 	struct pspgl_dlist * (*done) (struct pspgl_dlist *thiz);
-	unsigned long *cmd_buf;
 	unsigned long len;
 	int compile_and_run;
 	int qid;
-	/* need to insert padding to avoid cached/uncached conflicts */
-	unsigned char pad_before [32];
-	unsigned long __attribute__((aligned(16))) _cmdbuf[DLIST_SIZE + 8];
-	unsigned char pad_after [32];
+	unsigned long *cmd_buf;
+	/* need to align to cache lines (32bytes) to avoid cached/uncached conflicts */
+	unsigned long __attribute__((aligned(32))) _cmdbuf[DLIST_SIZE + 8];
 };
 
 
