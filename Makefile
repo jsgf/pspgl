@@ -99,7 +99,9 @@ libGL.a_OBJS = \
 
 libGLU.a_OBJS = \
 	gluLookAt.o \
-	gluPerspective.o
+	gluLookAtf.o \
+	gluPerspective.o \
+	gluPerspectivef.o
 
 libglut.a_OBJS = \
 	glut.o
