@@ -9,20 +9,26 @@ GLint eglerror = EGL_SUCCESS;
 struct pspgl_context *pspgl_curctx = NULL;
 
 
-struct vidmem_chunk {
+typedef struct {
 	void *ptr;
 	unsigned long len;
-};
+} vidmem_chunk;
 
 
-static struct vidmem_chunk *vidmem_map = NULL;
+static vidmem_chunk *vidmem_map = NULL;
 static unsigned long vidmem_map_len = 0;
 
 
 static
 void *vidmem_map_insert_new (unsigned long idx, unsigned long adr, unsigned long size)
 {
-	void *tmp = realloc(vidmem_map, (vidmem_map_len + 1) * sizeof(vidmem_map[0]));
+	psp_log("vidmem_map_insert_new: idx: %i, adr: %i, size: %i\n", idx, adr, size);
+	void *tmp;
+	if (vidmem_map) {
+		tmp = realloc(vidmem_map, (vidmem_map_len + 1) * sizeof(vidmem_chunk));
+	} else {
+		tmp = malloc(sizeof(vidmem_chunk));
+	}
 
 	if (!tmp)
 		return NULL;
@@ -30,7 +36,8 @@ void *vidmem_map_insert_new (unsigned long idx, unsigned long adr, unsigned long
 	psp_log("alloc vidmem %lu: adr 0x%08x - size 0x%08x\n", idx, (unsigned int) adr, (unsigned int) size);
 
 	vidmem_map = tmp;
-	memmove(&vidmem_map[idx+1], &vidmem_map[idx], vidmem_map_len * sizeof(vidmem_map[0]));
+	if (idx < vidmem_map_len)
+		memmove(&vidmem_map[idx+1], &vidmem_map[idx], vidmem_map_len * sizeof(vidmem_chunk));
 	vidmem_map_len++;
 	vidmem_map[idx].ptr = (void*) adr;
 	vidmem_map[idx].len = size;
