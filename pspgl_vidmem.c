@@ -30,7 +30,7 @@ void *vidmem_map_insert_new (unsigned long idx, unsigned long adr, unsigned long
 	psp_log("alloc vidmem %lu: adr 0x%08x - size 0x%08x\n", idx, (unsigned int) adr, (unsigned int) size);
 
 	vidmem_map = tmp;
-	memmove(&vidmem_map[idx+1], &vidmem_map[idx], vidmem_map_len * sizeof(vidmem_map[0]));
+	memmove(&vidmem_map[idx+1], &vidmem_map[idx], (vidmem_map_len-idx) * sizeof(vidmem_map[0]));
 	vidmem_map_len++;
 	vidmem_map[idx].ptr = (void*) adr;
 	vidmem_map[idx].len = size;
