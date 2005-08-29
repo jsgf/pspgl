@@ -416,15 +416,17 @@ void VM_Compile (vm_t *vm, vmHeader_t *header)
 static
 void display (void)
 {
-	static char *cmdline = "";
 	static int initialized = 0;
 
 	if (!initialized) {
+		char *cmdline = strdup("+demo four " "+set cg_drawFPS 1");
 		Com_Init(cmdline);
+		free(cmdline);
 		initialized = 1;
 	}
 
 	Com_Frame();
+	glutPostRedisplay();
 }
 
 
@@ -496,7 +498,8 @@ int main (int argc, char **argv)
 	printf("%s (%d):\n", __FUNCTION__, __LINE__);
 	glutInit(&argc, argv);
 	glutInitWindowSize(480, 272);
-	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH | GLUT_STENCIL);
+//	glutInitWindowSize(640, 480);
+	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH | GLUT_STENCIL);
 	glutCreateWindow("Quake3");
 	glutSpecialFunc(special_keydown);
 	glutSpecialUpFunc(special_keyup);
