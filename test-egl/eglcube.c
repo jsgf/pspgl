@@ -186,12 +186,11 @@ int main(int argc, char* argv[])
 
 		GLCHK(glMatrixMode(GL_PROJECTION));
 		GLCHK(glLoadIdentity());
-		GLCHK(gluPerspective(75.0f, 16.0f/9.0f, 0.5f, 1000.0f));
+		GLCHK(gluPerspectivef(75.0f, 16.0f/9.0f, 0.5f, 1000.0f));
 
 		GLCHK(glMatrixMode(GL_MODELVIEW));
 		GLCHK(glLoadIdentity());
-		GLCHK(gluLookAt (0.0f, 0.0f, 2.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f));
-		//GLCHK(glTranslatef(0.0f, 0.0f, -2.5f));
+		GLCHK(gluLookAtf(0.0f, 0.0f, 2.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f));
 		GLCHK(glRotatef(angle * 0.79f, 1.0f, 0.0f, 0.0f));
 		GLCHK(glRotatef(angle * 0.98f, 0.0f, 1.0f, 0.0f));
 		GLCHK(glRotatef(angle * 1.32f, 0.0f, 0.0f, 1.0f));
