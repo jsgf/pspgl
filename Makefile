@@ -54,6 +54,7 @@ libGL.a_OBJS = \
 	glFrontFace.o \
 	glFrustumf.o \
 	glFrustum.o \
+	glGetFloatv.o \
 	glGetIntegerv.o \
 	glGetError.o \
 	glGetString.o \

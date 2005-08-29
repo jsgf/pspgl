@@ -24,11 +24,8 @@ void glGetIntegerv (GLenum pname, GLint *params)
 	struct pspgl_surface *s = pspgl_curctx->draw;
 
 	switch (pname) {
-	case GL_MAX_TEXTURE_UNITS_ARB:
-		*params = 1;
-		break;
 	case GL_MAX_TEXTURE_SIZE:
-		*params = 256;		/* XXX CHECKME!! */
+		params[0] = 256;		/* XXX CHECKME!! */
 		break;
 	case GL_VIEWPORT:
 		/* XXX IMPRPOVE: better read from registers / register cache */
@@ -37,29 +34,45 @@ void glGetIntegerv (GLenum pname, GLint *params)
 		params[2] = pspgl_curctx->viewport.width;
 		params[3] = pspgl_curctx->viewport.height;
 		break;
+	case GL_MAX_VIEWPORT_DIMS:
+		params[0] = s->width;
+		params[1] = s->height;
+		break;
 	case GL_DEPTH_BITS:
-		*params = (s->depth_buffer == NULL) ? 0 : 16;
+		params[0] = (s->depth_buffer == NULL) ? 0 : 16;
 		break;
 	case GL_STENCIL_BITS:
-		*params = colorfmt[s->pixfmt].alpha_bits;
+		params[0] = colorfmt[s->pixfmt].alpha_bits;
 		break;
 	case GL_RED_BITS:
-		*params = colorfmt[s->pixfmt].red_bits;
+		params[0] = colorfmt[s->pixfmt].red_bits;
 		break;
 	case GL_GREEN_BITS:
-		*params = colorfmt[s->pixfmt].green_bits;
+		params[0] = colorfmt[s->pixfmt].green_bits;
 		break;
 	case GL_BLUE_BITS:
-		*params = colorfmt[s->pixfmt].blue_bits;
+		params[0] = colorfmt[s->pixfmt].blue_bits;
 		break;
 	case GL_ALPHA_BITS:
-		*params = colorfmt[s->pixfmt].alpha_bits;
+		params[0] = colorfmt[s->pixfmt].alpha_bits;
 		break;
-	case GL_LINE_WIDTH:
-	case GL_ALIASED_LINE_WIDTH_RANGE:
-	case GL_SMOOTH_LINE_WIDTH_RANGE:
-	case GL_SMOOTH_LINE_WIDTH_GRANULARITY:
-		*params = 1;
+	case GL_MAX_TEXTURE_UNITS_ARB:
+		params[0] = 1;
+		break;
+	case GL_MAX_LIGHTS:
+		params[0] = 4;
+		break;
+	case GL_MAX_CLIP_PLANES:
+		params[0] = 0;
+		break;
+	case GL_STENCIL_WRITEMASK:
+		params[0] = pspgl_curctx->write_mask.stencil;
+		break;
+	case GL_DEPTH_CLEAR_VALUE:
+		params[0] = pspgl_curctx->clear.depth;
+		break;
+	case GL_STENCIL_CLEAR_VALUE:
+		params[0] = pspgl_curctx->clear.stencil;
 		break;
 	default:
 		GLERROR(GL_INVALID_ENUM);
