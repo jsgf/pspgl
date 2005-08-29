@@ -19,8 +19,16 @@ EGLBoolean eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 
 	c->refcount--;
 
-	if (c->refcount == 0)
+	if (c->refcount == 0) {
+		int i;
+
+		for (i=0; i<3; i++) {
+			if (c->matrix_stack[i])
+				free(c->matrix_stack[i]);
+		}
+
 		free(c);
+	}
 
 	return EGL_TRUE;
 }

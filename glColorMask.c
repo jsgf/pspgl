@@ -11,6 +11,8 @@ void glColorMask (GLboolean red, GLboolean green, GLboolean blue, GLboolean alph
 	if (blue)
 		mask |= 0x00ff0000;
 
+	pspgl_curctx->write_mask.alpha = alpha ? 0xff : 0;
+
         sendCommandi(232, mask);
-        sendCommandi(233, alpha ? 0xff : 0);
+        sendCommandi(233, pspgl_curctx->write_mask.alpha);
 }

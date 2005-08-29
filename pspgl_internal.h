@@ -68,8 +68,8 @@ struct pspgl_context {
 		GLint x, y, width, height;
 	} scissor_test;
 	GLenum matrix_mode;
-	GLint matrix_depth[3];
-	GLfloat matrix [3][16];
+	GLint matrix_stack_depth[3];
+	GLfloat (* (matrix_stack [3])) [16];
 	struct {
 		GLenum equation;
 		GLenum sfactor, dfactor;
@@ -107,7 +107,10 @@ struct pspgl_context {
 		GLenum mag_filter;
 		GLenum min_filter;
 	} texture;
-
+	struct {
+		unsigned char alpha;
+		unsigned char stencil;
+	} write_mask;
 	struct pspgl_surface *read;
 	struct pspgl_surface *draw;
 	
@@ -121,7 +124,6 @@ struct pspgl_context {
 	int refcount;
 };
 
-#define NUM_CMDLISTS	4
 
 struct pspgl_surface {
 	int pixfmt;

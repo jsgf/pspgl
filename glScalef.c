@@ -3,8 +3,9 @@
 
 void glScalef (GLfloat x, GLfloat y, GLfloat z)
 {
-	int matrix_id = pspgl_curctx->matrix_mode & 0x03;
-	GLfloat *m = pspgl_curctx->matrix[matrix_id];
+	int matrix_id = pspgl_curctx->matrix_mode;
+	int depth = pspgl_curctx->matrix_stack_depth[matrix_id];
+	GLfloat *m = pspgl_curctx->matrix_stack[matrix_id][depth-1];
 
 	m[0] *= x;
 	m[1] *= x;

@@ -4,7 +4,7 @@
 #include "pspgl_misc.h"
 
 
-#define DLIST_SIZE 1024		/* command words (32bit). needs to be a multiple of 32. */
+#define DLIST_SIZE 1024		/* command words (32bit) */
 
 
 struct pspgl_dlist {
@@ -15,7 +15,7 @@ struct pspgl_dlist {
 	int qid;
 	unsigned long *cmd_buf;
 	/* need to align to cache lines (32bytes) to avoid cached/uncached conflicts */
-	unsigned long __attribute__((aligned(32))) _cmdbuf[DLIST_SIZE + 8];
+	unsigned long _cmdbuf[DLIST_SIZE + 2 * 32 / sizeof(unsigned long)];
 };
 
 

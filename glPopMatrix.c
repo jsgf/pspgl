@@ -1,22 +1,21 @@
 #include "pspgl_internal.h"
-#include <pspge.h>
+#include <stdlib.h>
+
 
 void glPopMatrix (void)
 {
 	struct pspgl_context *c = pspgl_curctx;
-	int matrix_id = c->matrix_mode & 0x03;
+	int matrix_id = c->matrix_mode;
+	int depth = c->matrix_stack_depth[matrix_id];
 
-	if (c->matrix_depth[matrix_id] == 0) {
+	if (depth <= 1) {
 		GLERROR(GL_STACK_UNDERFLOW);
 		return;
 	}
 
-	c->matrix_depth[matrix_id]--;
+	c->matrix_stack[matrix_id] = realloc(c->matrix_stack[matrix_id], (depth - 1) * sizeof(c->matrix_stack[0][0]));
+	c->matrix_stack_depth[matrix_id]--;
 
-	/* need to wait until pending matrix transforms are finished... */
-	sendCommandi(60 + 2 * matrix_id, pspgl_curctx->matrix_depth[matrix_id]);
-	glFlush();
-
-	sceGeGetMtx(c->matrix_depth[matrix_id], c->matrix[matrix_id]);
+	glLoadMatrixf(c->matrix_stack[matrix_id][depth-2]);
 }
 

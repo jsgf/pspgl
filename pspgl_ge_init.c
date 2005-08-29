@@ -10,8 +10,8 @@ unsigned long ge_init_state [] =
 	0x18000000, 0x19000000, 0x1a000000, 0x1b000000, 0x1c000000, 0x1d000000, 0x1e000000, 0x1f000000,
 	0x20000000, 0x21000000, 0x22000000, 0x23000000, 0x24000000, 0x25000000, 0x26000000, 0x27000000,
 	0x28000000, 0x2a000000, 0x2b000000, 0x2c000000, 0x2d000000, 0x2e000000, 0x2f000000, 0x30000000,
-	0x31000000, 0x32000000, 0x33000000, 0x36000000, 0x37000000, 0x38000000, 0x3a000000, 0x3b000000,
-	0x3c000000, 0x3d000000, 0x3e000000, 0x3f000000, 0x40000000, 0x41000000, 0x42000000, 0x43000000,
+	0x31000000, 0x32000000, 0x33000000, 0x36000000, 0x37000000, 0x38000000, /*0x3a000000, 0x3b000000,
+	0x3c000000, 0x3d000000, 0x3e000000, 0x3f000000, 0x40000000, 0x41000000,*/ 0x42000000, 0x43000000,
 	0x44000000, 0x45000000, 0x46000000, 0x47000000, 0x48000000, 0x49000000, 0x4a000000, 0x4b000000,
 	0x4c000000, 0x4d000000, 0x50000000, 0x51000000, 0x53000000, 0x54000000, 0x55000000, 0x56000000,
 	0x57000000, 0x58000000, 0x5b000000, 0x5c000000, 0x5d000000, 0x5e000000, 0x5f000000, 0x60000000,
@@ -51,29 +51,21 @@ unsigned long ge_init_state [] =
 	0xe4000c1d,	/* Dither Matrix, Row 2 */
 	0xe500e2f3,	/* Dither Matrix, Row 3 */
 	0xde000004,	/* Depth Test Function GL_LESS */
+
+	0x3a000000,	/* World Matrix Select = 0 */
+	0x3b3f8000,	/* World Matrix Upload 1.00000 */
+	0x3b000000,	/* World Matrix Upload 0.00000 */
+	0x3b000000,	/* World Matrix Upload 0.00000 */
+	0x3b000000,	/* World Matrix Upload 0.00000 */
+	0x3b3f8000,	/* World Matrix Upload 1.00000 */
+	0x3b000000,	/* World Matrix Upload 0.00000 */
+	0x3b000000,	/* World Matrix Upload 0.00000 */
+	0x3b000000,	/* World Matrix Upload 0.00000 */
+	0x3b3f8000,	/* World Matrix Upload 1.00000 */
+	0x3b000000,	/* World Matrix Upload 0.00000 */
+	0x3b000000,	/* World Matrix Upload 0.00000 */
+	0x3b000000,	/* World Matrix Upload 0.00000 */
 };
-
-
-static
-void reset_matrices (struct pspgl_context *c)
-{
-	int i, j, opcode;
-
-	for (opcode=58; opcode<=64; opcode+=2) {
-		sendCommandi(opcode, 0);
-		for (j=0; j<4; j++) {
-			for (i=0; i<((opcode == 62) ? 4 : 3); i++) {
-				sendCommandf(opcode+1, (i == j) ? 1.0 : 0.0);
-			}
-		}
-	}
-
-	for (j=0; j<3; j++) {
-		for (i=0; i<4; i++) {
-			c->matrix[j][4*i+i] = 1.0;
-		}
-	}
-}
 
 
 void pspgl_ge_init (struct pspgl_context *c)
@@ -83,9 +75,13 @@ void pspgl_ge_init (struct pspgl_context *c)
 	for (i=0; i<sizeof(ge_init_state)/sizeof(ge_init_state[0]); i++)
 		pspgl_dlist_enqueue_cmd(c->dlist_current, ge_init_state[i]);
 
-	reset_matrices(c);
+	/* create & initialize new matrix stacks, matrix mode is GL_MODELVIEW when done... */
+	for (i=GL_TEXTURE; --i>=GL_MODELVIEW; ) {
+		glMatrixMode(i);
+		glPushMatrix();
+		glLoadIdentity();
+	}
 
-	c->matrix_mode = GL_MODELVIEW;
 	c->blend.equation = GL_ADD;
 	c->depth_offset = 0.0;
 	c->swap_interval = 1;
