@@ -37,7 +37,7 @@ int has_depthbuffer = 1;
 	s->current_front = 0;
 	s->displayed = 1;
 
-	psp_log("s->pixelformat = 0x%04x\n", s->pixelformat);
+	psp_log("GL pixelformat = 0x%04x\n", pixelformat);
 
 	switch (pixelformat) {
 	case GL_UNSIGNED_SHORT_4_4_4_4:
@@ -57,14 +57,12 @@ int has_depthbuffer = 1;
 		return EGL_FALSE;
 	}
 
-
-
 	bufferlen = s->height * s->pixelperline * bytesperpixel;
 
 	psp_log("width = %lu\n", s->width);
 	psp_log("height = %lu\n", s->height);
 	psp_log("pixelperline = %lu\n", s->pixelperline);
-	psp_log("pixelformat = 0x%04x\n", s->pixelformat);
+	psp_log("pixelformat = 0x%04x\n", s->pixfmt);
 
 	if (has_frontbuffer) {
 		if (!(s->color_buffer[0] = pspgl_vidmem_alloc(bufferlen)))
