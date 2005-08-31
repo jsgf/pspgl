@@ -194,7 +194,7 @@ void pspgl_varray_draw (GLenum mode, GLenum index_type, const GLvoid *indices, G
 	sendCommandi(18, vertex_fmt);
 	sendCommandi(16, (adr >> 8) & 0xf0000);
 	sendCommandi(1, adr & 0xffffff);
-	sendCommandi(4, (prim << 16) | count);
+	sendCommandiUncached(4, (prim << 16) | count);
 
 	/* XXX TODO: we handle line loops as line strips. Here we need to render the final, closing line, too. */
 }

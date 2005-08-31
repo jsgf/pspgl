@@ -18,37 +18,69 @@ void pspgl_dlist_enqueue_cmd (struct pspgl_dlist *d, unsigned long cmd)
 	d->len++;
 }
 
-static int pspgl_dlist_finish(struct pspgl_dlist *d)
-{
-	assert(d->len+2 < DLIST_SIZE);
 
-	if (d->len >= DLIST_SIZE - 2) {
-		/* XXX should be an assertion */
-		GLERROR(GL_OUT_OF_MEMORY);
-		return 1;
+/**
+ *  cached register write, save value and mark as touched...
+ */
+void sendCommandi (unsigned long cmd, unsigned long argi) 
+{
+	pspgl_curctx->ge_reg[cmd] = ((cmd) << 24) | ((argi) & 0xffffff);
+	pspgl_curctx->ge_reg_touched[cmd/32] |= (1 << (cmd % 32));
+}
+
+
+/**
+ *  flush all pending, cached values, then clear register-touch mark words.
+ */
+static
+void flush_pending_state_changes (struct pspgl_context *c, struct pspgl_dlist *d)
+{
+	unsigned long i;
+
+	/**
+	 * XXX IMPROVE: we simply iterate over the bitfield, this can be done
+	 *              much more efficient using a binary search. See ffz().
+	 */
+	for (i=0; i<256; i++) {
+		uint32_t touched = c->ge_reg_touched[i/32] >> (i % 32);
+		if (touched & 1)
+			pspgl_dlist_enqueue_cmd(d, c->ge_reg[i]);
 	}
+
+	for (i=0; i<256/32; i++)
+		c->ge_reg_touched[i] = 0x00000000;
+}
+
+
+/**
+ *  trigger some real action. Implies a flush of pending state changes.
+ */
+void sendCommandiUncached (unsigned long cmd, unsigned long argi) 
+{
+	unsigned long val = ((cmd) << 24) | ((argi) & 0xffffff);
+	flush_pending_state_changes(pspgl_curctx, pspgl_curctx->dlist_current);
+	pspgl_dlist_enqueue_cmd(pspgl_curctx->dlist_current, val);
+}
+
+
+static
+void pspgl_dlist_finish (struct pspgl_dlist *d)
+{
+	flush_pending_state_changes(pspgl_curctx, d);
+
+	assert(d->len < DLIST_SIZE - 2);
 
 	d->cmd_buf[d->len++] = 0x0f000000;	/* FINISH */
 	d->cmd_buf[d->len++] = 0x0c000000;	/* END */
-
-	return 0;
 }
+
 
 void pspgl_dlist_finalize(struct pspgl_dlist *d)
 {
-	assert(d->qid == -1);
-
-	if (pspgl_dlist_finish(d))
-		return;
-
+	pspgl_dlist_finish(d);
 	pspgl_dlist_dump(d->cmd_buf, d->len);
-
+	assert(d->qid == -1);
 	d->qid = sceGeListEnQueue(d->cmd_buf, &d->cmd_buf[d->len], 0, NULL);
-}
-
-void sendCommandi(unsigned long cmd, unsigned long argi) 
-{
-	pspgl_dlist_enqueue_cmd(pspgl_curctx->dlist_current, ((cmd) << 24) | ((argi) & 0xffffff));
 }
 
 
@@ -130,6 +162,7 @@ struct pspgl_dlist* pspgl_dlist_swap (struct pspgl_dlist *thiz)
 
 	return next;
 }
+
 
 void pspgl_dlist_submit(struct pspgl_dlist *d)
 {

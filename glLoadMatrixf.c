@@ -1,6 +1,16 @@
 #include "pspgl_internal.h"
 
 
+/* write a uncached matrix register */
+static inline
+void sendCommandfMtx (int cmd, GLfloat argf)
+{
+	union { float f; unsigned int i; } arg = { .f = argf };
+	unsigned long val = (cmd << 24) | (arg.i >> 8);
+	pspgl_dlist_enqueue_cmd(pspgl_curctx->dlist_current, val);
+}
+
+
 void glLoadMatrixf (const GLfloat *m)
 {
 	int matrix_id = pspgl_curctx->matrix_mode;
@@ -13,12 +23,12 @@ void glLoadMatrixf (const GLfloat *m)
 	for (i=0; i<16; i++)
 		matrix[i] = m[i];
 
-	sendCommandi(opcode, 0);
+	sendCommandiUncached(opcode, 0);
 	opcode++;
 
 	for (j=0; j<4; j++) {
 		for (i=0; i<n; i++) {
-			sendCommandf(opcode, m[4*j+i]);
+			sendCommandfMtx(opcode, m[4*j+i]);
 		}
 	}
 }

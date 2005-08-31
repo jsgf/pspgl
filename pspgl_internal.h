@@ -14,6 +14,8 @@ typedef unsigned long uint32_t;
 
 struct pspgl_context {
 	uint32_t ge_ctx [512];
+	uint32_t ge_reg [256];
+	uint32_t ge_reg_touched [256/32];
 
 	struct {
 		GLenum primitive;
@@ -198,15 +200,9 @@ unsigned long COLOR4 (const GLfloat c[4])
 		 ((int) (255.0 * CLAMPF(c[0]))));
 }
 
-/*
-#define sendCommandi(cmd,argi)						\
-do {									\
-	pspgl_dlist_enqueue_cmd(pspgl_curctx->dlist_current,		\
-				((cmd) << 24) | ((argi) & 0xffffff));	\
-} while (0)
-*/
 
 void sendCommandi(unsigned long cmd, unsigned long argi); 
+void sendCommandiUncached(unsigned long cmd, unsigned long argi); 
 
 #define sendCommandf(cmd,argf)						\
 do {									\

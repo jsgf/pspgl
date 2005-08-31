@@ -86,7 +86,6 @@ EGLBoolean pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s)
 {
 	unsigned long current_back = (s->color_buffer[1] == NULL) ? 0 : (s->current_front ^ 1);
 	unsigned long adr;
-	unsigned long i;
 
 	psp_log("current_front %d\n", s->current_front);
 

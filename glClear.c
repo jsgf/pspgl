@@ -60,7 +60,7 @@ void glClear (GLbitfield mask)
 	sendCommandi(18, 0x80019c);              /* xform: 2D, vertex format: RGB8888 (uint32), xyz (float32) */
 	sendCommandi(16, (((unsigned long) vbuf) >> 8) & 0xf0000); /* vertex array BASE */
 	sendCommandi(1, ((unsigned long) vbuf) & 0xffffff);        /* vertex array, Adress */
-	sendCommandi(4, (6 << 16) | 2);          /* sprite (type 6), 2 vertices */
+	sendCommandiUncached(4, (6 << 16) | 2);			   /* sprite (type 6), 2 vertices */
 
 	/* leave clear mode */
 	sendCommandi(211, 0);
