@@ -90,7 +90,8 @@ if test ! -d "$PSP_MOUNTDIR/PSP" ; then
 fi
 
 mksfo "$PSP_EBOOT_TITLE" $IMAGE.sfo
-psp-strip $IMAGE -o "$IMAGE".strip
+psp-fixup-imports $IMAGE -o "$IMAGE".fixup
+psp-strip "$IMAGE".fixup -o "$IMAGE".strip
 
 
 if [ "$PSP_REVISION" = "1.00" -o "$PSP_REVISION" == "all" ] ; then
