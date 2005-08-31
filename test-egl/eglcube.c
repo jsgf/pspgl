@@ -71,13 +71,10 @@ struct Vertex __attribute__((aligned(16))) vertices[12*3] =
 
 int done = 0;
 
-#include "pspgl_internal.h"	/* dirty hack, required for psp_log() */
-#undef psp_log
-
 /* disable verbose logging to "ms0:/pspgl.ge" */
 #if 0
 	#include "pspgl_internal.h"	/* dirty hack, required for psp_log() */
-	#define psp_log(x...) psp_log(x)
+	#define psp_log(x...) __psp_log(x)
 #else
 	#define psp_log(x...) do {} while (0)
 	extern void __psp_log (const char *fmt, ...);
