@@ -2,28 +2,29 @@
 #include "pspgl_internal.h"
 
 
-static const char *vendor_string = "pspEGL";
-static const char *version_string = "1.1 (pspEGL build " __DATE__ ", " __TIME__ ")";
-static const char *extension_string = "";
+static const
+char *egl_strings [] = {
+        /* EGL_VENDOR */
+        "pspEGL",
+        /* EGL_VERSION */
+        "(pspEGL build " __DATE__ ", " __TIME__ ")",
+        /* EGL_EXTENSIONS */
+        ""
+};
+
 
 const char* eglQueryString (EGLDisplay dpy, EGLint name)
 {
-	const char *s;
+        unsigned long idx = name - EGL_VENDOR;
+        const char *s;
 
-	switch (name) {
-	case EGL_VENDOR:
-		s = vendor_string;
-		break;
-	case EGL_VERSION:
-		s = version_string;
-		break;
-	case EGL_EXTENSIONS:
-		s = extension_string;
-		break;
-	default:
+        if (idx >= sizeof(egl_strings)/sizeof(egl_strings[0])) {
 		EGLERROR(EGL_BAD_PARAMETER);
-		s = NULL;
-	}
+                s = NULL;
+        } else {
+                s = egl_strings[idx];
+        }
 
-	return s;
+        return s;
 }
+

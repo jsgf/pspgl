@@ -2,33 +2,32 @@
 #include "pspgl_internal.h"
 
 
-static const char *vendor_string = "pspGL";
-static const char *version_string = "OpenGL ES-CM 1.1";
-static const char *renderer_string = "(pspGL build " __DATE__ ", " __TIME__ ")";
-static const char *extension_string = "EXT_texture_env_add ARB_texture_env_add "
-				      "EXT_blend_minmax EXT_blend_subtract ";
+static const
+char *gl_strings [] = {
+	/* GL_VENDOR */
+	"pspGL",
+	/* GL_RENDERER */
+	"OpenGL ES-CM 1.1",
+	/* GL_VERSION */
+	"(pspGL build " __DATE__ ", " __TIME__ ")",
+	/* GL_EXTENSIONS */
+	"GL_EXT_texture_env_add GL_ARB_texture_env_add "
+	"GL_EXT_blend_minmax GL_EXT_blend_subtract "
+};
 
-const GLubyte * glGetString( GLenum name )
+
+const GLubyte * glGetString (GLenum name)
 {
+	unsigned long idx = name - GL_VENDOR;
 	const char *s;
 
-	switch (name) {
-	case GL_VENDOR:
-		s = vendor_string;
-		break;
-	case GL_RENDERER:
-		s = renderer_string;
-		break;
-	case GL_VERSION:
-		s = version_string;
-		break;
-	case GL_EXTENSIONS:
-		s = extension_string;
-		break;
-	default:
-		EGLERROR(EGL_BAD_PARAMETER);
+	if (idx >= sizeof(gl_strings)/sizeof(gl_strings[0])) {
+		GLERROR(GL_INVALID_ENUM);
 		s = NULL;
+	} else {
+		s = gl_strings[idx];
 	}
 
 	return (const GLubyte *) s;
 }
+
