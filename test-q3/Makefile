@@ -27,7 +27,7 @@ ifeq ($(ARCH),psp-)
 	CFLAGS += -I ./generic
 	LFLAGS += -DMODULE_NAME="Quake3" psp-setup.c
 	LFLAGS += -L$(SDKPATH)/lib -lglut -lGL
-	LFLAGS += -lpspdebug -lpspge -lpspdisplay -lpspctrl -lpspsdk -lc -lpsplibc -lm -lc -lpspglue -lpspuser -lpspkernel
+	LFLAGS += -lpspdebug -lpspge -lpspdisplay -lpspctrl -lpspsdk -lm -lc -lpspuser -lpspkernel
 else
 	ifeq ($(shell uname),Darwin)
         	CFLAGS += -F OpenGL -I/System/Library/Frameworks/OpenGL.framework/Headers/ 
