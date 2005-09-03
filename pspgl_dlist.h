@@ -14,8 +14,8 @@ struct pspgl_dlist {
 	int compile_and_run;
 	int qid;
 	unsigned long *cmd_buf;
-	/* need to align to cache lines (32bytes) to avoid cached/uncached conflicts */
-	unsigned long _cmdbuf[DLIST_SIZE + 2 * 32 / sizeof(unsigned long)];
+	/* need to align to cache lines (64bytes) to avoid cached/uncached conflicts */
+	unsigned long _cmdbuf[DLIST_SIZE + 2 * 64 / sizeof(unsigned long)];
 };
 
 

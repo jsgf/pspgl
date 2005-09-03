@@ -99,16 +99,16 @@ struct pspgl_dlist* pspgl_dlist_finalize_and_clone (struct pspgl_dlist *thiz)
 }
 
 
-static inline unsigned long align32 (unsigned long adr) { return (((adr + 0x1f) & ~0x1f) | 0x40000000); }
+static inline unsigned long align64 (unsigned long adr) { return (((adr + 0x3f) & ~0x3f) | 0x40000000); }
 
 
 /**
  *  When allocating the command buffer we need to consider 2 requirements:
  *
- *   - the command buffer start address must be aligned to a 32-byte boundary.
- *   - it must not share any cache line with otherwise used memory.
+ *   - the command buffer start address must be aligned to a 16-byte boundary.
+ *   - it must not share any cache line with otherwise used memory. Cache lines are 64bytes long.
  *
- *  In order to achieve the 2nd requirement we allocate 32 extra bytes before
+ *  In order to achieve the 2nd requirement we allocate 64 extra bytes before
  *  and at the end of the command buffer.
  */
 struct pspgl_dlist* pspgl_dlist_create (int compile_and_run,
@@ -128,7 +128,7 @@ struct pspgl_dlist* pspgl_dlist_create (int compile_and_run,
 	d->compile_and_run = compile_and_run;
 	d->qid = -1;
 
-	d->cmd_buf = (void *) align32(32 + (unsigned long) d->_cmdbuf);
+	d->cmd_buf = (void *) align64((unsigned long) d->_cmdbuf);
 
 	pspgl_dlist_reset(d);
 
@@ -237,6 +237,8 @@ void * pspgl_dlist_insert_space (struct pspgl_dlist *d, unsigned long size)
 
 	size = align16(size + 2 * sizeof(d->cmd_buf[0]));
 	size /= sizeof(d->cmd_buf[0]);
+
+	flush_pending_state_changes(pspgl_curctx, pspgl_curctx->dlist_current);
 
 	if (d->len >= DLIST_SIZE - 4 - size) {
 		d = d->done(d);
