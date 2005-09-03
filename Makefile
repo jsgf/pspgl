@@ -81,6 +81,7 @@ libGL.a_OBJS = \
 	glScissor.o \
 	glShadeModel.o \
 	glStencilFunc.o \
+	glStencilMask.o \
 	glStencilOp.o \
 	glTexCoord.o \
 	glTexCoordPointer.o \
@@ -133,7 +134,7 @@ clean:
 	make -C test-egl clean
 	make -C test-glut clean
 
-install: libGL.a
+install: all
 	mkdir -p $(PSPPATH)/include $(PSPPATH)/lib
 	mkdir -p $(PSPPATH)/include/GL $(PSPPATH)/include/GLES
 	cp GL/*.h $(PSPPATH)/include/GL

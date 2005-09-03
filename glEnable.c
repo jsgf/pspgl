@@ -35,6 +35,10 @@ void pspgl_enable_state (GLenum cap, int enable)
 			GLERROR(GL_INVALID_OPERATION);
 			enable = GL_FALSE;
 		}
+		if (enable)
+			sendCommandi(233, pspgl_curctx->write_mask.stencil);
+		else
+			sendCommandi(233, pspgl_curctx->write_mask.alpha);
 		opcode = 36;
 		break;
 	case GL_DEPTH_TEST:

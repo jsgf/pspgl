@@ -14,5 +14,12 @@ void glColorMask (GLboolean red, GLboolean green, GLboolean blue, GLboolean alph
 	pspgl_curctx->write_mask.alpha = alpha ? 0xff : 0;
 
         sendCommandi(232, mask);
-        sendCommandi(233, pspgl_curctx->write_mask.alpha);
+
+	/**
+	 * Alpha Channel and Stencil are shared. Only update Alpha mask register
+	 * if stencil test is disabled.
+	 */
+	if ((pspgl_curctx->ge_reg[36] & 1) == 0)
+	        sendCommandi(233, pspgl_curctx->write_mask.alpha);
 }
+
