@@ -69,3 +69,11 @@ void glVertex3fv (const GLfloat *v)
 	glVertex3f(v[0], v[1], v[2]);
 }
 
+
+void glVertex4fv (const GLfloat *v)
+{
+	GLfloat scale = 1.0f / v[3];
+	glVertex3f(scale * v[0], scale * v[1], scale * v[2]);
+}
+
+
