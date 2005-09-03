@@ -45,7 +45,7 @@ void glTexEnvfv (GLenum target, GLenum pname, const GLfloat *params)
 		sendCommandi(201, (GE_TEXENV_RGBA << 16) | (GE_TEXENV_RGBA << 8) | mode);
 		break;
 	case GL_TEXTURE_ENV_COLOR:
-		sendCommandi(202, COLOR(params));
+		sendCommandi(202, COLOR3(params));
 		break;
 	default:
 		goto invalid_enum;
@@ -69,3 +69,4 @@ void glTexEnvi (GLenum target, GLenum pname, GLint param)
 	GLfloat p = param;
 	glTexEnvfv(target, pname, &p);
 }
+

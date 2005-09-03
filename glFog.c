@@ -43,18 +43,9 @@ void glFogi (GLenum pname, GLint param)
 
 void glFogfv (GLenum pname, const GLfloat *param)
 {
-	uint32_t color;
-
 	switch (pname) {
 	case GL_FOG_COLOR:
-		pspgl_curctx->fog.color[0] = param[0];
-		pspgl_curctx->fog.color[1] = param[1];
-		pspgl_curctx->fog.color[2] = param[2];
-		pspgl_curctx->fog.color[3] = param[3];
-		color  = ((int) (255.0f * CLAMPF(param[0]))) << 0;
-		color |= ((int) (255.0f * CLAMPF(param[1]))) << 8;
-		color |= ((int) (255.0f * CLAMPF(param[2]))) << 16;
-		sendCommandi(207, color & 0xffffff);
+		sendCommandi(207, COLOR3(param));
 		break;
 	default:
 		glFogf(pname, param[0]);

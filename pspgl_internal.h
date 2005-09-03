@@ -22,7 +22,6 @@ struct pspgl_vertex_array {
 
 
 struct pspgl_context {
-	uint32_t ge_ctx [512];
 	uint32_t ge_reg [256];
 	uint32_t ge_reg_touched [256/32];
 
@@ -34,71 +33,34 @@ struct pspgl_context {
 		unsigned long color;
 		GLfloat normal [3];
 	} current;
+
 	struct {
 		struct pspgl_vertex_array vertex;
 		struct pspgl_vertex_array normal;
 		struct pspgl_vertex_array color;
 		struct pspgl_vertex_array texcoord;
 	} vertex_array;
+
 	struct {
 		GLclampf color [4];
 		GLclampf depth;
 		GLint stencil;
 	} clear;
 
-	/* XXX IMPROVE Do we really need to store the viewport? it's a hardware state... */
-	struct {
-		GLint x, y, width, height;
-	} viewport;
-	GLfloat depth_offset;
 	struct {
 		GLenum enabled;
 		GLint x, y, width, height;
 	} scissor_test;
-	GLenum matrix_mode;
-	GLint matrix_stack_depth[3];
-	GLfloat (* (matrix_stack [3])) [16];
-	struct {
-		GLenum equation;
-		GLenum sfactor, dfactor;
-	} blend;
-	struct {
-		GLfloat near, far;
-		GLclampf color [4];
-	} fog;
-	struct {
-		GLclampf ambient [4];
-		GLclampf diffuse [4];
-		GLclampf specular [4];
-		GLfloat position [4];
-		GLfloat spot_direction [3];
-		GLfloat spot_exponent;
-		GLfloat spot_cutoff;
-		GLfloat constant_attentuation;
-		GLfloat linear_attentuation;
-		GLfloat quadratic_attentuation;
-	} light [4];
-	struct {
-		GLclampf ambient [4];
-		GLenum color_control;
-	} light_model;
-	struct {
-		GLclampf ambient [4];
-		GLclampf diffuse [4];
-		GLclampf specular [4];
-		GLfloat shininess;
-	} material;
-	struct {
-		GLenum enabled;
-		GLenum wrap_s;
-		GLenum wrap_t;
-		GLenum mag_filter;
-		GLenum min_filter;
-	} texture;
+
 	struct {
 		unsigned char alpha;
 		unsigned char stencil;
 	} write_mask;
+
+	GLenum matrix_mode;
+	GLint matrix_stack_depth[3];
+	GLfloat (* (matrix_stack [3])) [16];
+
 	struct pspgl_surface *read;
 	struct pspgl_surface *draw;
 	
@@ -110,6 +72,27 @@ struct pspgl_context {
 	unsigned int swap_interval;
 	int initialized;
 	int refcount;
+
+	/* XXX IMPROVE Do we really need to store anything below? these are hardware states, stored in ge_reg[]... */
+	uint32_t ge_ctx [512];
+	struct {
+		GLint x, y, width, height;
+	} viewport;
+	GLfloat depth_offset;
+	struct {
+		GLenum equation;
+		GLenum sfactor, dfactor;
+	} blend;
+	struct {
+		GLfloat near, far;
+	} fog;
+	struct {
+		GLenum enabled;
+		GLenum wrap_s;
+		GLenum wrap_t;
+		GLenum mag_filter;
+		GLenum min_filter;
+	} texture;
 };
 
 
@@ -169,7 +152,7 @@ static inline GLclampf CLAMPF (GLfloat x)
 
 
 static inline
-unsigned long COLOR (const GLfloat c[3])
+unsigned long COLOR3 (const GLfloat c[3])
 {
 	return ((((int) (255.0 * CLAMPF(c[2]))) << 16) |
 		(((int) (255.0 * CLAMPF(c[1]))) << 8) |
