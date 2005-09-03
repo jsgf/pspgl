@@ -43,8 +43,10 @@ tools/ directory you find a rough disassembler for GE packets, maybe you find
 this useful to debug your problems. Please note that still a lot of commands
 are missing, please send patches if you enhance this functionality.
 
-Here is a short list of things you should consider when writing GL applications
-for the PSP:
+The PSP has been designed for gaming, so some OpenGL features that are rarely 
+used in games are missing and some have only somewhat limited support by the
+Hardware. Here is a short list of things you should consider when writing 
+GL applications for the PSP:
 
  - only 4 light sources are supported
  - antialiasing can get switched on/off only globally
@@ -53,6 +55,7 @@ for the PSP:
  - Alpha channel and Stencil buffer in the frambuffer are shared.
    (Enable Stencil test if you want to write to the stencil buffer)
  - We don't know yet whether/how the fog function can get changed.
+ - Only single-sided lighting, for two sided shading you need a CW and a CCW pass.
 
 This list is by no means complete, please report if you encounter other issues.
 
