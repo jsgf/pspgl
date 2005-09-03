@@ -28,6 +28,7 @@ libGL.a_OBJS = \
 	eglSwapInterval.o \
 	eglTerminate.o \
 	glAlphaFunc.o \
+	glArrayElement.o \
 	glBegin.o \
 	glBlendEquation.o \
 	glBlendFunc.o \

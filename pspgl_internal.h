@@ -12,6 +12,15 @@ typedef unsigned long uint32_t;
 
 #define NUM_CMDLISTS	4
 
+struct pspgl_vertex_array {
+	GLenum enabled;
+	GLint size;
+	GLenum type;
+	GLsizei stride;
+	const GLvoid *ptr;
+};
+
+
 struct pspgl_context {
 	uint32_t ge_ctx [512];
 	uint32_t ge_reg [256];
@@ -26,33 +35,10 @@ struct pspgl_context {
 		GLfloat normal [3];
 	} current;
 	struct {
-		struct {
-			GLenum enabled;
-			GLint size;
-			GLenum type;
-			GLsizei stride;
-			const GLvoid *ptr;
-		} vertex;
-		struct {
-			GLenum enabled;
-			GLenum type;
-			GLsizei stride;
-			const GLvoid *ptr;
-		} normal;
-		struct {
-			GLenum enabled;
-			GLint size;
-			GLenum type;
-			GLsizei stride;
-			const GLvoid *ptr;
-		} color;
-		struct {
-			GLenum enabled;
-			GLint size;
-			GLenum type;
-			GLsizei stride;
-			const GLvoid *ptr;
-		} texcoord;
+		struct pspgl_vertex_array vertex;
+		struct pspgl_vertex_array normal;
+		struct pspgl_vertex_array color;
+		struct pspgl_vertex_array texcoord;
 	} vertex_array;
 	struct {
 		GLclampf color [4];
