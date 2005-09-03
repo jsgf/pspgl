@@ -265,7 +265,7 @@ void process_insn (uint32_t insn)
 	case 0xd3:
 		DUMP("Clear Enable = %d, Flags (%s|%s|%s)", (arg & 1),
 			(arg & (1 << 8)) ? "CLEAR_COLOR" : "-",
-			(arg & (1 << 9)) ? "??CLEAR_ALPHA/STENCIL??" : "-",
+			(arg & (1 << 9)) ? "CLEAR_ALPHA/STENCIL" : "-",
 			(arg & (1 << 10)) ? "CLEAR_DEPTH" : "-");
 		break;
 	case 0xd4:
