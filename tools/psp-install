@@ -9,28 +9,38 @@ PSP_EBOOT_SND0="NULL"
 PSP_EBOOT_PSAR="NULL"
 
 for opt do
-	case "$opt" in
-	--eboot-title=*) PSP_EBOOT_TITLE=`echo $opt | cut -d '=' -f 2`
-	;;
-	--eboot-icon=*) PSP_EBOOT_ICON=`echo $opt | cut -d '=' -f 2`
-	;;
-	--eboot-icon1=*) PSP_EBOOT_ICON1=`echo $opt | cut -d '=' -f 2`
-	;;
-	--eboot-unkpng=*) PSP_EBOOT_UNKPNG=`echo $opt | cut -d '=' -f 2`
-	;;
-	--eboot-pic1=*) PSP_EBOOT_PIC1=`echo $opt | cut -d '=' -f 2`
-	;;
-	--eboot-snd0=*) PSP_EBOOT_SND0=`echo $opt | cut -d '=' -f 2`
-	;;
-	--eboot-PSAR=*) PSP_EBOOT_PSAR=`echo $opt | cut -d '=' -f 2`
-	;;
-	--psp-revision=*) PSP_REVISION=`echo $opt | cut -d '=' -f 2`
-	;;
-	--help) help=yes
-	;;
-	*) IMAGE=$opt
-	;;
-	esac
+	if [ "$skip" = "yes" ] ; then
+		skip=""
+	else
+		case "$opt" in
+		--eboot-title=*) PSP_EBOOT_TITLE=`echo $opt | cut -d '=' -f 2`
+		;;
+		--eboot-icon=*) PSP_EBOOT_ICON=`echo $opt | cut -d '=' -f 2`
+		;;
+		--eboot-icon1=*) PSP_EBOOT_ICON1=`echo $opt | cut -d '=' -f 2`
+		;;
+		--eboot-unkpng=*) PSP_EBOOT_UNKPNG=`echo $opt | cut -d '=' -f 2`
+		;;
+		--eboot-pic1=*) PSP_EBOOT_PIC1=`echo $opt | cut -d '=' -f 2`
+		;;
+		--eboot-snd0=*) PSP_EBOOT_SND0=`echo $opt | cut -d '=' -f 2`
+		;;
+		--eboot-PSAR=*) PSP_EBOOT_PSAR=`echo $opt | cut -d '=' -f 2`
+		;;
+		--psp-revision=*) PSP_REVISION=`echo $opt | cut -d '=' -f 2`
+		;;
+		--help) help=yes
+		;;
+		-d)     	# BSD install option 'create directories', ignore
+		;;
+		-m) skip="yes"	# BSD install option 'file mode', ignore, next arg, too
+		;;
+		-v)		# BSD install option 'verbose', ignore
+		;;
+		*) IMAGE=$opt
+		;;
+		esac
+	fi
 done
 
 
@@ -62,6 +72,15 @@ if [ "$IMAGE" = ""  -o "$help" = "yes" ] ; then
 	exit 1
 fi
 
+
+IMGTYPE=`file "$IMAGE" | grep "ELF 32-bit LSB MIPS-II executable, MIPS"`
+
+if [ "$IMGTYPE" = "" ] ; then
+	echo "--------------------------------------------------------------------------------" 
+	echo " no MIPS32-ELF binary, not installing..." 
+	echo "--------------------------------------------------------------------------------" 
+	exit 0
+fi
 
 if [ "$PSP_EBOOT_TITLE" = "" ] ; then
 	PSP_EBOOT_TITLE="$IMAGE"
