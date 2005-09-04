@@ -125,7 +125,6 @@ EGLBoolean pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s)
 
 		psp_log("display @ adr 0x%08x\n", (unsigned long) s->color_buffer[s->current_front]);
 
-		sceDisplaySetMode(0, s->width, s->height);
 		sceDisplaySetFrameBuf(s->color_buffer[s->current_front],
 				      s->pixelperline,
 				      s->pixfmt,

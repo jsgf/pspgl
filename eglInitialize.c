@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <pspdisplay.h>
 #include "pspgl_internal.h"
 
 
@@ -10,7 +11,7 @@ EGLBoolean eglInitialize (EGLDisplay dpy, EGLint *major, EGLint *minor)
 
 	if (!initialized) {
 		atexit((void *) eglTerminate);
-
+		sceDisplaySetMode(0, 480, 272);
 		initialized = 1;
 	}
 
