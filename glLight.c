@@ -38,7 +38,7 @@ void glLightfv (GLenum light, GLenum pname, const GLfloat *params)
 		sendCommandf(113+3*light, params[2]);
 		break;
 	case GL_SPOT_EXPONENT:
-		sendCommandi(139+light, params[0]);
+		sendCommandf(139+light, params[0]);
 		break;
 	case GL_SPOT_CUTOFF:
 		sendCommandi(95+light, (params[0] == 0.0) ? 0 : (params[0] == 180.0) ? 1 : 2);
