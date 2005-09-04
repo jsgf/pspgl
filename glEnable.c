@@ -103,3 +103,4 @@ void glDisable (GLenum cap)
 {
 	pspgl_enable_state(cap, 0);
 }
+

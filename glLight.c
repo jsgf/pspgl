@@ -38,10 +38,11 @@ void glLightfv (GLenum light, GLenum pname, const GLfloat *params)
 		sendCommandf(113+3*light, params[2]);
 		break;
 	case GL_SPOT_EXPONENT:
-		/* XXX ??? seems possible, but how ?!? */
+		sendCommandi(139+light, params[0]);
 		break;
 	case GL_SPOT_CUTOFF:
-		/* XXX ??? seems possible, but how ?!? */
+		sendCommandi(95+light, (params[0] == 0.0) ? 0 : (params[0] == 180.0) ? 1 : 2);
+		sendCommandf(135+light, params[0]);
 		break;
 	case GL_CONSTANT_ATTENUATION:
 		sendCommandf(123+3*light, params[0]);
