@@ -47,6 +47,7 @@ libGL.a_OBJS = \
 	glDepthMask.o \
 	glDepthRange.o \
 	glDrawArrays.o \
+	glDrawBuffer.o \
 	glDrawElements.o \
 	glEnable.o \
 	glEnableClientState.o \
