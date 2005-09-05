@@ -27,6 +27,8 @@ libGL.a_OBJS = \
 	eglSwapBuffers.o \
 	eglSwapInterval.o \
 	eglTerminate.o \
+	eglWaitGL.o \
+	eglWaitNative.o \
 	glAlphaFunc.o \
 	glArrayElement.o \
 	glBegin.o \
