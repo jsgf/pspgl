@@ -21,6 +21,24 @@ struct pspgl_vertex_array {
 };
 
 
+struct pspgl_texobj {
+	uint32_t ge_texreg_160x201 [201-160+1];
+	GLclampf  priority;
+};
+
+
+extern const struct pspgl_texobj pspgl_texobj_default;
+
+
+struct pspgl_shared_context {
+	int refcount;
+	struct {
+		GLint id;
+		struct pspgl_texobj *texobj;
+	} *texobj_list;
+};
+
+
 struct pspgl_context {
 	uint32_t ge_reg [256];
 	uint32_t ge_reg_touched [256/32];
@@ -57,9 +75,16 @@ struct pspgl_context {
 		unsigned char stencil;
 	} write_mask;
 
+	GLfloat depth_offset;
+
 	GLenum matrix_mode;
 	GLint matrix_stack_depth[3];
 	GLfloat (* (matrix_stack [3])) [16];
+
+	struct pspgl_texobj texobj0;
+	struct pspgl_texobj *texobj_current;
+
+	struct pspgl_shared_context *shared;
 
 	struct pspgl_surface *read;
 	struct pspgl_surface *draw;
@@ -78,7 +103,6 @@ struct pspgl_context {
 	struct {
 		GLint x, y, width, height;
 	} viewport;
-	GLfloat depth_offset;
 	struct {
 		GLenum equation;
 		GLenum sfactor, dfactor;
