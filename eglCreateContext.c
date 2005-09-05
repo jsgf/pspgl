@@ -21,6 +21,15 @@ EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_
 	ctx->dlist_current = ctx->dlist[0];
 	ctx->dlist_idx = 0;
 
+	if (share_context == NULL) {
+		ctx->shared = malloc(sizeof(struct pspgl_shared_context));
+		memset(ctx->shared, 0, sizeof(struct pspgl_shared_context));
+	} else {
+		ctx->shared = ((struct pspgl_context *) share_context)->shared;
+	}
+
+	ctx->shared->refcount++;
+
 	return (EGLContext) ctx;
 }
 

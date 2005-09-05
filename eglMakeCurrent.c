@@ -35,10 +35,6 @@ EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
 		}
 	} else {
 		pspgl_ge_init(c);
-		glScissor(0, 0, c->draw->width, c->draw->height);
-		glViewport(0, 0, c->draw->width, c->draw->height);
-		glDepthRange(0.0, 1.0);
-		pspgl_curctx->clear.depth = 1.0;
 		c->initialized = 1;
 	}
 

@@ -27,8 +27,17 @@ EGLBoolean eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 				free(c->matrix_stack[i]);
 		}
 
+		c->shared->refcount--;
+
+		if (c->shared->refcount == 0) {
+			if (c->shared->texobj_list)
+				free(c->shared->texobj_list);
+			free(c->shared);
+		}
+
 		free(c);
 	}
 
 	return EGL_TRUE;
 }
+
