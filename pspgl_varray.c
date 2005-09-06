@@ -188,7 +188,7 @@ void pspgl_varray_draw (GLenum mode, GLenum index_type, const GLvoid *indices, G
 			return;
 		}
 		sendCommandi(16, (((unsigned long) indices) >> 8) & 0xf0000);
-		sendCommandi(2, ((unsigned long) indices) & 0xffffff);
+		sendCommandiUncached(2, ((unsigned long) indices) & 0xffffff);
 	}
 
 	sendCommandi(18, vertex_fmt);
