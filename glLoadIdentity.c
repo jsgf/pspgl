@@ -3,7 +3,7 @@
 
 void glLoadIdentity (void)
 {
-	static const float identity [] = {
+	static const GLfloat identity [] = {
 		1.0, 0.0, 0.0, 0.0,
 		0.0, 1.0, 0.0, 0.0,
 		0.0, 0.0, 1.0, 0.0,

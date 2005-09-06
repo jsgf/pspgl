@@ -22,5 +22,6 @@ void glScalef (GLfloat x, GLfloat y, GLfloat z)
 	m[10] *= z;
 	m[11] *= z;
 
-	glLoadMatrixf(m);
+	pspgl_curctx->matrix_touched |= (1 << matrix_id);
 }
+

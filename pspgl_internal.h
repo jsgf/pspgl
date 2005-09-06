@@ -77,6 +77,7 @@ struct pspgl_context {
 
 	GLfloat depth_offset;
 
+	unsigned long matrix_touched;  /* bitfield */
 	GLenum matrix_mode;
 	GLint matrix_stack_depth[3];
 	GLfloat (* (matrix_stack [3])) [16];
@@ -194,8 +195,11 @@ unsigned long COLOR4 (const GLfloat c[4])
 }
 
 
-void sendCommandi(unsigned long cmd, unsigned long argi); 
-void sendCommandiUncached(unsigned long cmd, unsigned long argi); 
+extern void pspgl_flush_pending_matrix_changes (struct pspgl_context *c);
+extern void pspgl_flush_pending_state_changes (struct pspgl_context *c);
+
+extern void sendCommandi(unsigned long cmd, unsigned long argi); 
+extern void sendCommandiUncached(unsigned long cmd, unsigned long argi); 
 
 #define sendCommandf(cmd,argf)						\
 do {									\

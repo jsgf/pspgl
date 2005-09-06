@@ -24,5 +24,6 @@ void glMultMatrixf (const GLfloat *m)
 		P(i,3) = ai0 * B(0,3) + ai1 * B(1,3) + ai2 * B(2,3) + ai3 * B(3,3);
 	}
 
-	glLoadMatrixf(matrix);
+	pspgl_curctx->matrix_touched |= (1 << matrix_id);
 }
+

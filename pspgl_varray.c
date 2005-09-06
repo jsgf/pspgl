@@ -170,6 +170,8 @@ void pspgl_varray_draw (GLenum mode, GLenum index_type, const GLvoid *indices, G
 		return;
 	}
 
+	pspgl_flush_pending_matrix_changes(pspgl_curctx);
+
 	if (indices) {
 		switch (index_type) {
 		case GL_UNSIGNED_BYTE:

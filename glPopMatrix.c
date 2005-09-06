@@ -16,6 +16,6 @@ void glPopMatrix (void)
 	c->matrix_stack[matrix_id] = realloc(c->matrix_stack[matrix_id], (depth - 1) * sizeof(c->matrix_stack[0][0]));
 	c->matrix_stack_depth[matrix_id]--;
 
-	glLoadMatrixf(c->matrix_stack[matrix_id][depth-2]);
+	pspgl_curctx->matrix_touched |= (1 << matrix_id);
 }
 

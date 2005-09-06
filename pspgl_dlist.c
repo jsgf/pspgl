@@ -29,26 +29,92 @@ void sendCommandi (unsigned long cmd, unsigned long argi)
 }
 
 
+/* write a uncached matrix register */
+static inline
+void sendCommandfMtx (int cmd, GLfloat argf)
+{
+	union { float f; unsigned int i; } arg = { .f = argf };
+	unsigned long val = (cmd << 24) | (arg.i >> 8);
+	pspgl_dlist_enqueue_cmd(pspgl_curctx->dlist_current, val);
+}
+
+
+void pspgl_flush_pending_matrix_changes (struct pspgl_context *c)
+{
+	int matrix_id;
+
+	for (matrix_id=0; matrix_id<3; matrix_id++) {
+		if (c->matrix_touched & (1 << matrix_id)) {
+			int depth = c->matrix_stack_depth[matrix_id];
+			GLfloat *m = c->matrix_stack[matrix_id][depth-1];
+			int opcode = 60 + 2 * matrix_id;
+			int n = (opcode == 62) ? 4 : 3;
+			int i, j;
+
+			sendCommandiUncached(opcode, 0);
+			opcode++;
+
+			for (j=0; j<4; j++) {
+				for (i=0; i<n; i++) {
+					sendCommandfMtx(opcode, m[4*j+i]);
+				}
+			}
+		}
+	}
+
+	c->matrix_touched = 0;
+}
+
+
 /**
  *  flush all pending, cached values, then clear register-touch mark words.
  */
-static
-void flush_pending_state_changes (struct pspgl_context *c, struct pspgl_dlist *d)
+void pspgl_flush_pending_state_changes (struct pspgl_context *c)
 {
 	unsigned long i;
+	struct pspgl_dlist *d = pspgl_curctx->dlist_current;
 
-	/**
-	 * XXX IMPROVE: we simply iterate over the bitfield, this can be done
-	 *              much more efficient using a binary search. See ffz().
-	 */
-	for (i=0; i<256; i++) {
-		uint32_t touched = c->ge_reg_touched[i/32] >> (i % 32);
-		if (touched & 1)
-			pspgl_dlist_enqueue_cmd(d, c->ge_reg[i]);
-	}
+	for (i=0; i<256/32; i++) {
+		uint32_t word = c->ge_reg_touched[i];
+		uint32_t idx = 32 * i;
 
-	for (i=0; i<256/32; i++)
+		/**
+		 * try to accelerate search for the common case of sparse arrays
+		 * by skipping blocks of long zero bit clusters
+		 */
+		if ((word & 0xffff) == 0) {
+			word >>= 16;
+			idx += 16;
+		}
+
+		while (word) {
+			while (word & 1) {
+				pspgl_dlist_enqueue_cmd(d, c->ge_reg[idx]);
+				word >>= 1;
+				idx++;
+			}
+			if (word == 0)
+				break;
+			if ((word & 0xff) == 0) {
+				word >>= 8;
+				idx += 8;
+			}
+			if ((word & 0xf) == 0) {
+				word >>= 4;
+				idx += 4;
+			}
+			if ((word & 0x3) == 0) {
+				word >>= 2;
+				idx += 2;
+			}
+			if ((word & 0x1) == 0) {
+				word >>= 1;
+				idx++;
+			}
+		}
+
 		c->ge_reg_touched[i] = 0x00000000;
+	}
 }
 
 
@@ -58,7 +124,7 @@ void flush_pending_state_changes (struct pspgl_context *c, struct pspgl_dlist *d
 void sendCommandiUncached (unsigned long cmd, unsigned long argi) 
 {
 	unsigned long val = ((cmd) << 24) | ((argi) & 0xffffff);
-	flush_pending_state_changes(pspgl_curctx, pspgl_curctx->dlist_current);
+	pspgl_flush_pending_state_changes(pspgl_curctx);
 	pspgl_dlist_enqueue_cmd(pspgl_curctx->dlist_current, val);
 }
 
@@ -66,7 +132,7 @@ void sendCommandiUncached (unsigned long cmd, unsigned long argi)
 static
 void pspgl_dlist_finish (struct pspgl_dlist *d)
 {
-	flush_pending_state_changes(pspgl_curctx, d);
+	pspgl_flush_pending_state_changes(pspgl_curctx);
 
 	assert(d->len < DLIST_SIZE - 2);
 
@@ -238,7 +304,7 @@ void * pspgl_dlist_insert_space (struct pspgl_dlist *d, unsigned long size)
 	size = align16(size + 2 * sizeof(d->cmd_buf[0]));
 	size /= sizeof(d->cmd_buf[0]);
 
-	flush_pending_state_changes(pspgl_curctx, pspgl_curctx->dlist_current);
+	pspgl_flush_pending_state_changes(pspgl_curctx);
 
 	if (d->len >= DLIST_SIZE - 4 - size) {
 		d = d->done(d);

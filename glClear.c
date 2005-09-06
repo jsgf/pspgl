@@ -65,3 +65,4 @@ void glClear (GLbitfield mask)
 	/* leave clear mode */
 	sendCommandi(211, 0);
 }
+

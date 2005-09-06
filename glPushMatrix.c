@@ -23,6 +23,6 @@ void glPushMatrix (void)
 	if (depth > 0)
 		memcpy(c->matrix_stack[matrix_id][depth], c->matrix_stack[matrix_id][depth-1], sizeof(c->matrix_stack[0][0]));
 
-	glLoadMatrixf(c->matrix_stack[matrix_id][depth]);
+	pspgl_curctx->matrix_touched |= (1 << matrix_id);
 }
 
