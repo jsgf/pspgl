@@ -83,3 +83,23 @@ void __pspgl_dlist_dump (unsigned long *cmd_buf, unsigned long len)
 	sceIoClose(fd);
 }
 
+
+void __pspgl_vram_dump (void)
+{
+	unsigned long vram_start = (unsigned long) sceGeEdramGetAddr();
+	unsigned long vram_size = (unsigned long) sceGeEdramGetSize();
+	unsigned long header [4];
+	int fd;
+
+	header[0] = PSPGL_GE_DUMP_DLIST;
+	header[1] = sizeof(header) + vram_size;
+	header[2] = vram_start;
+	header[3] = vram_size;
+
+	fd = sceIoOpen(PSPGL_GE_DUMPFILE, PSP_O_CREAT | PSP_O_APPEND | PSP_O_WRONLY, 0644);
+	sceIoWrite(fd, header, sizeof(header));
+	sceIoWrite(fd, (void *) vram_start, vram_size);
+	sceIoClose(fd);
+}
+
+

@@ -15,6 +15,7 @@ enum pspgl_dump_tag {
 extern void __pspgl_ge_register_dump (void);
 extern void __pspgl_ge_matrix_dump (void);
 extern void __pspgl_dlist_dump (unsigned long *cmd_buf, unsigned long len);
+extern void __pspgl_vram_dump (void);
 
 
 /**
@@ -26,10 +27,12 @@ extern void __pspgl_dlist_dump (unsigned long *cmd_buf, unsigned long len);
 #define pspgl_ge_register_dump() __pspgl_ge_register_dump()
 #define pspgl_ge_matrix_dump() __pspgl_ge_matrix_dump()
 #define pspgl_dlist_dump(buf,len) __pspgl_dlist_dump(buf,len)
+#define pspgl_vram_dump() __pspgl_vram_dump()
 #else
 #define pspgl_ge_register_dump() do {} while (0)
 #define pspgl_ge_matrix_dump() do {} while (0)
 #define pspgl_dlist_dump(buf,len) do {} while (0)
+#define pspgl_vram_dump() do {} while (0)
 #endif
 
 #if 0
