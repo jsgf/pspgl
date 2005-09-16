@@ -11,8 +11,10 @@ char *gl_strings [] = {
 	/* GL_VERSION */
 	"(pspGL build " __DATE__ ", " __TIME__ ")",
 	/* GL_EXTENSIONS */
-	"GL_EXT_texture_env_add GL_ARB_texture_env_add "
-	"GL_EXT_blend_minmax GL_EXT_blend_subtract "
+	"GL_EXT_texture_env_add "
+	"GL_ARB_texture_env_add "
+	"GL_EXT_blend_minmax "
+	"GL_EXT_blend_subtract "
 };
 
 
