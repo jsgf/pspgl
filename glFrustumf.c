@@ -26,7 +26,7 @@ void glFrustumf (GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLflo
 
 	m[12] = 0.0;
 	m[13] = 0.0;
-	m[14] = _2n * far * _1over_fmn;
+	m[14] = -(_2n * far * _1over_fmn);
 	m[15] = 0.0;
 
 	glMultMatrixf(m);
