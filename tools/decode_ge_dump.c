@@ -318,13 +318,28 @@ void process_insn (uint32_t insn)
 		DUMP("Frame Buffer Pointer [23-0] 0x%08x", arg);
 		break;
 	case 0x9d:
-		DUMP("Frame Buffer Width %d. Frame Buffer Pointer [32-24] 0x%08x", arg & 0xffff, (arg << 8) & 0xff000000);
+		DUMP("Frame Buffer Stride %d. Frame Buffer Pointer [32-24] 0x%08x", arg & 0xffff, (arg << 8) & 0xff000000);
 		break;
 	case 0x9e:
 		DUMP("Depth Buffer Pointer [23-0] 0x%08x", arg);
 		break;
 	case 0x9f:
-		DUMP("Depth Buffer Width %d. Frame Buffer Pointer [32-24] 0x%08x", arg & 0xffff, (arg << 8) & 0xff000000);
+		DUMP("Depth Buffer Stride %d. Frame Buffer Pointer [32-24] 0x%08x", arg & 0xffff, (arg << 8) & 0xff000000);
+		break;
+	case 0xa0 ... 0xa7:
+		DUMP("(Mipmap Level %d) Texture Pointer [23-0] 0x%08x", opcode - 0xa0, arg);
+		break;
+	case 0xa8 ... 0xaf:
+		DUMP("(Mipmap Level %d) Texture Stride %d. Texture Pointer [32-24] 0x%08x", opcode - 0xa0, arg & 0xffff, (arg << 8) & 0xff000000);
+		break;
+	case 0xb0:
+		DUMP("CLUT Pointer [23-0] 0x%08x", arg);
+		break;
+	case 0xb1:
+		DUMP("CLUT Pointer [32-24] 0x%08x", arg << 8);
+		break;
+	case 0xb8 ... 0xbf:
+		DUMP("(Mipmap Level %d) Texture Width 2^%d, Height 2^%d", opcode - 0xa0, arg & 0xff, arg >> 8);
 		break;
 	case 0xca:
 		DUMP("TextureEnv Color 0x%06x", arg);
