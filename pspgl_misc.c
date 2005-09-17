@@ -91,7 +91,7 @@ void __pspgl_vram_dump (void)
 	unsigned long header [4];
 	int fd;
 
-	header[0] = PSPGL_GE_DUMP_DLIST;
+	header[0] = PSPGL_GE_DUMP_VRAM;
 	header[1] = sizeof(header) + vram_size;
 	header[2] = vram_start;
 	header[3] = vram_size;

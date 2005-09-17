@@ -9,7 +9,8 @@ extern void __psp_log (const char *fmt, ...);
 enum pspgl_dump_tag {
 	PSPGL_GE_DUMP_MATRIX    = 1,
 	PSPGL_GE_DUMP_REGISTERS = 2,
-	PSPGL_GE_DUMP_DLIST     = 3
+	PSPGL_GE_DUMP_DLIST     = 3,
+	PSPGL_GE_DUMP_VRAM      = 4
 };
 
 extern void __pspgl_ge_register_dump (void);
