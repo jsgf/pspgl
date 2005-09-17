@@ -73,7 +73,7 @@ void  pspgl_vidmem_free (void * ptr)
 				(unsigned int) ptr, (unsigned int) vidmem_map[i].len);
 			
 			vidmem_map_len--;
-			memmove(&vidmem_map[i], &vidmem_map[i+1], vidmem_map_len * sizeof(vidmem_map[0]));
+			memmove(&vidmem_map[i], &vidmem_map[i+1], (vidmem_map_len-i) * sizeof(vidmem_map[0]));
 			tmp = realloc(vidmem_map, vidmem_map_len * sizeof(vidmem_map[0]));
 			if (tmp)
 				vidmem_map = tmp;
