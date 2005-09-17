@@ -288,9 +288,28 @@ void process_insn (uint32_t insn)
 		DUMP("Light Mode %d (%s)",
 		     arg, arg == 0 ? "single color" : arg == 1 ? "seperate specular color" : "??");
 		break;
-	case 0x5f:
+	case 0x5f ... 0x62:
 		DUMP("(Light %d) Type %d (%s)", opcode - 0x5d,
 		     arg, arg == 0 ? "parallel" : arg == 1 ? "point" : arg == 2 ? "spot" : "??");
+		break;
+	case 0x63 ... 0x6e:
+		DUMP("(Light %d) Position %c %1.5f", (opcode - 0x63) / 3, (opcode - 0x63) % 3 + 'X', float32(arg));
+		break;
+	case 0x6f ... 0x7a:
+		DUMP("(Light %d) Direction %c %1.5f", (opcode - 0x6f) / 3, (opcode - 0x6f) % 3 + 'X', float32(arg));
+		break;
+	case 0x7b ... 0x86:
+		DUMP("(Light %d) Attentuation Coefficient %c %1.5f", (opcode - 0x7b) / 3, (opcode - 0x7b) % 3 + 'A', float32(arg));
+		break;
+	case 0x87 ... 0x8a:
+		DUMP("(Light %d) Spotlight Cutoff %1.5f", opcode - 0x87, float32(arg));
+		break;
+	case 0x8b ... 0x8e:
+		DUMP("(Light %d) Spotlight Cone Attentuation %1.5f", opcode - 0x8b, float32(arg));
+		break;
+	case 0x8f ... 0x9a:
+		DUMP("(Light %d) Light Color %s %1.5f",
+		     (opcode - 0x8f) / 3, ((opcode - 0x8f) % 3) == 0 ? "Ambient" : ((opcode - 0x8f) % 3 == 1) ? "Diffuse" : "Specular", float32(arg));
 		break;
 	case 0x9b:
 		DUMP("Front Face Orientation = %d (%s)", arg, arg == 0 ? "CW" : arg == 1 ? "CCW" : "???");
@@ -306,6 +325,27 @@ void process_insn (uint32_t insn)
 		break;
 	case 0x9f:
 		DUMP("Depth Buffer Width %d. Frame Buffer Pointer [32-24] 0x%08x", arg & 0xffff, (arg << 8) & 0xff000000);
+		break;
+	case 0xca:
+		DUMP("TextureEnv Color 0x%06x", arg);
+		break;
+	case 0xcb:
+		DUMP("Texture Flush");
+		break;
+	case 0xcc:
+		DUMP("Texture Sync");
+		break;
+	case 0xcd:
+		DUMP("Fog End %1.5f", float32(arg));
+		break;
+	case 0xce:
+		DUMP("Fog Range %1.5f", float32(arg));
+		break;
+	case 0xcf:
+		DUMP("Fog Color 0x%06x", arg);
+		break;
+	case 0xd0:
+		DUMP("Texture Slope %1.5f", float32(arg));
 		break;
 	case 0xd2:
 		DUMP("Pixel Format %d (%s)", arg, arg == 0 ? "RGB565" : arg == 1 ? "RGBA551" : arg == 2 ? "RGBA4444" : arg == 3 ? "RGBA8888" : "???");
@@ -327,6 +367,25 @@ void process_insn (uint32_t insn)
 		break;
 	case 0xd7:
 		DUMP("Far Depth Plane %d / %f", arg, float32(arg));
+		break;
+	case 0xd8:
+		DUMP("Color Test Function %d (%s)", arg, (arg < sizeof(test_function)/sizeof(test_function[0])) ? test_function[arg] : "???");
+		break;
+	case 0xd9:
+		DUMP("Color Test Reference 0x%06x", arg);
+		break;
+	case 0xda:
+		DUMP("Color Test Mask 0x%06x", arg);
+		break;
+	case 0xdb:
+		DUMP("Alpha Test Function %d (%s), Reference 0x%02x, Mask 0x%02x", 
+		     arg & 0xff, ((arg & 0xff) < sizeof(test_function)/sizeof(test_function[0])) ? test_function[arg & 0xff] : "???",
+		     (arg >> 8) & 0xff, (arg >> 16) & 0xff);
+		break;
+	case 0xdc:
+		DUMP("Stencil Test Function %d (%s), Reference 0x%02x, Mask 0x%02x", 
+		     arg & 0xff, ((arg & 0xff) < sizeof(test_function)/sizeof(test_function[0])) ? test_function[arg & 0xff] : "???",
+		     (arg >> 8) & 0xff, (arg >> 16) & 0xff);
 		break;
 	case 0xde:
 		DUMP("Depth Test Function %d (%s)", arg, (arg < sizeof(test_function)/sizeof(test_function[0])) ? test_function[arg] : "???");
