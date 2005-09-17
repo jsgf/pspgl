@@ -251,6 +251,12 @@ void process_insn (uint32_t insn)
 	case 0x4d:
 		DUMP("Viewport/Screen Offset Y %d", arg >> 4);
 		break;
+	case 0x4e:
+		/* ??? */
+		break;
+	case 0x4f:
+		/* ??? */
+		break;
 	case 0x50:
 		DUMP("Shading = %d (%s)", arg, arg == 0 ? "FLAT" : arg == 1 ? "SMOOTH" : "???");
 		break;
@@ -258,31 +264,39 @@ void process_insn (uint32_t insn)
 		DUMP("Enable Normal Reverse = %d", arg);
 		break;
 	case 0x53:
-		DUMP("Material Specular 0x%06x", arg);
+		DUMP("Update Material %d/%d/%d - specular %s, diffuse %s, ambient %s",
+		     (arg >> 16) & 0xff, (arg >> 8) & 0xff, arg & 0xff, 
+		     (arg >> 16) & 0xff ? "yes" : "no", (arg >> 8) & 0xff ? "yes" : "no", arg & 0xff ? "yes" : "no");
 		break;
 	case 0x54:
-		DUMP("Material Diffuse 0x%06x", arg);
+		DUMP("Color Material Emissive 0x%06x", arg);
 		break;
 	case 0x55:
-		DUMP("Material Ambient 0x%06x", arg);
+		DUMP("Color Material Ambient 0x%06x", arg);
 		break;
 	case 0x56:
-		DUMP("Material Specular Alpha 0x%02x", arg);
+		DUMP("Color Material Diffuse 0x%06x", arg);
 		break;
 	case 0x57:
-		DUMP("Material Diffuse Alpha 0x%02x", arg);
+		DUMP("Color Material Specular 0x%06x", arg);
 		break;
 	case 0x58:
-		DUMP("Material Ambient Alpha 0x%02x", arg);
+		DUMP("Color Material Ambient Alpha 0x%02x", arg);
+		break;
+	case 0x59:
+		/* ??? */
+		break;
+	case 0x5a:
+		/* ??? */
 		break;
 	case 0x5b:
 		DUMP("Specular Power %1.5f", float32(arg));
 		break;
 	case 0x5c:
-		DUMP("Ambient Color 0x%06x", arg);
+		DUMP("Ambient LightModel Color 0x%06x", arg);
 		break;
 	case 0x5d:
-		DUMP("Ambient Alpha 0x%02x", arg);
+		DUMP("Ambient LightModel Alpha 0x%02x", arg);
 		break;
 	case 0x5e:
 		DUMP("Light Mode %d (%s)",
