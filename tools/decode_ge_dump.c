@@ -70,8 +70,27 @@ void process_insn (uint32_t insn)
 	case 0x04:
 		DUMP("Primitive Kick: %d vertices, type %d", arg & 0xffff, arg >> 16);
 		break;
+	case 0x05:
+		DUMP("Bezier Patch Kick: count: %d in U, %d in V-direction", arg & 0xff, arg >> 8);
+		break;
+	case 0x06:
+		DUMP("Spline Kick: count: %d in U, %d in V-direction, u_f %d, v_f %d",
+			arg & 0xff, arg >> 8, (arg >> 16) & 0x03, (arg >> 18) & 0x03);
+		break;
+	case 0x07:
+		DUMP("Bounding Box: count: %d", arg);
+		break;
 	case 0x08:
 		DUMP("Jump to Address (BASE) + 0x%08x", arg);
+		break;
+	case 0x09:
+		DUMP("Conditional Jump to Address (BASE) + 0x%08x", arg);
+		break;
+	case 0x0a:
+		DUMP("Call Display List at address (BASE) + 0x%08x", arg);
+		break;
+	case 0x0b:
+		DUMP("Return from Display List Call");
 		break;
 	case 0x0c:
 		DUMP("END");
@@ -146,10 +165,10 @@ void process_insn (uint32_t insn)
 		DUMP("Enable Antialiasing = %d", arg);
 		break;
 	case 0x26:
-		DUMP("Enable Patch Culling(1) = %d", arg);
+		DUMP("Enable Patch Culling = %d", arg);
 		break;
 	case 0x27:
-		DUMP("Enable Patch Culling(2) = %d", arg);
+		DUMP("Enable Color Test = %d", arg);
 		break;
 	case 0x28:
 		DUMP("Enable Color LogicOp = %d", arg);
@@ -239,10 +258,39 @@ void process_insn (uint32_t insn)
 		DUMP("Enable Normal Reverse = %d", arg);
 		break;
 	case 0x53:
-		DUMP("Color Material 0x%06x", arg);
+		DUMP("Material Specular 0x%06x", arg);
+		break;
+	case 0x54:
+		DUMP("Material Diffuse 0x%06x", arg);
+		break;
+	case 0x55:
+		DUMP("Material Ambient 0x%06x", arg);
+		break;
+	case 0x56:
+		DUMP("Material Specular Alpha 0x%02x", arg);
+		break;
+	case 0x57:
+		DUMP("Material Diffuse Alpha 0x%02x", arg);
+		break;
+	case 0x58:
+		DUMP("Material Ambient Alpha 0x%02x", arg);
 		break;
 	case 0x5b:
 		DUMP("Specular Power %1.5f", float32(arg));
+		break;
+	case 0x5c:
+		DUMP("Ambient Color 0x%06x", arg);
+		break;
+	case 0x5d:
+		DUMP("Ambient Alpha 0x%02x", arg);
+		break;
+	case 0x5e:
+		DUMP("Light Mode %d (%s)",
+		     arg, arg == 0 ? "single color" : arg == 1 ? "seperate specular color" : "??");
+		break;
+	case 0x5f:
+		DUMP("(Light %d) Type %d (%s)", opcode - 0x5d,
+		     arg, arg == 0 ? "parallel" : arg == 1 ? "point" : arg == 2 ? "spot" : "??");
 		break;
 	case 0x9b:
 		DUMP("Front Face Orientation = %d (%s)", arg, arg == 0 ? "CW" : arg == 1 ? "CCW" : "???");
