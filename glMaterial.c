@@ -8,17 +8,18 @@ void glMaterialfv (GLenum face, GLenum pname, const GLfloat *params)
 		sendCommandi(85, COLOR3(params));
 		sendCommandi(88, (int) (255.0 * CLAMPF(params[3])));
 		break;
-	case GL_DIFFUSE:
+	case GL_EMISSION:
 		sendCommandi(84, COLOR3(params));
-		sendCommandi(87, (int) (255.0 * CLAMPF(params[3])));
+		break;
+	case GL_DIFFUSE:
+		sendCommandi(86, COLOR3(params));
 		break;
 	case GL_AMBIENT_AND_DIFFUSE:
 		glMaterialfv(face, GL_AMBIENT, params);
 		glMaterialfv(face, GL_DIFFUSE, params);
 		break;
 	case GL_SPECULAR:
-		sendCommandi(83, COLOR3(params));
-		sendCommandi(86, (int) (255.0 * CLAMPF(params[3])));
+		sendCommandi(87, COLOR3(params));
 		break;
 	case GL_SHININESS:
 		sendCommandf(91, params[0]);
