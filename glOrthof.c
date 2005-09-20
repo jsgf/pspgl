@@ -35,9 +35,9 @@ void glOrthof (GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat
 	m[10] = -2.0 * _1over_fmn;
 	m[11] = 0.0;
 
-	m[12] = (right + left) *  _1over_rml;
-	m[13] = (top + bottom) *  _1over_tmb;
-	m[14] = (far + near) * _1over_fmn;
+	m[12] = -(right + left) *  _1over_rml;
+	m[13] = -(top + bottom) *  _1over_tmb;
+	m[14] = -(far + near) * _1over_fmn;
 	m[15] = 1.0;
 
 	glMultMatrixf(m);
