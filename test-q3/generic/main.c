@@ -436,58 +436,117 @@ unsigned char keytab [] = {
 
 
 static
+void special_key (int key, int down)
+{
+	switch (key) {
+	case 13:
+		CL_KeyEvent(K_ENTER, down, Sys_Milliseconds());
+		break;
+	case ' ':
+		CL_KeyEvent(K_SPACE, down, Sys_Milliseconds());
+		break;
+	case 27:
+		CL_KeyEvent(K_ESCAPE, down, Sys_Milliseconds());
+		break;
+	case 127:
+		CL_KeyEvent(K_BACKSPACE, down, Sys_Milliseconds());
+		break;
+	default:
+		if (key >= GLUT_KEY_LEFT && key <= GLUT_KEY_LEFT + sizeof(keytab)/sizeof(*keytab))
+			CL_KeyEvent(keytab[key - GLUT_KEY_LEFT], down, Sys_Milliseconds());
+	}
+}
+
+
+static
 void special_keydown (int key, int x, int y)
 {
-printf("%s: key 0x%08x\n", __FUNCTION__, key);
-	if (key >= GLUT_KEY_LEFT && key <= GLUT_KEY_LEFT + sizeof(keytab)/sizeof(*keytab))
-		CL_KeyEvent(keytab[key - GLUT_KEY_LEFT], qtrue, Sys_Milliseconds());
+	special_key(key, qtrue);
 }
 
 
 static
 void special_keyup (int key, int x, int y)
 {
-printf("%s: key 0x%08x\n", __FUNCTION__, key);
+	special_key(key, qfalse);
+}
+
+
+static
+void key (unsigned char key, int down)
+{
 	switch (key) {
 	case 13:
-		CL_KeyEvent(K_ENTER, qfalse, Sys_Milliseconds());
+		CL_KeyEvent(K_ENTER, down, Sys_Milliseconds());
 		break;
 	case ' ':
-		CL_KeyEvent(K_SPACE, qfalse, Sys_Milliseconds());
+		CL_KeyEvent(K_SPACE, down, Sys_Milliseconds());
 		break;
 	case 27:
-		CL_KeyEvent(K_ESCAPE, qfalse, Sys_Milliseconds());
+		CL_KeyEvent(K_ESCAPE, down, Sys_Milliseconds());
 		break;
 	case 127:
-		CL_KeyEvent(K_BACKSPACE, qfalse, Sys_Milliseconds());
+		CL_KeyEvent(K_BACKSPACE, down, Sys_Milliseconds());
 		break;
 	default:
-		if (key >= GLUT_KEY_LEFT && key <= GLUT_KEY_LEFT + sizeof(keytab)/sizeof(*keytab))
-			CL_KeyEvent(keytab[key - GLUT_KEY_LEFT], qfalse, Sys_Milliseconds());
+		CL_CharEvent(key);
 	}
 }
 
 
 static
-void keydown (unsigned char key, int x, int y)
+void keydown (unsigned char keycode, int x, int y)
 {
-printf("%s: key 0x%08x\n", __FUNCTION__, key);
-	switch (key) {
-	case 13:
-		CL_KeyEvent(K_ENTER, qtrue, Sys_Milliseconds());
-		break;
-	case ' ':
-		CL_KeyEvent(K_SPACE, qtrue, Sys_Milliseconds());
-		break;
-	case 27:
-		CL_KeyEvent(K_ESCAPE, qtrue, Sys_Milliseconds());
-		break;
-	case 127:
-		CL_KeyEvent(K_BACKSPACE, qtrue, Sys_Milliseconds());
-		break;
-	default:
-		CL_CharEvent(key);
+	key(keycode, qtrue);
+}
+
+
+static
+void keyup (unsigned char keycode, int x, int y)
+{
+	key(keycode, qfalse);
+}
+
+
+static int mouse_x, mouse_y;
+
+static
+void mouse_motion (int x, int y)
+{
+	CL_MouseEvent(2 * (x - mouse_x), 2 * (y - mouse_y), Sys_Milliseconds());
+	mouse_x = x;
+	mouse_y = y;
+}
+
+static
+void mouse_button (int button, int state, int x, int y)
+{
+	int keycode = K_MOUSE1 + button - GLUT_LEFT_BUTTON;
+	int press = (state == GLUT_DOWN) ? qtrue : qfalse;
+	CL_KeyEvent(keycode, press, Sys_Milliseconds());
+	mouse_x = x;
+	mouse_y = y;
+}
+
+static
+void joystick (unsigned int buttons, int x, int y, int z)
+{
+	static unsigned int prev_buttons;
+	unsigned int changed = buttons ^ prev_buttons;
+	int time = Sys_Milliseconds();
+	int i;
+
+	CL_JoystickEvent(0, x, time);
+	CL_JoystickEvent(1, y, time);
+
+	for (i=0; i<32; i++) {
+		if (changed & (1 << i)) {
+			int press = (buttons & (1 << i)) ? qtrue : qfalse;
+			CL_KeyEvent(K_JOY1 + i, press, time);
+		}
 	}
+
+	prev_buttons = buttons;
 }
 
 
@@ -502,8 +561,11 @@ int main (int argc, char **argv)
 	glutSpecialFunc(special_keydown);
 	glutSpecialUpFunc(special_keyup);
 	glutKeyboardFunc(keydown);
-//	glutKeyboardUpFunc(keyup);
-//	glutJoystickFunc(joystick, 0);
+	glutKeyboardUpFunc(keyup);
+	glutJoystickFunc(joystick, 0);
+	glutMouseFunc(mouse_button);
+	glutMotionFunc(mouse_motion);
+	glutPassiveMotionFunc(mouse_motion);
 	glutDisplayFunc(display);
 	glutMainLoop();
 
