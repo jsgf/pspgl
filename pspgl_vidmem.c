@@ -116,18 +116,19 @@ EGLBoolean pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s)
 		/* wait for completion of pending render operations before display */
 		glFinish();
 
+		/* wait for sync if needed */
+		if (pspgl_curctx->swap_interval > 0) {
+			do {
+				sceDisplayWaitVblankStart();
+			} while ((sceDisplayGetVcount() % pspgl_curctx->swap_interval) != 0);
+		}
+
+		psp_log("display @ adr 0x%08x\n", (unsigned long) s->color_buffer[s->current_front]);
+
 		sceDisplaySetFrameBuf(s->color_buffer[s->current_front],
 				      s->pixelperline,
 				      s->pixfmt,
 				      PSP_DISPLAY_SETBUF_NEXTFRAME);
-
-		/* wait for sync if needed */
-		if (pspgl_curctx->swap_interval > 0) {
-			while ((sceDisplayGetVcount() % pspgl_curctx->swap_interval) != 0)
-				sceDisplayWaitVblankStart();
-		}
-
-		psp_log("display @ adr 0x%08x\n", (unsigned long) s->color_buffer[s->current_front]);
 	}
 
 	return EGL_TRUE;
