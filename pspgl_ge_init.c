@@ -54,19 +54,19 @@ unsigned long ge_init_state [] =
 	0xe500e2f3,	/* Dither Matrix, Row 3 */
 	0xde000004,	/* Depth Test Function GL_LESS */
 
-	0x3a000000,	/* World Matrix Select = 0 */
-	0x3b3f8000,	/* World Matrix Upload 1.00000 */
-	0x3b000000,	/* World Matrix Upload 0.00000 */
-	0x3b000000,	/* World Matrix Upload 0.00000 */
-	0x3b000000,	/* World Matrix Upload 0.00000 */
-	0x3b3f8000,	/* World Matrix Upload 1.00000 */
-	0x3b000000,	/* World Matrix Upload 0.00000 */
-	0x3b000000,	/* World Matrix Upload 0.00000 */
-	0x3b000000,	/* World Matrix Upload 0.00000 */
-	0x3b3f8000,	/* World Matrix Upload 1.00000 */
-	0x3b000000,	/* World Matrix Upload 0.00000 */
-	0x3b000000,	/* World Matrix Upload 0.00000 */
-	0x3b000000,	/* World Matrix Upload 0.00000 */
+	0x3c000000,	/* View Matrix Select = 0 */
+	0x3d3f8000,	/* View Matrix Upload 1.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d3f8000,	/* View Matrix Upload 1.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d3f8000,	/* View Matrix Upload 1.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
 };
 
 const

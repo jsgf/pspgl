@@ -192,10 +192,10 @@ void process_insn (uint32_t insn)
 		DUMP("Patch Front Face Orientation = %d (%s)", arg, arg == 0 ? "CW" : arg == 1 ? "CCW" : "???");
 		break;
 	case 0x3a:
-		DUMP("World Matrix Select = %d", arg);
+		DUMP("Model Matrix Select = %d", arg);
 		break;
 	case 0x3b:
-		DUMP("World Matrix Upload %1.5f", float32(arg));
+		DUMP("Model Matrix Upload %1.5f", float32(arg));
 		break;
 	case 0x3c:
 		DUMP("View Matrix Select = %d", arg);

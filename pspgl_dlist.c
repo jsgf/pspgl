@@ -41,13 +41,14 @@ void sendCommandfMtx (int cmd, GLfloat argf)
 
 void pspgl_flush_pending_matrix_changes (struct pspgl_context *c)
 {
+	static const unsigned char matrix_opcode [] = { 58, 62, 64 };
 	int matrix_id;
 
 	for (matrix_id=0; matrix_id<3; matrix_id++) {
 		if (c->matrix_touched & (1 << matrix_id)) {
 			int depth = c->matrix_stack_depth[matrix_id];
 			GLfloat *m = c->matrix_stack[matrix_id][depth-1];
-			int opcode = 60 + 2 * matrix_id;
+			int opcode = matrix_opcode[matrix_id];
 			int n = (opcode == 62) ? 4 : 3;
 			int i, j;
 
