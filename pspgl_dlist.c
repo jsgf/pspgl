@@ -9,7 +9,7 @@
 
 void pspgl_dlist_enqueue_cmd (struct pspgl_dlist *d, unsigned long cmd)
 {
-	if (d->len >= DLIST_SIZE - 2) {
+	if (d->len >= DLIST_SIZE - 4) {
 		d = dlist_flush(d);
 		if (!d)
 			return;
@@ -135,10 +135,12 @@ void pspgl_dlist_finish (struct pspgl_dlist *d)
 {
 	pspgl_flush_pending_state_changes(pspgl_curctx);
 
-	assert(d->len < DLIST_SIZE - 2);
+	assert(d->len < DLIST_SIZE - 4);
 
 	d->cmd_buf[d->len++] = 0x0f000000;	/* FINISH */
 	d->cmd_buf[d->len++] = 0x0c000000;	/* END */
+	d->cmd_buf[d->len++] = 0x00000000;
+	d->cmd_buf[d->len++] = 0x00000000;
 }
 
 
@@ -147,7 +149,7 @@ void pspgl_dlist_finalize(struct pspgl_dlist *d)
 	pspgl_dlist_finish(d);
 	pspgl_dlist_dump(d->cmd_buf, d->len);
 	assert(d->qid == -1);
-	d->qid = sceGeListEnQueue(d->cmd_buf, &d->cmd_buf[d->len], 0, NULL);
+	d->qid = sceGeListEnQueue(d->cmd_buf, &d->cmd_buf[d->len-1], 0, NULL);
 }
 
 
@@ -307,9 +309,9 @@ void * pspgl_dlist_insert_space (struct pspgl_dlist *d, unsigned long size)
 
 	pspgl_flush_pending_state_changes(pspgl_curctx);
 
-	if (d->len >= DLIST_SIZE - 2 - size) {
+	if (d->len >= DLIST_SIZE - 4 - size) {
 		d = d->done(d);
-		if (!d || (d->len >= DLIST_SIZE - 2 - size))
+		if (!d || (d->len >= DLIST_SIZE - 4 - size))
 			return NULL;
 	}
 
