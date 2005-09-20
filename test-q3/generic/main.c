@@ -325,9 +325,7 @@ int Sys_Milliseconds (void)
 		return tp.tv_usec / 1000;
 	}
 
-	/* XXX we slow down the timebase by factor two for now, to have a closer look on the details... */
-	return ((tp.tv_sec - sys_timeBase) * 1000 + tp.tv_usec / 1000) / 2;
-	//return (tp.tv_sec - sys_timeBase) * 1000 + tp.tv_usec / 1000;
+	return (tp.tv_sec - sys_timeBase) * 1000 + tp.tv_usec / 1000;
 }
 
 
@@ -389,7 +387,7 @@ void Sys_ShowConsole (int visLevel, qboolean quitOnClose)
 qboolean Sys_LowPhysicalMemory (void)
 {
 	printf("%s (%d):\n", __FUNCTION__, __LINE__);
-	return qfalse;
+	return qtrue;
 }
 
 
@@ -419,7 +417,7 @@ void display (void)
 	static int initialized = 0;
 
 	if (!initialized) {
-		char *cmdline = strdup("+demo four " "+set cg_drawFPS 1");
+		char *cmdline = strdup(""); /*strdup("+demo four " "+set cg_drawFPS 1");*/
 		Com_Init(cmdline);
 		free(cmdline);
 		initialized = 1;

@@ -12,9 +12,10 @@ ARCH = psp-
 CC = $(ARCH)gcc
 RM = rm -f
 
-CFLAGS = -g -Wall -O0 -MD -DBOTLIB
-LFLAGS = -g -Wall -O0
+CFLAGS = -g -Wall -O2 -MD -DBOTLIB
+LFLAGS = -g -Wall -O2
 
+CFLAGS += -ffunction-sections
 
 ifeq ($(ARCH),psp-)
 	SDKPATH := $(shell psp-config --pspsdk-path)
