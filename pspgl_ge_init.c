@@ -45,6 +45,13 @@ unsigned long ge_init_state [] =
 	0x36000101,	/* Patch Divide, 1x1 */
 	0x483f8000,	/* Texture Scale S 1.0 */
 	0x493f8000,	/* Texture Scale T 1.0 */
+
+	0x54000000,	/* emissive color 0.0, 0.0, 0.0, 1.0 */
+	0x55333333,	/* ambient  color 0.2, 0.2, 0.2, 1.0 */
+	0x56cccccc,	/* diffuse  color 0.8, 0.8, 0.8, 1.0 */
+	0x57000000,	/* specular color 0.0, 0.0, 0.0, 1.0 */
+	0x580000ff,	/* ambient alpha 1 */
+
 	0x5b3f8000,	/* Specular Power = 1.0 */
 	0x9b000001,	/* Front Face Orientation GL_CCW */
 	0xc7000106,	/* Texfilter mag (LINEAR), min (NEAREST_MIPMAP_LINEAR) */
@@ -68,6 +75,7 @@ unsigned long ge_init_state [] =
 	0x3d000000,	/* View Matrix Upload 0.00000 */
 	0x3d000000,	/* View Matrix Upload 0.00000 */
 };
+
 
 const
 struct pspgl_texobj pspgl_texobj_default = {

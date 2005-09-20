@@ -137,6 +137,7 @@ clean:
 	make -C tools clean
 	make -C test-egl clean
 	make -C test-glut clean
+	make -C test-q3 clean
 
 install: all
 	mkdir -p $(PSPPATH)/include $(PSPPATH)/lib
