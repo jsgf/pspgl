@@ -3,15 +3,15 @@
 
 void glColorMask (GLboolean red, GLboolean green, GLboolean blue, GLboolean alpha)
 {
-	unsigned long mask = red ? 0x000000ff : 0;
+	unsigned long mask = red ? 0xffff00 : 0xffffff;
 
 	if (green)
-		mask |= 0x0000ff00;
+		mask &= 0xff00ff;
 
 	if (blue)
-		mask |= 0x00ff0000;
+		mask &= 0x00ffff;
 
-	pspgl_curctx->write_mask.alpha = alpha ? 0xff : 0;
+	pspgl_curctx->write_mask.alpha = alpha ? 0x00: 0xff;
 
         sendCommandi(232, mask);
 

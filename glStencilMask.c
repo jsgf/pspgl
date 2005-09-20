@@ -3,7 +3,7 @@
 
 void glStencilMask (GLuint mask)
 {
-	pspgl_curctx->write_mask.stencil = mask;
+	pspgl_curctx->write_mask.stencil = ~mask;
 
 	/**
 	 * Alpha Channel and Stencil are shared. Only update mask register
