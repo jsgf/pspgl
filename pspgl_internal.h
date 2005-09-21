@@ -89,7 +89,6 @@ struct pspgl_context {
 	int refcount;
 
 	/* XXX IMPROVE Do we really need to store anything below? these are hardware states, stored in ge_reg[]... */
-	uint32_t ge_ctx [512];
 	struct {
 		GLint x, y, width, height;
 	} viewport;
