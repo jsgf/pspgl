@@ -1,14 +1,6 @@
 #include "pspgl_internal.h"
 
 
-/* Blend Equation */
-#define GE_ADD               0
-#define GE_SUBTRACT          1
-#define GE_REVERSE_SUBTRACT  2
-#define GE_MIN               3
-#define GE_MAX               4
-#define GE_ABS               5
-
 /* Blend Factor */
 #define GE_SRC_COLOR		0
 #define GE_ONE_MINUS_SRC_COLOR	1
@@ -23,7 +15,7 @@
 
 void glBlendFunc (GLenum sfactor, GLenum dfactor)
 {
-	unsigned int srcfunc, dstfunc, equation;
+	unsigned int srcfunc, dstfunc;
 
 	switch (dfactor) {
 	case GL_ZERO:
@@ -94,27 +86,6 @@ void glBlendFunc (GLenum sfactor, GLenum dfactor)
 		return;
 	}
 
-	switch (pspgl_curctx->blend.equation) {
-	case GL_FUNC_SUBTRACT:
-		equation = GE_SUBTRACT;
-		break;
-	case GL_FUNC_REVERSE_SUBTRACT:
-		equation = GE_REVERSE_SUBTRACT;
-		break;
-	case GL_MIN:
-		equation = GE_MIN;
-		break;
-	case GL_MAX:
-		equation = GE_MAX;
-		break;
-	case GL_FUNC_ADD:
-	default:
-		equation = GE_ADD;
-	}
-
-	pspgl_curctx->blend.sfactor = sfactor;
-	pspgl_curctx->blend.dfactor = dfactor;
-
-	sendCommandi(223, (equation << 8) | (dstfunc << 4) | srcfunc);
+	pspgl_context_writereg_masked(pspgl_curctx, 223, (dstfunc << 4) | srcfunc, 0x0ff);
 }
 

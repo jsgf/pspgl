@@ -94,7 +94,6 @@ void pspgl_ge_init (struct pspgl_context *c)
 	glViewport(0, 0, c->draw->width, c->draw->height);
 	glDepthRange(0.0, 1.0);
 	c->clear.depth = 1.0;
-	c->blend.equation = GL_ADD;
 	c->depth_offset = 0.0;
 	c->swap_interval = 1;
 

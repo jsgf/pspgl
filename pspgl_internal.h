@@ -94,10 +94,6 @@ struct pspgl_context {
 		GLint x, y, width, height;
 	} viewport;
 	struct {
-		GLenum equation;
-		GLenum sfactor, dfactor;
-	} blend;
-	struct {
 		GLfloat near, far;
 	} fog;
 };
