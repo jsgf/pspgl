@@ -22,19 +22,22 @@ int filter_gl2ge (GLenum f)
 
 
 static
-void update_clamp (void)
+void update_clamp (struct pspgl_context *c, int shift, GLenum param)
 {
-	int clamps = (pspgl_curctx->texture.wrap_s == GL_REPEAT) ? 0 : 1;
-	int clampt = (pspgl_curctx->texture.wrap_t == GL_REPEAT) ? 0 : 1;
-	sendCommandi(199, (clampt << 8) | clamps);
+	switch (param) {
+	case GL_REPEAT:
+	case GL_CLAMP:
+		pspgl_context_writereg_masked(c, 199, (param - GL_REPEAT) << shift, 0xff << shift);
+		break;
+	default:
+		GLERROR(GL_INVALID_ENUM);
+	}
 }
 
 
 static
-void update_texfilter (GLenum *dst, GLenum param)
+void update_texfilter (struct pspgl_context *c, int shift, GLenum param)
 {
-	int min, mag;
-
 	switch (param) {
 	case GL_NEAREST:
 	case GL_LINEAR:
@@ -42,10 +45,7 @@ void update_texfilter (GLenum *dst, GLenum param)
 	case GL_LINEAR_MIPMAP_NEAREST:
 	case GL_NEAREST_MIPMAP_LINEAR:
 	case GL_LINEAR_MIPMAP_LINEAR:
-		*dst = param;
-		min = filter_gl2ge(pspgl_curctx->texture.min_filter);
-		mag = filter_gl2ge(pspgl_curctx->texture.mag_filter);
-		sendCommandi(198, (mag << 8) | min);
+		pspgl_context_writereg_masked(c, 198, filter_gl2ge(param) << shift, 0xff << shift);
 		break;
 	default:
 		GLERROR(GL_INVALID_ENUM);
@@ -60,18 +60,12 @@ void glTexParameterfv (GLenum target, GLenum pname, const GLfloat *params)
 
 	switch (pname) {
 	case GL_TEXTURE_WRAP_S:
-		pspgl_curctx->texture.wrap_s = params[0];
-		update_clamp();
-		break;
 	case GL_TEXTURE_WRAP_T:
-		pspgl_curctx->texture.wrap_t = params[0];
-		update_clamp();
+		update_clamp(pspgl_curctx, (pname == GL_TEXTURE_WRAP_S) ? 0 : 8, params[0]);
 		break;
 	case GL_TEXTURE_MAG_FILTER:
-		update_texfilter(&pspgl_curctx->texture.mag_filter, params[0]);
-		break;
 	case GL_TEXTURE_MIN_FILTER:
-		update_texfilter(&pspgl_curctx->texture.min_filter, params[0]);
+		update_texfilter(pspgl_curctx, (pname == GL_TEXTURE_MIN_FILTER) ? 0 : 8, params[0]);
 		break;
 	default:
 		goto invalid_enum;

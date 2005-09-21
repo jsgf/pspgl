@@ -100,13 +100,6 @@ struct pspgl_context {
 	struct {
 		GLfloat near, far;
 	} fog;
-	struct {
-		GLenum enabled;
-		GLenum wrap_s;
-		GLenum wrap_t;
-		GLenum mag_filter;
-		GLenum min_filter;
-	} texture;
 };
 
 

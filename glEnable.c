@@ -12,7 +12,6 @@ void pspgl_enable_state (GLenum cap, int enable)
 		opcode = 23;
 		break;
 	case GL_TEXTURE_2D:
-		pspgl_curctx->texture.enabled = enable;
 		opcode = 30;
 		break;
 	case GL_CULL_FACE:
