@@ -30,8 +30,8 @@ EGLBoolean eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 		c->shared->refcount--;
 
 		if (c->shared->refcount == 0) {
-			if (c->shared->texobj_list)
-				free(c->shared->texobj_list);
+			pspgl_hash_foreach_free(&c->shared->texture_objects, (void (*) (void *)) pspgl_texobj_free);
+			pspgl_hash_foreach_free(&c->shared->display_lists, /* XXX should become dlist_free() */ free);
 			free(c->shared);
 		}
 

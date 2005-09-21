@@ -32,6 +32,7 @@ libGL.a_OBJS = \
 	glAlphaFunc.o \
 	glArrayElement.o \
 	glBegin.o \
+	glBindTexture.o \
 	glBlendEquation.o \
 	glBlendFunc.o \
 	glClear.o \
@@ -43,6 +44,8 @@ libGL.a_OBJS = \
 	glColorMask.o \
 	glColorPointer.o \
 	glCullFace.o \
+	glDeleteLists.o \
+	glDeleteTextures.o \
 	glDepthFunc.o \
 	glDepthMask.o \
 	glDepthRange.o \
@@ -58,11 +61,15 @@ libGL.a_OBJS = \
 	glFrontFace.o \
 	glFrustumf.o \
 	glFrustum.o \
+	glGenLists.o \
+	glGenTextures.o \
 	glGetFloatv.o \
 	glGetIntegerv.o \
 	glGetError.o \
 	glGetString.o \
 	glInterleavedArrays.o \
+	glIsList.o \
+	glIsTexture.o \
 	glLight.o \
 	glLightModel.o \
 	glLineWidth.o \
@@ -80,6 +87,7 @@ libGL.a_OBJS = \
 	glPushMatrix.o \
 	glPolygonMode.o \
 	glPolygonOffset.o \
+	glPrioritizeTextures.o \
 	glRotatef.o \
 	glScalef.o \
 	glScissor.o \
@@ -97,9 +105,12 @@ libGL.a_OBJS = \
 	glVertexi.o \
 	glVertexPointer.o \
 	glViewport.o \
+ 	pspgl_context.o \
  	pspgl_dlist.o \
  	pspgl_ge_init.o \
+ 	pspgl_hash.o \
  	pspgl_misc.o \
+ 	pspgl_texobj.o \
  	pspgl_varray.o \
  	pspgl_vidmem.o
 

@@ -10,7 +10,7 @@ void glEnd (void)
 		if (prim < 0) {
 			GLERROR(GL_INVALID_ENUM);
 		} else {
-			pspgl_flush_pending_matrix_changes(pspgl_curctx);
+			pspgl_context_flush_pending_matrix_changes(pspgl_curctx);
 			sendCommandi(18, 0x0001ff);              /* xform: 3D, vertex format: t2f_c4ub_n3f_v3f */
 			sendCommandi(16, (adr >> 8) & 0xf0000); /* vertex array BASE */
 			sendCommandi(1, adr & 0xffffff);        /* vertex array, Adress */

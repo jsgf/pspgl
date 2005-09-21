@@ -7,9 +7,6 @@
 #define GE_TEXENV_REPLACE				3
 #define GE_TEXENV_ADD					4
 
-#define GE_TEXENV_RGB					0
-#define GE_TEXENV_RGBA					1
-
 
 void glTexEnvfv (GLenum target, GLenum pname, const GLfloat *params)
 {
@@ -41,11 +38,10 @@ void glTexEnvfv (GLenum target, GLenum pname, const GLfloat *params)
 		default:
 			goto invalid_enum;
 		}
-		/* XXX checkme: RGBA or RGB? should it depend on texture format? */
-		sendCommandi(201, (GE_TEXENV_RGBA << 16) | (GE_TEXENV_RGBA << 8) | mode);
+		pspgl_context_writereg_masked(pspgl_curctx, 201, mode, 0x0000ff);
 		break;
 	case GL_TEXTURE_ENV_COLOR:
-		sendCommandi(202, COLOR3(params));
+		pspgl_context_writereg(pspgl_curctx, 202, COLOR3(params));
 		break;
 	default:
 		goto invalid_enum;

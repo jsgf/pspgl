@@ -4,10 +4,10 @@
 #include <GL/gl.h>
 #include <GLES/egl.h>
 
-typedef unsigned long uint32_t;
-
 #include "pspgl_dlist.h"
+#include "pspgl_hash.h"
 #include "pspgl_misc.h"
+#include "pspgl_texobj.h"
 
 
 #define NUM_CMDLISTS	4
@@ -21,21 +21,10 @@ struct pspgl_vertex_array {
 };
 
 
-struct pspgl_texobj {
-	uint32_t ge_texreg_160x201 [201-160+1];
-	GLclampf  priority;
-};
-
-
-extern const struct pspgl_texobj pspgl_texobj_default;
-
-
 struct pspgl_shared_context {
 	int refcount;
-	struct {
-		GLint id;
-		struct pspgl_texobj *texobj;
-	} *texobj_list;
+	struct hashtable texture_objects;
+	struct hashtable display_lists;
 };
 
 
@@ -195,11 +184,15 @@ unsigned long COLOR4 (const GLfloat c[4])
 }
 
 
-extern void pspgl_flush_pending_matrix_changes (struct pspgl_context *c);
-extern void pspgl_flush_pending_state_changes (struct pspgl_context *c);
+extern void pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd, unsigned long argi);
+extern void pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd, unsigned long argi, unsigned long mask);
+extern void pspgl_context_flush_pending_state_changes (struct pspgl_context *c);
+extern void pspgl_context_writereg_uncached (struct pspgl_context *c, unsigned long cmd, unsigned long argi);
 
-extern void sendCommandi(unsigned long cmd, unsigned long argi); 
-extern void sendCommandiUncached(unsigned long cmd, unsigned long argi); 
+extern void pspgl_context_flush_pending_matrix_changes (struct pspgl_context *c);
+
+#define sendCommandi(cmd,argi)		pspgl_context_writereg(pspgl_curctx, cmd, argi)
+#define sendCommandiUncached(cmd,argi)	pspgl_context_writereg_uncached (pspgl_curctx, cmd, argi)
 
 #define sendCommandf(cmd,argf)						\
 do {									\
