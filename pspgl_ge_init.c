@@ -44,20 +44,6 @@ unsigned long ge_init_state [] =
 	0x20000001,	/* Enable Dithering */
 	0x36000101,	/* Patch Divide, 1x1 */
 
-	0x3c000000,	/* View Matrix Select = 0 */
-	0x3d3f8000,	/* View Matrix Upload 1.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d3f8000,	/* View Matrix Upload 1.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d3f8000,	/* View Matrix Upload 1.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-
 	0x483f8000,	/* Texture Scale S 1.0 */
 	0x493f8000,	/* Texture Scale T 1.0 */
 	0x54000000,	/* emissive color 0.0, 0.0, 0.0, 1.0 */
@@ -76,12 +62,35 @@ unsigned long ge_init_state [] =
 };
 
 
+static const
+unsigned long ge_matrix_init_state [] = {
+	0x3c000000,	/* View Matrix Select = 0 */
+	0x3d3f8000,	/* View Matrix Upload 1.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d3f8000,	/* View Matrix Upload 1.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d3f8000,	/* View Matrix Upload 1.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+	0x3d000000,	/* View Matrix Upload 0.00000 */
+};
+
+
+
 void pspgl_ge_init (struct pspgl_context *c)
 {
 	int i;
 
 	for (i=0; i<sizeof(ge_init_state)/sizeof(ge_init_state[0]); i++)
-		pspgl_dlist_enqueue_cmd(c->dlist_current, ge_init_state[i]);
+		pspgl_context_writereg(c, ge_init_state[i] >> 24, ge_init_state[i]);
+
+	/* matrix registers are overloaded, not cached. Use direct write-through. */
+	for (i=0; i<sizeof(ge_matrix_init_state)/sizeof(ge_matrix_init_state[0]); i++)
+		pspgl_dlist_enqueue_cmd(c->dlist_current, ge_matrix_init_state[i]);
 
 	/* create & initialize new matrix stacks, matrix mode is GL_MODELVIEW when done... */
 	for (i=GL_TEXTURE; --i>=GL_MODELVIEW; ) {
@@ -90,17 +99,19 @@ void pspgl_ge_init (struct pspgl_context *c)
 		glLoadIdentity();
 	}
 
+	memcpy(&c->texobj0, &pspgl_texobj_default, sizeof(c->texobj0));
+	c->texobj_current = &c->texobj0;
+
+	/* load register set of new texture object and mark all related registers as dirty*/
+	memcpy(&c->ge_reg[160], c->texobj_current->ge_texreg_160x201, sizeof(c->texobj_current->ge_texreg_160x201) - 4);
+	c->ge_reg_touched[4] = 0xffffffff;
+	c->ge_reg_touched[5] = 0x000001ff;
+
 	glScissor(0, 0, c->draw->width, c->draw->height);
 	glViewport(0, 0, c->draw->width, c->draw->height);
 	glDepthRange(0.0, 1.0);
 	c->clear.depth = 1.0;
 	c->depth_offset = 0.0;
 	c->swap_interval = 1;
-
-	memcpy(&c->texobj0, &pspgl_texobj_default, sizeof(c->texobj0));
-	c->texobj_current = &c->texobj0;
-
-	for (i=0; i<sizeof(c->texobj0.ge_texreg_160x201)/sizeof(c->texobj0.ge_texreg_160x201[0]); i++)
-		pspgl_dlist_enqueue_cmd(c->dlist_current, c->texobj0.ge_texreg_160x201[i]);
 }
 

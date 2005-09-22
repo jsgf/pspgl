@@ -303,7 +303,7 @@ void process_insn (uint32_t insn)
 		     arg, arg == 0 ? "single color" : arg == 1 ? "seperate specular color" : "??");
 		break;
 	case 0x5f ... 0x62:
-		DUMP("(Light %d) Type %d (%s)", opcode - 0x5d,
+		DUMP("(Light %d) Type %d (%s)", opcode - 0x5f,
 		     arg, arg == 0 ? "parallel" : arg == 1 ? "point" : arg == 2 ? "spot" : "??");
 		break;
 	case 0x63 ... 0x6e:
@@ -322,8 +322,8 @@ void process_insn (uint32_t insn)
 		DUMP("(Light %d) Spotlight Cone Attentuation %1.5f", opcode - 0x8b, float32(arg));
 		break;
 	case 0x8f ... 0x9a:
-		DUMP("(Light %d) Light Color %s %1.5f",
-		     (opcode - 0x8f) / 3, ((opcode - 0x8f) % 3) == 0 ? "Ambient" : ((opcode - 0x8f) % 3 == 1) ? "Diffuse" : "Specular", float32(arg));
+		DUMP("(Light %d) Light Color %s 0x%06x",
+		     (opcode - 0x8f) / 3, ((opcode - 0x8f) % 3) == 0 ? "Ambient" : ((opcode - 0x8f) % 3 == 1) ? "Diffuse" : "Specular", arg);
 		break;
 	case 0x9b:
 		DUMP("Front Face Orientation = %d (%s)", arg, arg == 0 ? "CW" : arg == 1 ? "CCW" : "???");
@@ -344,7 +344,7 @@ void process_insn (uint32_t insn)
 		DUMP("(Mipmap Level %d) Texture Pointer [23-0] 0x%08x", opcode - 0xa0, arg);
 		break;
 	case 0xa8 ... 0xaf:
-		DUMP("(Mipmap Level %d) Texture Stride %d. Texture Pointer [32-24] 0x%08x", opcode - 0xa0, arg & 0xffff, (arg << 8) & 0xff000000);
+		DUMP("(Mipmap Level %d) Texture Stride %d. Texture Pointer [32-24] 0x%08x", opcode - 0xa8, arg & 0xffff, (arg << 8) & 0xff000000);
 		break;
 	case 0xb0:
 		DUMP("CLUT Pointer [23-0] 0x%08x", arg);
@@ -353,7 +353,13 @@ void process_insn (uint32_t insn)
 		DUMP("CLUT Pointer [32-24] 0x%08x", arg << 8);
 		break;
 	case 0xb8 ... 0xbf:
-		DUMP("(Mipmap Level %d) Texture Width 2^%d, Height 2^%d", opcode - 0xa0, arg & 0xff, arg >> 8);
+		DUMP("(Mipmap Level %d) Texture Width 2^%d, Height 2^%d", opcode - 0xb8, arg & 0xff, arg >> 8);
+		break;
+	case 0xc4:
+		DUMP("CLUT size %d", arg);
+		break;
+	case 0xc7:
+		DUMP("Texture Wrap Mode S %d (%s), T %d (%s)", arg & 0xff, (arg & 0xff) ? "clamp" : "repeat", arg >> 8, (arg >> 8) ? "clamp" : "repeat");
 		break;
 	case 0xca:
 		DUMP("TextureEnv Color 0x%06x", arg);
@@ -421,6 +427,15 @@ void process_insn (uint32_t insn)
 		break;
 	case 0xe2 ... 0xe5:
 		DUMP("Dither Matrix %d", opcode - 0xe2);
+		break;
+	case 0xe7:
+		DUMP("Depth Mask 0x%04x", arg);
+		break;
+	case 0xe8:
+		DUMP("Pixel Mask Color 0x%06x", arg);
+		break;
+	case 0xe9:
+		DUMP("Pixel Mask Alpha 0x%02x", arg);
 		break;
 	default:
 		;
