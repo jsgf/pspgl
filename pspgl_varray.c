@@ -193,6 +193,9 @@ void pspgl_varray_draw (GLenum mode, GLenum index_type, const GLvoid *indices, G
 		sendCommandiUncached(2, ((unsigned long) indices) & 0xffffff);
 	}
 
+	/* Texture Sync, need to await end of transfer if any is pending */
+	sendCommandi(204, 0);
+
 	sendCommandi(18, vertex_fmt);
 	sendCommandi(16, (adr >> 8) & 0xf0000);
 	sendCommandi(1, adr & 0xffffff);
