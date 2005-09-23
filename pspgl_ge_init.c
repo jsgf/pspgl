@@ -104,8 +104,8 @@ void pspgl_ge_init (struct pspgl_context *c)
 
 	/* load register set of new texture object and mark all related registers as dirty*/
 	memcpy(&c->ge_reg[160], c->texobj_current->ge_texreg_160x201, sizeof(c->texobj_current->ge_texreg_160x201) - 4);
-	c->ge_reg_touched[4] = 0xffffffff;
-	c->ge_reg_touched[5] = 0x000001ff;
+	c->ge_reg_touched[4] |= 0xffffffff;
+	c->ge_reg_touched[5] |= 0x000001ff;
 
 	glScissor(0, 0, c->draw->width, c->draw->height);
 	glViewport(0, 0, c->draw->width, c->draw->height);
