@@ -28,33 +28,21 @@ void pspgl_context_flush_pending_state_changes (struct pspgl_context *c)
 	struct pspgl_dlist *d = pspgl_curctx->dlist_current;
 
 	for (i=0; i<256/32; i++) {
-		uint32_t word = c->ge_reg_touched[i];
-		uint32_t idx = 32 * i;
-
-		/**
-		 * try to accelerate search for the common case of sparse arrays
-		 * by skipping blocks of long zero bit clusters
-		 */
-		if ((word & 0xffff) == 0) {
-			word >>= 16;
-			idx += 16;
-		}
+		register uint32_t word = c->ge_reg_touched[i];
+		int idx = 32 * i + 31;
 
 		while (word) {
-			while (word & 1) {
+			register unsigned long zerobits;
+
+			/* count leading zeros */
+			__asm__("clz %0, %1" : "=r" (zerobits) : "r" (word));
+			word <<= zerobits;
+			idx -= zerobits;
+
+			while (word & (1 << 31)) {
 				pspgl_dlist_enqueue_cmd(d, c->ge_reg[idx]);
-				word >>= 1;
-				idx++;
-			}
-			if (word == 0)
-				break;
-			if ((word & 0xff) == 0) {
-				word >>= 8;
-				idx += 8;
-			}
-			while ((word & 0x1) == 0) {
-				word >>= 1;
-				idx++;
+				word <<= 1;
+				idx--;
 			}
 		}
 
