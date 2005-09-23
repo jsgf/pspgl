@@ -6,16 +6,23 @@
  */
 void pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd, unsigned long argi) 
 {
-	c->ge_reg[cmd] = ((cmd) << 24) | ((argi) & 0xffffff);
-	c->ge_reg_touched[cmd/32] |= (1 << (cmd % 32));
+	unsigned long new = ((cmd) << 24) | ((argi) & 0xffffff);
+
+	if (new != c->ge_reg[cmd]) {
+		c->ge_reg[cmd] = new;
+		c->ge_reg_touched[cmd/32] |= (1 << (31 - cmd % 32));
+	}
 }
 
 
 void pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd, unsigned long argi, unsigned long mask)
 {
-	c->ge_reg[cmd] &= ~mask;
-	c->ge_reg[cmd] |= argi & mask;
-	c->ge_reg_touched[cmd/32] |= (1 << (cmd % 32));
+	unsigned long new = (c->ge_reg[cmd] & ~mask) | (argi & mask);
+
+	if (new != c->ge_reg[cmd]) {
+		c->ge_reg[cmd] = new;
+		c->ge_reg_touched[cmd/32] |= (1 << (31 - cmd % 32));
+	}
 }
 
 
@@ -29,21 +36,20 @@ void pspgl_context_flush_pending_state_changes (struct pspgl_context *c)
 
 	for (i=0; i<256/32; i++) {
 		register uint32_t word = c->ge_reg_touched[i];
-		int idx = 32 * i + 31;
+		int idx = 32 * i;
 
 		while (word) {
-			register unsigned long zerobits;
+			register unsigned long count;
 
 			/* count leading zeros */
-			__asm__("clz %0, %1" : "=r" (zerobits) : "r" (word));
-			word <<= zerobits;
-			idx -= zerobits;
+			__asm__("clz %0, %1" : "=r" (count) : "r" (word));
+			word <<= count;
+			idx += count;
 
-			while (word & (1 << 31)) {
-				pspgl_dlist_enqueue_cmd(d, c->ge_reg[idx]);
-				word <<= 1;
-				idx--;
-			}
+			/* count leading ones */
+			__asm__("clo %0, %1" : "=r" (count) : "r" (word));
+			for (; count>0; count--, word<<=1)
+				pspgl_dlist_enqueue_cmd(d, c->ge_reg[idx++]);
 		}
 
 		c->ge_reg_touched[i] = 0;

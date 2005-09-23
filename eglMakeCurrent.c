@@ -5,14 +5,14 @@
 /* mask out trigger action registers, or the GE might run amok on context changes... */
 static const
 uint32_t ge_reg_touch_mask [] = {
-	0xffffe08f,
-	0x01ffffff,
+	0xf107ffff,
+	0xffffff80,
 	0xffffffff,
 	0xffffffff,
 	0xffffffff,
 	0xffffffff,
-	0xfffff3ff,
-	0xfefff7ff,
+	0xffcfffff,
+	0xffefff7f,
 };
 
 
