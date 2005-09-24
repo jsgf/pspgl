@@ -81,32 +81,32 @@ unsigned long ge_matrix_init_state [] = {
 };
 
 
-
 void pspgl_ge_init (struct pspgl_context *c)
 {
 	int i;
 
-	for (i=0; i<sizeof(ge_init_state)/sizeof(ge_init_state[0]); i++)
-		pspgl_context_writereg(c, ge_init_state[i] >> 24, ge_init_state[i]);
+	for (i=0; i<sizeof(ge_init_state)/sizeof(ge_init_state[0]); i++) {
+		unsigned long cmd = ge_init_state[i];
+		c->ge_reg[cmd >> 24] = cmd;
+	}
 
 	/* matrix registers are overloaded, not cached. Use direct write-through. */
 	for (i=0; i<sizeof(ge_matrix_init_state)/sizeof(ge_matrix_init_state[0]); i++)
 		pspgl_dlist_enqueue_cmd(c->dlist_current, ge_matrix_init_state[i]);
 
-	/* create & initialize new matrix stacks, matrix mode is GL_MODELVIEW when done... */
-	for (i=GL_TEXTURE; --i>=GL_MODELVIEW; ) {
+	/* create & initialize new matrix stacks, default matrix mode is GL_MODELVIEW when done... */
+	for (i=GL_TEXTURE; i>=GL_MODELVIEW; i--) {
 		glMatrixMode(i);
 		glPushMatrix();
 		glLoadIdentity();
 	}
 
+	/* set up default texobj0 */
 	memcpy(&c->texobj0, &pspgl_texobj_default, sizeof(c->texobj0));
 	c->texobj_current = &c->texobj0;
 
-	/* load register set of new texture object and mark all related registers as dirty*/
+	/* load register set of new texture object, all related registers are marked as dirty in MakeCurrent() */
 	memcpy(&c->ge_reg[160], c->texobj_current->ge_texreg_160x201, sizeof(c->texobj_current->ge_texreg_160x201));
-	c->ge_reg_touched[5] |= 0xffffffff;
-	c->ge_reg_touched[6] |= 0xffc00000;
 
 	glScissor(0, 0, c->draw->width, c->draw->height);
 	glViewport(0, 0, c->draw->width, c->draw->height);

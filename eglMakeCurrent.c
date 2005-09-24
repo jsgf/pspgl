@@ -2,17 +2,20 @@
 #include "pspgl_internal.h"
 
 
-/* mask out trigger action registers, or the GE might run amok on context changes... */
+/**
+ * mask out trigger action registers, or the GE might run amok on context changes...
+ * This bitfield is generated from ge_init_state[] with all non-action fields enabled.
+ */
 static const
 uint32_t ge_reg_touch_mask [] = {
-	0xf107ffff,
-	0xffffff80,
+	0x6000b7ff,
+	0xffbff380,
+	0x3ffcdf9f,
 	0xffffffff,
 	0xffffffff,
-	0xffffffff,
-	0xffffffff,
-	0xffcfffff,
-	0xffefff7f,
+	0xfffffcff,
+	0xffffbfff,
+	0xffdaffc0
 };
 
 
@@ -38,15 +41,16 @@ EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
 
 	pspgl_curctx = c;
 
-	if (c->initialized) {
-		/* simply mark registers and matrices as dirty, we need to rewrite them all after context restore... */
-		for (i=0; i<sizeof(c->ge_reg_touched)/sizeof(c->ge_reg_touched[0]); i++)
-			c->ge_reg_touched[i] = ge_reg_touch_mask[i];
-		c->matrix_touched = 0x07;
-	} else {
+	if (!c->initialized) {
 		pspgl_ge_init(c);
 		c->initialized = 1;
 	}
+
+	/* mark all registers and matrices as dirty, we need to rewrite them at init and after context restore... */
+	for (i=0; i<sizeof(c->ge_reg_touched)/sizeof(c->ge_reg_touched[0]); i++)
+		c->ge_reg_touched[i] |= ge_reg_touch_mask[i];
+
+	c->matrix_touched |= 0x07;
 
 	return pspgl_vidmem_setup_write_and_display_buffer(c->draw);
 }
