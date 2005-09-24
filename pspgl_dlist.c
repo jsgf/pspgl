@@ -14,7 +14,7 @@ void pspgl_dlist_enqueue_cmd (struct pspgl_dlist *d, unsigned long cmd)
 		if (!d)
 			return;
 	}
-	pspgl_curctx->dlist_current->cmd_buf[d->len] = cmd;
+	d->cmd_buf[d->len] = cmd;
 	d->len++;
 }
 
@@ -197,7 +197,7 @@ void * pspgl_dlist_insert_space (struct pspgl_dlist *d, unsigned long size)
 	size = align16(size + 0x0f + 2 * sizeof(d->cmd_buf[0]));
 	size /= sizeof(d->cmd_buf[0]);
 
-	if (d->len >= DLIST_SIZE - 4 - size) {
+	if (d->len + size >= DLIST_SIZE - 4) {
 		d = d->done(d);
 		if (!d || (d->len >= DLIST_SIZE - 4 - size))
 			return NULL;
