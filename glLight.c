@@ -3,6 +3,7 @@
 
 void glLightfv (GLenum light, GLenum pname, const GLfloat *params)
 {
+	struct pspgl_context *c = pspgl_curctx;
 	GLfloat scale;
 
 	if (light < GL_LIGHT0 || light > GL_LIGHT3) {
@@ -41,7 +42,7 @@ void glLightfv (GLenum light, GLenum pname, const GLfloat *params)
 		sendCommandf(139+light, params[0]);
 		break;
 	case GL_SPOT_CUTOFF:
-		sendCommandi(95+light, (params[0] == 0.0) ? 0 : (params[0] == 180.0) ? 1 : 2);
+		pspgl_context_writereg_masked(c, 95+light, ((params[0] == 0.0) ? 0 : (params[0] == 180.0) ? 1 : 2) << 8, 0x00ff00);
 		sendCommandf(135+light, params[0]);
 		break;
 	case GL_CONSTANT_ATTENUATION:

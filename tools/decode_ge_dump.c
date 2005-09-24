@@ -303,8 +303,9 @@ void process_insn (uint32_t insn)
 		     arg, arg == 0 ? "single color" : arg == 1 ? "seperate specular color" : "??");
 		break;
 	case 0x5f ... 0x62:
-		DUMP("(Light %d) Type %d (%s)", opcode - 0x5f,
-		     arg, arg == 0 ? "parallel" : arg == 1 ? "point" : arg == 2 ? "spot" : "??");
+		DUMP("(Light %d) Type %d (%s), %s/%s/%s", opcode - 0x5f,
+		     (arg >> 8), (arg >> 8) == 0 ? "parallel" : (arg >> 8) == 1 ? "point" : (arg >> 8) == 2 ? "spot" : "??",
+		     arg & 0x01 ? "ambient" : "-", arg & 0x02 ? "diffuse" : "-", arg & 0x04 ? "specular" : "-");
 		break;
 	case 0x63 ... 0x6e:
 		DUMP("(Light %d) Position %c %1.5f", (opcode - 0x63) / 3, (opcode - 0x63) % 3 + 'X', float32(arg));
