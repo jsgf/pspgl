@@ -4,16 +4,14 @@ pspGL is a pure, minimal, hardware-accelerated implementation of something like
 OpenGL for the Playstation Portable. Before you are able to compile it, you
 need to set up a PSP toolchain and SDK as described on http://pspdev.org.
 
-The exit() implementation in the psplibc is broken, please apply the patch at
-the end of this file before building the SDK.
+Export PSP_MOUNTDIR=<your_PSP_mountpoint> and PSP_REVISION=<your_PSP_revision>.
+Then type 'make' to build, 'make -C <demodir> install' to build and install one
+of the demos.  Here an example how to build for a 1.50 PSP on MacOS-X:
 
-If you build on MacOS-X just open a shell and type:
-
+   $ export PSP_MOUNTDIR=/Volumes/PSP
+   $ export PSP_REVISION=1.5
    $ make && make -C test-egl clean install
    $ make && make -C test-glut clean install
-
-For other operating systems the install rule probably won't work, please 
-create a new install rule for your OS and sumbit the according patch.
 
 All OpenGL-ES fixed-point commands are not implemented. Please take a look
 in the GLES/gl.h header file for the OpenGL commands implemented additionally
@@ -56,6 +54,7 @@ GL applications for the PSP:
    (Enable Stencil test if you want to write to the stencil buffer)
  - We don't know yet whether/how the fog function can get changed.
  - Only single-sided lighting, for two sided shading you need a CW and a CCW pass.
+ - No wireframe rendering, we don' know whether the PSP supports this.
 
 This list is by no means complete, please report if you encounter other issues.
 

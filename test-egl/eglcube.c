@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
 
 	GLCHK(glDisable(GL_STENCIL_TEST));
 	GLCHK(glDisable(GL_ALPHA_TEST));
-	GLCHK(glEnable(GL_SCISSOR_TEST));
+	GLCHK(glDisable(GL_SCISSOR_TEST));
 
 	GLCHK(glDepthFunc(GL_LEQUAL));
 	GLCHK(glEnable(GL_DEPTH_TEST));
