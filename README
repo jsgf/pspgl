@@ -9,7 +9,7 @@ Then type 'make' to build, 'make -C <demodir> install' to build and install one
 of the demos.  Here an example how to build for a 1.50 PSP on MacOS-X:
 
    $ export PSP_MOUNTDIR=/Volumes/PSP
-   $ export PSP_REVISION=1.5
+   $ export PSP_REVISION=1.50
    $ make && make -C test-egl clean install
    $ make && make -C test-glut clean install
 

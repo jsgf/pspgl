@@ -67,7 +67,7 @@ if [ "$IMAGE" = ""  -o "$help" = "yes" ] ; then
 	echo "	PSP_REVISION=<1.00|1.50|all>	define PSP revision" 
 	echo "" 
 	echo "Usage Example:" 
-	echo "	PSP_MOUNTDIR=/Volumes/PSP PSP_REVISION=1.5 psp-install test.elf --eboot-title=test" 
+	echo "	PSP_MOUNTDIR=/Volumes/PSP PSP_REVISION=1.50 psp-install test.elf --eboot-title=test" 
 	echo "" 
 	exit 1
 fi
