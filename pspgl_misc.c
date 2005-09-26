@@ -2,6 +2,7 @@
 #include <pspge.h>
 
 #include <stdio.h>
+#include <string.h>
 #include <stdarg.h>
 
 #include "pspgl_internal.h"
@@ -89,7 +90,9 @@ void __pspgl_vram_dump (void)
 	unsigned long vram_start = (unsigned long) sceGeEdramGetAddr();
 	unsigned long vram_size = (unsigned long) sceGeEdramGetSize();
 	unsigned long header [4];
+	unsigned char vram_copy [0x10000];
 	int fd;
+	int i;
 
 	header[0] = PSPGL_GE_DUMP_VRAM;
 	header[1] = sizeof(header) + vram_size;
@@ -98,8 +101,13 @@ void __pspgl_vram_dump (void)
 
 	fd = sceIoOpen(PSPGL_GE_DUMPFILE, PSP_O_CREAT | PSP_O_APPEND | PSP_O_WRONLY, 0644);
 	sceIoWrite(fd, header, sizeof(header));
-	sceIoWrite(fd, (void *) vram_start, vram_size);
+
+	/* copy in blocks, direct writes from VRAM to file don't seem to work... */
+	for (i=0; i<vram_size/sizeof(vram_copy); i++, vram_start+=sizeof(vram_copy)) {
+		memcpy(vram_copy, (void *) vram_start, sizeof(vram_copy));
+		sceIoWrite(fd, (void *) vram_copy, sizeof(vram_copy));
+	}
+
 	sceIoClose(fd);
 }
-
 
