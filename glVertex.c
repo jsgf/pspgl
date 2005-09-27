@@ -48,8 +48,15 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 		c->current.vertex_count = overhang[prim];
 
 		if (overhang[prim]) {
+			struct t2f_c4ub_n3f_v3f *vbuf_start;
+
 			c->current.vbuf_adr = pspgl_dlist_insert_space(c->dlist_current, 12 * sizeof(struct t2f_c4ub_n3f_v3f));
-			memcpy(c->current.vbuf_adr, vbuf - overhang[prim] + 1, overhang[prim] * sizeof(*vbuf));
+			vbuf_start = (struct t2f_c4ub_n3f_v3f *) c->current.vbuf_adr;
+
+			if (prim == GL_TRIANGLE_FAN)
+				vbuf_start++;
+
+			memcpy(vbuf_start, vbuf - overhang[prim] + 1, overhang[prim] * sizeof(*vbuf));
 		}
  
 		/* reset primitive type, was cleared by glEnd() */
