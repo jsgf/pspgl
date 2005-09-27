@@ -54,7 +54,7 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 			c->current.vbuf_adr = pspgl_dlist_insert_space(c->dlist_current, 12 * sizeof(struct t2f_c4ub_n3f_v3f));
 			vbuf_start = c->current.vbuf_adr;
 
-			if (prim == GL_TRIANGLE_FAN) {
+			if (prim == GL_TRIANGLE_FAN || prim == GL_POLYGON) {
 				memcpy(vbuf_start, prev, sizeof(vbuf_start[0]));
 				c->current.vertex_count++;
 				vbuf_start++;
