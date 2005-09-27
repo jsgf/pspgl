@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
 	EGLint num_configs;
 	EGLContext ctx;
 	EGLSurface surface;
-	GLfloat angle = 45.0f;
+	GLfloat angle = 0.0f;
 	SceCtrlData pad;
 
 	sceCtrlSetSamplingCycle(0);
@@ -159,18 +159,17 @@ int main(int argc, char* argv[])
 	GLCHK(glDisable(GL_SCISSOR_TEST));
 
 	GLCHK(glDepthFunc(GL_LEQUAL));
-	GLCHK(glDepthRangef(0.0f, 1.0f));
-	GLCHK(glClearDepthf(1.0f));
 	GLCHK(glEnable(GL_DEPTH_TEST));
 
 	GLCHK(glFrontFace(GL_CW));
 	GLCHK(glShadeModel(GL_SMOOTH));
-	GLCHK(glDisable(GL_CULL_FACE));
+	GLCHK(glEnable(GL_CULL_FACE));
 
 	GLCHK(glEnable(GL_TEXTURE_2D));
 
 	GLCHK(glViewport(0, 0, 480, 272));
 	GLCHK(glScissor(0, 0, 480, 272));
+	GLCHK(glDepthRangef(0.0f, 1.0f));
 
 	while (!done) {
 		sceCtrlReadBufferPositive(&pad, 1); 
@@ -182,6 +181,7 @@ int main(int argc, char* argv[])
 			angle += 1.0f;
 
 		GLCHK(glClearColor(pad.Lx * 1.0f/255, pad.Ly * 1.0f/255, 1.0f, 1.0f));
+		GLCHK(glClearDepthf(1.0f));
 		GLCHK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
 		GLCHK(glMatrixMode(GL_PROJECTION));
@@ -190,7 +190,7 @@ int main(int argc, char* argv[])
 
 		GLCHK(glMatrixMode(GL_MODELVIEW));
 		GLCHK(glLoadIdentity());
-		GLCHK(gluLookAtf(0.0f, 0.0f, 1.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f));
+		GLCHK(gluLookAtf(0.0f, 0.0f, 2.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f));
 		GLCHK(glRotatef(angle * 0.79f, 1.0f, 0.0f, 0.0f));
 		GLCHK(glRotatef(angle * 0.98f, 0.0f, 1.0f, 0.0f));
 		GLCHK(glRotatef(angle * 1.32f, 0.0f, 0.0f, 1.0f));
@@ -206,8 +206,6 @@ int main(int argc, char* argv[])
 		GLCHK(glDrawArrays(GL_TRIANGLES, 0, 12*3));
 
 		EGLCHK(eglSwapBuffers(dpy, surface));
-__pspgl_vram_dump();
-done=1;
 	}
 
 	EGLCHK(eglTerminate(dpy));
