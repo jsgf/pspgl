@@ -2,6 +2,6 @@
 
 void glClearDepth (GLclampd depth)
 {
-	pspgl_curctx->clear.depth = CLAMPF((GLfloat) depth);
+	pspgl_curctx->clear.depth = 65535.0f * CLAMPF((GLfloat) depth);
 }
 

@@ -40,7 +40,8 @@ unsigned long ge_init_state [] =
 	0xee000000, 0xf0000000, 0xf1000000, 0xf2000000, 0xf3000000, 0xf4000000, 0xf5000000, 0xf6000000,
 	0xf7000000, 0xf8000000, 0xf9000000,
 */
-	0x1c000001,	/* Enable Frustum Clip Planes */
+//	0x1c000001,	/* Enable Frustum Clip Planes */
+	0x1c000000,	/* Disable Frustum Clip Planes */
 	0x20000001,	/* Enable Dithering */
 	0x36000101,	/* Patch Divide, 1x1 */
 

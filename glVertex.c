@@ -12,48 +12,48 @@ struct t2f_c4ub_n3f_v3f {
 
 void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 {
+	struct pspgl_context *c = pspgl_curctx;
 	struct t2f_c4ub_n3f_v3f *vbuf;
 
-	if (pspgl_curctx->current.vertex_count == 0) {
-		struct pspgl_dlist *dlist = pspgl_curctx->dlist_current;
-		pspgl_curctx->current.vbuf_adr = pspgl_dlist_insert_space(dlist, 12 * sizeof(struct t2f_c4ub_n3f_v3f));
-	}
+	if (c->current.vertex_count == 0)
+		c->current.vbuf_adr = pspgl_dlist_insert_space(c->dlist_current, 12 * sizeof(struct t2f_c4ub_n3f_v3f));
 
-	vbuf = (struct t2f_c4ub_n3f_v3f *) pspgl_curctx->current.vbuf_adr;
+	vbuf = (struct t2f_c4ub_n3f_v3f *) c->current.vbuf_adr;
 
 	if (!vbuf) {
 		GLERROR(GL_OUT_OF_MEMORY);
 		return;
 	}
 
-	vbuf += pspgl_curctx->current.vertex_count;
+	vbuf += c->current.vertex_count;
 
-	vbuf->texcoord[0] = pspgl_curctx->current.texcoord[0];
-	vbuf->texcoord[1] = pspgl_curctx->current.texcoord[1];
-	vbuf->color = pspgl_curctx->current.color;
-	vbuf->normal[0] = pspgl_curctx->current.normal[0];
-	vbuf->normal[1] = pspgl_curctx->current.normal[1];
-	vbuf->normal[2] = pspgl_curctx->current.normal[2];
+	vbuf->texcoord[0] = c->current.texcoord[0];
+	vbuf->texcoord[1] = c->current.texcoord[1];
+	vbuf->color = c->current.color;
+	vbuf->normal[0] = c->current.normal[0];
+	vbuf->normal[1] = c->current.normal[1];
+	vbuf->normal[2] = c->current.normal[2];
 	vbuf->vertex[0] = x;
 	vbuf->vertex[1] = y;
 	vbuf->vertex[2] = z;
 
-	if (++pspgl_curctx->current.vertex_count == 12) {
+	if (++c->current.vertex_count == 12) {
 		static const char overhang [] = { 0, 0, 1, 1, 0, 2, 2, 3, 3, 2 };
-		GLenum prim = pspgl_curctx->current.primitive;
+		GLenum prim = c->current.primitive;
 
 		/* vertex buffer full, render + restart */
 		glEnd();
 
 		/* copy overhang */
-		pspgl_curctx->current.vertex_count = overhang[prim];
+		c->current.vertex_count = overhang[prim];
 
-		memcpy(pspgl_curctx->current.vbuf_adr,
-		       vbuf - overhang[prim],
-		       overhang[prim] * sizeof(*vbuf));
-
+		if (overhang[prim]) {
+			c->current.vbuf_adr = pspgl_dlist_insert_space(c->dlist_current, 12 * sizeof(struct t2f_c4ub_n3f_v3f));
+			memcpy(c->current.vbuf_adr, vbuf - overhang[prim] + 1, overhang[prim] * sizeof(*vbuf));
+		}
+ 
 		/* reset primitive type, was cleared by glEnd() */
-		pspgl_curctx->current.primitive = prim;
+		c->current.primitive = prim;
 	}
 }
 

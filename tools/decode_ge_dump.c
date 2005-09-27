@@ -31,7 +31,8 @@ uint32_t swap32 (uint32_t x)
 enum pspgl_dump_tag {
         PSPGL_GE_DUMP_MATRIX    = 1,
         PSPGL_GE_DUMP_REGISTERS = 2,
-        PSPGL_GE_DUMP_DLIST     = 3
+        PSPGL_GE_DUMP_DLIST     = 3,
+        PSPGL_GE_DUMP_VRAM      = 4
 };
 
 
@@ -447,6 +448,7 @@ void process_insn (uint32_t insn)
 static
 void process_chunk (uint32_t tag, uint32_t *buf, unsigned long len)
 {
+	static int vram_dump_id = 0;
 	uint32_t adr, i;
 
 	printf("\ngot chunk (tag 0x%08x, len %lu bytes)\n", tag, len);
@@ -481,6 +483,10 @@ void process_chunk (uint32_t tag, uint32_t *buf, unsigned long len)
 	case PSPGL_GE_DUMP_REGISTERS:
 		for (i=0; i<len/4; i++)
 			printf("reg 0x%02x: 0x%08x\n", i, le32_to_cpu(buf[i]));
+		break;
+	case PSPGL_GE_DUMP_VRAM:
+		printf("VRAM dump id=%d, call 'decode_vram_dump <%d>' to analyze...\n", vram_dump_id, vram_dump_id);
+		vram_dump_id++;
 		break;
 	default:
 		fprintf(stderr, "**** unknown tag! ****\n");
