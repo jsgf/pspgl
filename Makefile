@@ -149,6 +149,7 @@ clean:
 	make -C test-egl clean
 	make -C test-glut clean
 	make -C test-q3 clean
+	make -C test-vfpu clean
 
 install: all
 	mkdir -p $(PSPPATH)/include $(PSPPATH)/lib
