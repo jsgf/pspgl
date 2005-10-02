@@ -11,7 +11,7 @@
  *
  *  Options:
  *         -DMODULE_NAME="name" -- set the name (default NONAME)
- *         -DMODULE_ATTR=0      -- module attributes (default 0)
+ *         -DMODULE_ATTR=0x1000 -- module attributes (default 0x1000)
  *         -DVERSION_MAJOR=1    -- version 1.x (default 1)
  *         -DVERSION_MINOR=0    -- version x.0 (default 0)
  *
@@ -37,11 +37,35 @@
 
 
 #if !defined(MODULE_ATTR)
-	#define MODULE_ATTR 0
+	#define MODULE_ATTR 0x1000
 #endif
 
 
 /*** we need to declare everything we need locally, we can't include the system includes while linking! ***/
+
+typedef struct _PspDebugRegBlock PspDebugRegBlock;
+typedef void (*PspDebugErrorHandler) (PspDebugRegBlock *regs);
+
+extern void sceKernelIcacheClearAll (void);
+extern int pspDebugInstallErrorHandler (PspDebugErrorHandler handler);
+
+static __inline__
+void pspKernelSetKernelPC(void)
+{
+        __asm__ volatile (
+        "la     $8, 1f\n\t"     \
+        "lui    $9, 0x8000\n\t" \
+        "or     $8, $9\n\t"     \
+        "jr     $8\n\t"         \
+        " nop\n\t"              \
+        "1:\n\t"
+        : : : "$8", "$9");
+
+        /* We need to invalidate the I-cache, to purge any instructions that still
+           refer to addresses in userspace. */
+        sceKernelIcacheClearAll();
+}
+
 
 typedef struct _scemoduleinfo {
         unsigned short          modattribute;
@@ -105,8 +129,20 @@ extern char _gp[];
 #define __stringify(s)	__tostring(s)
 #define __tostring(s)	#s
 
-PSP_MODULE_INFO(__stringify(MODULE_NAME), MODULE_ATTR, MODULE_VERSION_MAJOR, MODULE_VERSION_MINOR);
+#define PSP_MAIN_THREAD_ATTR(attr) \
+	unsigned int sce_newlib_attribute = (attr)
 
+enum PspThreadAttributes
+{
+        PSP_THREAD_ATTR_VFPU = 0x00004000,
+        PSP_THREAD_ATTR_USER = 0x80000000,
+        PSP_THREAD_ATTR_USBWLAN = 0xa0000000,
+        PSP_THREAD_ATTR_VSH = 0xc0000000,
+};
+
+
+PSP_MODULE_INFO(__stringify(MODULE_NAME), MODULE_ATTR, MODULE_VERSION_MAJOR, MODULE_VERSION_MINOR);
+PSP_MAIN_THREAD_ATTR(PSP_THREAD_ATTR_USER | PSP_THREAD_ATTR_VFPU);
 
 static
 int exit_callback (int arg1, int arg2, void *common)
@@ -129,19 +165,17 @@ int update_thread (SceSize args, void *argp)
 }
 
 
-static void setup_callbacks (void) __attribute__((constructor));
-static void setup_callbacks (void)
+static __attribute__((constructor)) void setup_callbacks (void)
 {
 	int id;
-
-	if ((id = sceKernelCreateThread("update_thread", update_thread, 0x11, 0xFA0, 0, 0)) >= 0)
+	pspKernelSetKernelPC(); 
+	pspDebugInstallErrorHandler((void *) 0);
+	if ((id = sceKernelCreateThread("update_thread", update_thread, 0x11, 0xFA0, PSP_THREAD_ATTR_USER, 0)) >= 0)
 		sceKernelStartThread(id, 0, 0);
 }
 
 
-
-static void back_to_kernel (void) __attribute__((destructor));
-static void back_to_kernel (void)
+static __attribute__((destructor)) void back_to_kernel (void)
 {
 	sceKernelExitGame();
 }
