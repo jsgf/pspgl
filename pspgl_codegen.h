@@ -55,10 +55,10 @@
 	R003 | S003   S013   S023   S033	R103 | S103   S113   S123   S133
 
   same for matrices starting at M200 - M700.
-  Subvectors can get addressed as sinlges/pairs/triplets/quads.
+  Subvectors can get addressed as singles/pairs/triplets/quads.
   Submatrices can get addressed 2x2 pairs, 3x3 triplets or 4x4 quads.
 
-  So Q_C010 specifies the Quad starting at S010, T_C011 the triple starting at S011.
+  So Q_C010 specifies the Quad Column starting at S010, T_C011 the triple Column starting at S011.
 */
 
 
@@ -516,7 +516,7 @@
 |    opcode 0xd03b0000               |    | vfpu_rs[6-0]  |   | vfpu_rd[6-0] |
 +------------------------------------+--------------------+---+--------------+
 
-  Convert Unsigned Short to Integer
+  Convert Short to Integer
 
     vs2i.s %vfpu_rd, %vfpu_rs   ; convert [sreg] vfpu_rs -> [preg] vfpu_rd
     vs2i.p %vfpu_rd, %vfpu_rs   ; convert [preg] vfpu_rs -> [qreg] vfpu_rd 
@@ -654,6 +654,33 @@
 #define vmone_p(vfpu_rd)  (0xf3870080 | (vfpu_rd))
 #define vmone_t(vfpu_rd)  (0xf3878000 | (vfpu_rd))
 #define vmone_q(vfpu_rd)  (0xf3878080 | (vfpu_rd))
+
+
+/*
++--------------------------+--------------+--+--------------+-+--------------+
+|31                     23 | 22        16 |15| 14         8 |7| 6         0  |
++--------------------------+--------------+--+--------------+-+--------------+
+| opcode 0xf0000080 (p)    | vfpu_rt[6-0] | 0| vfpu_rs[6-0] |1| vfpu_rd[6-0] |
+| opcode 0xf0008000 (t)    | vfpu_rt[6-0] | 1| vfpu_rs[6-0] |0| vfpu_rd[6-0] |
+| opcode 0xf0008080 (q)    | vfpu_rt[6-0] | 1| vfpu_rs[6-0] |1| vfpu_rd[6-0] |
++--------------------------+--------------+--+--------------+-+--------------+
+
+  MatrixMultiply.Pair/Triple/Quad
+
+    vmmul.p %vfpu_rd, %vfpu_rs, %vfpu_rt   ; multiply 2 2x2 Submatrices
+    vmmul.t %vfpu_rd, %vfpu_rs, %vfpu_rt   ; multiply 2 3x3 Submatrices
+    vmmul.q %vfpu_rd, %vfpu_rs, %vfpu_rt   ; multiply 2 4x4 Matrices
+
+	%vfpu_rd:	VFPU Matrix Destination Register ([p|t|q]reg 0..127)
+	%vfpu_rs:	VFPU Matrix Source Register ([p|t|q]reg 0..127)
+	%vfpu_rt:	VFPU Matrix Source Register ([p|t|q]reg 0..127)
+
+    vfpu_mtx[%vfpu_rd] <- matrix_multiply(vfpu_mtx[%vfpu_rs], vfpu_mtx[%vfpu_rt])
+*/
+
+#define vmmul_p(vfpu_rd, vfpu_rs, vfpu_rt) (0xf0000080 | (vfpu_rt << 16) | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vmmul_t(vfpu_rd, vfpu_rs, vfpu_rt) (0xf0008000 | (vfpu_rt << 16) | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vmmul_q(vfpu_rd, vfpu_rs, vfpu_rt) (0xf0008080 | (vfpu_rt << 16) | (vfpu_rs << 8) | (vfpu_rd)) 
 
 
 /*

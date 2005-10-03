@@ -128,6 +128,7 @@ static float vfpu_regs1 [32][4] __attribute__((aligned(16)));
 
 //static unsigned long test_vector [4] __attribute__((aligned(16))) = { 0xffff0000, 0x00ff0000, 0x0000ff00, 0x0000ffff };
 static float test_vector [4] __attribute__((aligned(16))) = { 1.1, 2.2, 3.3, 4.4 };
+//static float test_vector [4] __attribute__((aligned(16))) = { 1.0, 2.0, 3.0, 4.0 };
 
 /**
  *  ok... this function is the place to actually try the behaviour of some yet-unknown instructions.
@@ -136,9 +137,10 @@ void vfpu_testcase (void *arg)
 {
 	register void *ptr __asm__ ("a0") = arg;
 	__asm__ volatile (
-		cgen_asm(lv_q(Q_R000, 0, R_a0))
-		cgen_asm(vf2iz_q(Q_R100, Q_R000, 0))
-//		cgen_asm(vus2i_s(0, S_S000))
+		cgen_asm(lv_q(Q_R200, 0, R_a0))
+		cgen_asm(vf2iz_q(Q_R100, Q_R200, 25))
+		cgen_asm(vmov_q(Q_R000, Q_R100))
+		cgen_asm(vt4444_q(0, 0))
 		: "=r"(ptr) : "r"(ptr) : "memory");
 }
 
