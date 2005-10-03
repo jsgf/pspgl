@@ -135,6 +135,153 @@
 #define  Q_R702  62
 #define  Q_R703  63
 
+
+/* VFPU registers, Triple addressing */
+#define  T_C000  0x00    /* Triples in Columns, First Digit specifies Matrix, second Column, third Row */
+#define  T_C010  0x01
+#define  T_C020  0x02
+#define  T_C030  0x03
+#define  T_C100  0x04
+#define  T_C110  0x05
+#define  T_C120  0x06
+#define  T_C130  0x07
+
+#define  T_C200  0x08
+#define  T_C210  0x09
+#define  T_C220  0x0a
+#define  T_C230  0x0b
+#define  T_C300  0x0c
+#define  T_C310  0x0d
+#define  T_C320  0x0e
+#define  T_C330  0x0f
+
+#define  T_C400  0x10
+#define  T_C410  0x11
+#define  T_C420  0x12
+#define  T_C430  0x13
+#define  T_C500  0x14
+#define  T_C510  0x15
+#define  T_C520  0x16
+#define  T_C530  0x17
+
+#define  T_C600  0x18
+#define  T_C610  0x19
+#define  T_C620  0x1a
+#define  T_C630  0x1b
+#define  T_C700  0x1c
+#define  T_C710  0x1d
+#define  T_C720  0x1e
+#define  T_C730  0x1f
+
+#define  T_R000  0x20    /* Pairs in Rows, First Digit specifies Matrix, second Column, third Row */
+#define  T_R001  0x21
+#define  T_R002  0x22
+#define  T_R003  0x23
+#define  T_R100  0x24
+#define  T_R101  0x25
+#define  T_R102  0x26
+#define  T_R103  0x27
+
+#define  T_R200  0x28
+#define  T_R201  0x29
+#define  T_R202  0x2a
+#define  T_R203  0x2b
+#define  T_R300  0x2c
+#define  T_R301  0x2d
+#define  T_R302  0x2e
+#define  T_R303  0x2f
+
+#define  T_R400  0x30
+#define  T_R401  0x31
+#define  T_R402  0x32
+#define  T_R403  0x33
+#define  T_R500  0x34
+#define  T_R501  0x35
+#define  T_R502  0x36
+#define  T_R503  0x37
+
+#define  T_R600  0x38
+#define  T_R601  0x39
+#define  T_R602  0x3a
+#define  T_R603  0x3b
+#define  T_R700  0x3c
+#define  T_R701  0x3d
+#define  T_R702  0x3e
+#define  T_R703  0x3f
+
+#define  T_C001  0x40    /* Triples in Columns, First Digit specifies Matrix, second Column, third Row */
+#define  T_C011  0x41
+#define  T_C021  0x42
+#define  T_C031  0x43
+#define  T_C101  0x44
+#define  T_C111  0x45
+#define  T_C121  0x46
+#define  T_C131  0x47
+
+#define  T_C201  0x48
+#define  T_C211  0x49
+#define  T_C221  0x4a
+#define  T_C231  0x4b
+#define  T_C301  0x4c
+#define  T_C311  0x4d
+#define  T_C321  0x4e
+#define  T_C331  0x4f
+
+#define  T_C401  0x50
+#define  T_C411  0x51
+#define  T_C421  0x52
+#define  T_C431  0x53
+#define  T_C501  0x54
+#define  T_C511  0x55
+#define  T_C521  0x56
+#define  T_C531  0x57
+
+#define  T_C601  0x58
+#define  T_C611  0x59
+#define  T_C621  0x5a
+#define  T_C631  0x5b
+#define  T_C701  0x5c
+#define  T_C711  0x5d
+#define  T_C721  0x5e
+#define  T_C731  0x5f
+
+#define  T_R010  0x60    /* Pairs in Rows, First Digit specifies Matrix, second Column, third Row */
+#define  T_R011  0x61
+#define  T_R012  0x62
+#define  T_R013  0x63
+#define  T_R110  0x64
+#define  T_R111  0x65
+#define  T_R112  0x66
+#define  T_R113  0x67
+
+#define  T_R210  0x68
+#define  T_R211  0x69
+#define  T_R212  0x6a
+#define  T_R213  0x6b
+#define  T_R310  0x6c
+#define  T_R311  0x6d
+#define  T_R312  0x6e
+#define  T_R313  0x6f
+
+#define  T_R410  0x70
+#define  T_R411  0x71
+#define  T_R412  0x72
+#define  T_R413  0x73
+#define  T_R510  0x74
+#define  T_R511  0x75
+#define  T_R512  0x76
+#define  T_R513  0x77
+
+#define  T_R610  0x78
+#define  T_R611  0x79
+#define  T_R612  0x7a
+#define  T_R613  0x7b
+#define  T_R710  0x7c
+#define  T_R711  0x7d
+#define  T_R712  0x7e
+#define  T_R713  0x7f
+
+
 /* VFPU registers, Pair addressing */
 #define  P_C000  0x00    /* Pairs in Columns, First Digit specifies Matrix, second Column, third Row */
 #define  P_C010  0x01
