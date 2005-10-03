@@ -45,7 +45,7 @@
    The VFPU contains 32 registers (128bits each, 4x32bits).
 
    VFPU Registers can get accessed as Matrices, Vectors or single words.
-   All registers are overlayed and enumerated in 3 digits (Matrix/Row/Column):
+   All registers are overlayed and enumerated in 3 digits (Matrix/Column/Row):
 
 	M000 | C000   C010   C020   C030	M100 | C110   C110   C120   C130
 	-----+--------------------------	-----+--------------------------
@@ -63,7 +63,7 @@
 
 
 /* VFPU registers, Quadword addressing */
-#define  Q_C000  0	/* First digit specifies matrix, second the Row */
+#define  Q_C000  0	/* First digit specifies matrix, second the Column */
 #define  Q_C010  1
 #define  Q_C020  2
 #define  Q_C030  3
@@ -99,7 +99,7 @@
 #define  Q_C720  30
 #define  Q_C730  31
 
-#define  Q_R000  32	/* First Digit specifies Matrix, third the Column */
+#define  Q_R000  32	/* First Digit specifies Matrix, third the Row */
 #define  Q_R001  33
 #define  Q_R002  34
 #define  Q_R003  35
@@ -137,7 +137,7 @@
 
 
 /* VFPU registers, Single addressing */
-#define  S_S000  0x00    /* First Digit specifies Matrix, second Row, third Column */
+#define  S_S000  0x00    /* First Digit specifies Matrix, second Column, third Row */
 #define  S_S010  0x01
 #define  S_S020  0x02
 #define  S_S030  0x03
