@@ -135,6 +135,151 @@
 #define  Q_R702  62
 #define  Q_R703  63
 
+/* VFPU registers, Pair addressing */
+#define  P_C000  0x00    /* Pairs in Columns, First Digit specifies Matrix, second Column, third Row */
+#define  P_C010  0x01
+#define  P_C020  0x02
+#define  P_C030  0x03
+#define  P_C100  0x04
+#define  P_C110  0x05
+#define  P_C120  0x06
+#define  P_C130  0x07
+
+#define  P_C200  0x08
+#define  P_C210  0x09
+#define  P_C220  0x0a
+#define  P_C230  0x0b
+#define  P_C300  0x0c
+#define  P_C310  0x0d
+#define  P_C320  0x0e
+#define  P_C330  0x0f
+
+#define  P_C400  0x10
+#define  P_C410  0x11
+#define  P_C420  0x12
+#define  P_C430  0x13
+#define  P_C500  0x14
+#define  P_C510  0x15
+#define  P_C520  0x16
+#define  P_C530  0x17
+
+#define  P_C600  0x18
+#define  P_C610  0x19
+#define  P_C620  0x1a
+#define  P_C630  0x1b
+#define  P_C700  0x1c
+#define  P_C710  0x1d
+#define  P_C720  0x1e
+#define  P_C730  0x1f
+
+#define  P_R000  0x20    /* Pairs in Rows, First Digit specifies Matrix, second Column, third Row */
+#define  P_R001  0x21
+#define  P_R002  0x22
+#define  P_R003  0x23
+#define  P_R100  0x24
+#define  P_R101  0x25
+#define  P_R102  0x26
+#define  P_R103  0x27
+
+#define  P_R200  0x28
+#define  P_R201  0x29
+#define  P_R202  0x2a
+#define  P_R203  0x2b
+#define  P_R300  0x2c
+#define  P_R301  0x2d
+#define  P_R302  0x2e
+#define  P_R303  0x2f
+
+#define  P_R400  0x30
+#define  P_R401  0x31
+#define  P_R402  0x32
+#define  P_R403  0x33
+#define  P_R500  0x34
+#define  P_R501  0x35
+#define  P_R502  0x36
+#define  P_R503  0x37
+
+#define  P_R600  0x38
+#define  P_R601  0x39
+#define  P_R602  0x3a
+#define  P_R603  0x3b
+#define  P_R700  0x3c
+#define  P_R701  0x3d
+#define  P_R702  0x3e
+#define  P_R703  0x3f
+
+#define  P_C002  0x40    /* Pairs in Columns, First Digit specifies Matrix, second Column, third Row */
+#define  P_C012  0x41
+#define  P_C022  0x42
+#define  P_C032  0x43
+#define  P_C102  0x44
+#define  P_C112  0x45
+#define  P_C122  0x46
+#define  P_C132  0x47
+
+#define  P_C202  0x48
+#define  P_C212  0x49
+#define  P_C222  0x4a
+#define  P_C232  0x4b
+#define  P_C302  0x4c
+#define  P_C312  0x4d
+#define  P_C322  0x4e
+#define  P_C332  0x4f
+
+#define  P_C402  0x50
+#define  P_C412  0x51
+#define  P_C422  0x52
+#define  P_C432  0x53
+#define  P_C502  0x54
+#define  P_C512  0x55
+#define  P_C522  0x56
+#define  P_C532  0x57
+
+#define  P_C602  0x58
+#define  P_C612  0x59
+#define  P_C622  0x5a
+#define  P_C632  0x5b
+#define  P_C702  0x5c
+#define  P_C712  0x5d
+#define  P_C722  0x5e
+#define  P_C732  0x5f
+
+#define  P_R020  0x60    /* Pairs in Rows, First Digit specifies Matrix, second Column, third Row */
+#define  P_R021  0x61
+#define  P_R022  0x62
+#define  P_R023  0x63
+#define  P_R120  0x64
+#define  P_R121  0x65
+#define  P_R122  0x66
+#define  P_R123  0x67
+
+#define  P_R220  0x68
+#define  P_R221  0x69
+#define  P_R222  0x6a
+#define  P_R223  0x6b
+#define  P_R320  0x6c
+#define  P_R321  0x6d
+#define  P_R322  0x6e
+#define  P_R323  0x6f
+
+#define  P_R420  0x70
+#define  P_R421  0x71
+#define  P_R422  0x72
+#define  P_R423  0x73
+#define  P_R520  0x74
+#define  P_R521  0x75
+#define  P_R522  0x76
+#define  P_R523  0x77
+
+#define  P_R620  0x78
+#define  P_R621  0x79
+#define  P_R622  0x7a
+#define  P_R623  0x7b
+#define  P_R720  0x7c
+#define  P_R721  0x7d
+#define  P_R722  0x7e
+#define  P_R723  0x7f
+
 
 /* VFPU registers, Single addressing */
 #define  S_S000  0x00    /* First Digit specifies Matrix, second Column, third Row */
