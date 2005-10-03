@@ -495,36 +495,73 @@
 	%vfpu_rs:	VFPU Vector Source Register ([s|p]reg 0..127)
 	%vfpu_rd:	VFPU Vector Destination Register ([p|q]reg 0..127)
 
-    vfpu_regs[%vfpu_rd] <- (int) vfpu_regs[%vfpu_rs]
+  vus2i.s:
+    vfpu_regs[%vfpu_rd_p[0]] <- (int) low_16(vfpu_regs[%vfpu_rs]) / 2
+    vfpu_regs[%vfpu_rd_p[1]] <- (int) high_16(vfpu_regs[%vfpu_rs]) / 2
+
+  vus2i.p:
+    vfpu_regs[%vfpu_rd_q[0]] <- (int) low_16(vfpu_regs[%vfpu_rs_p[0]]) / 2
+    vfpu_regs[%vfpu_rd_q[1]] <- (int) high_16(vfpu_regs[%vfpu_rs_p[0]]) / 2
+    vfpu_regs[%vfpu_rd_q[2]] <- (int) low_16(vfpu_regs[%vfpu_rs_p[1]]) / 2
+    vfpu_regs[%vfpu_rd_q[3]] <- (int) high_16(vfpu_regs[%vfpu_rs_p[1]]) / 2
 */
 #define vus2i_s(vfpu_rd,vfpu_rs)  (0xd03a0000 | ((vfpu_rd) << 16) | (vfpu_rd))
 #define vus2i_p(vfpu_rd,vfpu_rs)  (0xd03a0080 | ((vfpu_rd) << 16) | (vfpu_rd))
 
 
 /*
++------------------------------------+--------------------+---+--------------+
+|31                               16 | 15 | 14          8 | 7 | 6          0 |
++------------------------------------+--------------------+---+--------------+
+|    opcode 0xd03b0000               |    | vfpu_rs[6-0]  |   | vfpu_rd[6-0] |
++------------------------------------+--------------------+---+--------------+
+
+  Convert Unsigned Short to Integer
+
+    vs2i.s %vfpu_rd, %vfpu_rs   ; convert [sreg] vfpu_rs -> [preg] vfpu_rd
+    vs2i.p %vfpu_rd, %vfpu_rs   ; convert [preg] vfpu_rs -> [qreg] vfpu_rd 
+
+	%vfpu_rs:	VFPU Vector Source Register ([s|p]reg 0..127)
+	%vfpu_rd:	VFPU Vector Destination Register ([p|q]reg 0..127)
+
+  vs2i.s:
+    vfpu_regs[%vfpu_rd_p[0]] <- (int) low_16(vfpu_regs[%vfpu_rs])
+    vfpu_regs[%vfpu_rd_p[1]] <- (int) high_16(vfpu_regs[%vfpu_rs])
+
+  vs2i.p:
+    vfpu_regs[%vfpu_rd_q[0]] <- (int) low_16(vfpu_regs[%vfpu_rs_p[0]])
+    vfpu_regs[%vfpu_rd_q[1]] <- (int) high_16(vfpu_regs[%vfpu_rs_p[0]])
+    vfpu_regs[%vfpu_rd_q[2]] <- (int) low_16(vfpu_regs[%vfpu_rs_p[1]])
+    vfpu_regs[%vfpu_rd_q[3]] <- (int) high_16(vfpu_regs[%vfpu_rs_p[1]])
+*/
+#define vs2i_s(vfpu_rd,vfpu_rs)  (0xd03b0000 | ((vfpu_rd) << 16) | (vfpu_rd))
+#define vs2i_p(vfpu_rd,vfpu_rs)  (0xd03b0080 | ((vfpu_rd) << 16) | (vfpu_rd))
+
+
+/*
 +----------------------+-------------+----+---------------+---+--------------+
 |31                 21 | 20       16 | 15 | 14          8 | 7 | 6          0 |
 +----------------------+-------------+----+---------------+---+--------------+
-|  opcode 0xd2200000   |  shift[4-1] |    | vfpu_rs[6-0]  |   | vfpu_rd[6-0] |
+|  opcode 0xd2200000   |  scale[4-1] |    | vfpu_rs[6-0]  |   | vfpu_rd[6-0] |
 +----------------------+-------------+----+---------------+---+--------------+
 
   Float to Int, Truncated
 
-    vf2iz.s %vfpu_rd, %vfpu_rs, shift   ; Truncate and Convert Float to Integer (Single)
-    vf2iz.p %vfpu_rd, %vfpu_rs, shift   ; Truncate and Convert Float to Integer (Pair)
-    vf2iz.t %vfpu_rd, %vfpu_rs, shift   ; Truncate and Convert Float to Integer (Triple)
-    vf2iz.q %vfpu_rd, %vfpu_rs, shift   ; Truncate and Convert Float to Integer (Quad)
+    vf2iz.s %vfpu_rd, %vfpu_rs, scale   ; Truncate and Convert Float to Integer (Single)
+    vf2iz.p %vfpu_rd, %vfpu_rs, scale   ; Truncate and Convert Float to Integer (Pair)
+    vf2iz.t %vfpu_rd, %vfpu_rs, scale   ; Truncate and Convert Float to Integer (Triple)
+    vf2iz.q %vfpu_rd, %vfpu_rs, scale   ; Truncate and Convert Float to Integer (Quad)
 
 	%vfpu_rs:	VFPU Vector Source Register ([s|p|t|q]reg 0..127)
 	%vfpu_rd:	VFPU Vector Destination Register ([s|p|t|q]reg 0..127)
-	shift:		Shift integer result by this amount
+	scale:		Multiply by (2^scale) before converting to Float
 
-    vfpu_regs[%vfpu_rd] <- ((int) vfpu_regs[%vfpu_rs]) << shift
+    vfpu_regs[%vfpu_rd] <- (int) (2^scale * vfpu_regs[%vfpu_rs])
 */
-#define vf2iz_s(vfpu_rd,vfpu_rs,shift)  (0xd2200000 | ((shift) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
-#define vf2iz_p(vfpu_rd,vfpu_rs,shift)  (0xd2200080 | ((shift) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
-#define vf2iz_t(vfpu_rd,vfpu_rs,shift)  (0xd2208000 | ((shift) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
-#define vf2iz_q(vfpu_rd,vfpu_rs,shift)  (0xd2208080 | ((shift) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
+#define vf2iz_s(vfpu_rd,vfpu_rs,scale)  (0xd2200000 | ((scale) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
+#define vf2iz_p(vfpu_rd,vfpu_rs,scale)  (0xd2200080 | ((scale) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
+#define vf2iz_t(vfpu_rd,vfpu_rs,scale)  (0xd2208000 | ((scale) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
+#define vf2iz_q(vfpu_rd,vfpu_rs,scale)  (0xd2208080 | ((scale) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
 
 
 /*
