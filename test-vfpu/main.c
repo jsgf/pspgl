@@ -26,16 +26,16 @@ void vfpu_init1 (void)
 		cgen_asm(vone_s(S_S000))
 		cgen_asm(vadd_s(S_S001, S_S000, S_S000))
 		cgen_asm(vadd_s(S_S002, S_S001, S_S000))
-		cgen_asm(vadd_s(S_S003, S_S002, S_S000))     /* C000 = ( 1  2  3  4) */
-		cgen_asm(vone_q(Q_C730))                     /* C730 = ( 1  1  1  1) */
-		cgen_asm(vscl_q(Q_C730, Q_C730, S_S003))     /* C730 = ( 4  4  4  4) */
-		cgen_asm(vadd_q(Q_C010, Q_C000, Q_C730))     /* C010 = ( 5  6  7  8) */
-		cgen_asm(vadd_q(Q_C020, Q_C010, Q_C730))     /* C020 = ( 9 10 11 12) */
-		cgen_asm(vadd_q(Q_C030, Q_C020, Q_C730))     /* C030 = (13 14 15 16) */
-		cgen_asm(vadd_q(Q_C100, Q_C030, Q_C730))     /* C100 = (17 18 19 20) */
-		cgen_asm(vadd_q(Q_C110, Q_C100, Q_C730))     /* C110 = (21 22 23 24) */
-		cgen_asm(vadd_q(Q_C120, Q_C110, Q_C730))     /* ... */
-		cgen_asm(vadd_q(Q_C130, Q_C120, Q_C730))
+		cgen_asm(vadd_s(S_S003, S_S002, S_S000))     /* R000 = ( 1  2  3  4) */
+		cgen_asm(vone_q(Q_R703))                     /* R703 = ( 1  1  1  1) */
+		cgen_asm(vscl_q(Q_R703, Q_R703, S_S003))     /* R703 = ( 4  4  4  4) */
+		cgen_asm(vadd_q(Q_R001, Q_R000, Q_R703))     /* R001 = ( 5  6  7  8) */
+		cgen_asm(vadd_q(Q_R002, Q_R001, Q_R703))     /* R002 = ( 9 10 11 12) */
+		cgen_asm(vadd_q(Q_R003, Q_R002, Q_R703))     /* R003 = (13 14 15 16) */
+		cgen_asm(vadd_q(Q_R100, Q_R003, Q_R703))     /* R100 = (17 18 19 20) */
+		cgen_asm(vadd_q(Q_R101, Q_R100, Q_R703))     /* R101 = (21 22 23 24) */
+		cgen_asm(vadd_q(Q_R102, Q_R101, Q_R703))     /* ... */
+		cgen_asm(vadd_q(Q_R103, Q_R102, Q_R703))
 		cgen_asm(vmmov_q(Q_M200, Q_M000))            /* M2 = M0 */
 		cgen_asm(vmmov_q(Q_M300, Q_M100))            /* M3 = M1 */
 		cgen_asm(vmzero_q(Q_M400))                   /* M4 = M5 = M6 = M7 = 0.0f */
@@ -50,41 +50,47 @@ void vfpu_save_regs (float vfpu_regs [32][4])
 {
         register void *ptr __asm__ ("a0") = vfpu_regs;
         __asm__ volatile (
-		cgen_asm(sv_q(Q_C000, 0 * 16, R_a0, 0))
-		cgen_asm(sv_q(Q_C010, 1 * 16, R_a0, 0))
-		cgen_asm(sv_q(Q_C020, 2 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C030, 3 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C100, 4 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C110, 5 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C120, 6 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C130, 7 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C200, 8 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C210, 9 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C220, 10 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C230, 11 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C300, 12 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C310, 13 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C320, 14 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C330, 15 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C400, 16 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C410, 17 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C420, 18 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C430, 19 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C500, 20 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C510, 21 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C520, 22 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C530, 23 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C600, 24 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C610, 25 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C620, 26 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C630, 27 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C700, 28 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C710, 29 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C720, 30 * 16, R_a0, 0))
-                cgen_asm(sv_q(Q_C730, 31 * 16, R_a0, 0))
+		cgen_asm(sv_q(Q_R000, 0 * 16, R_a0, 0))
+		cgen_asm(sv_q(Q_R001, 1 * 16, R_a0, 0))
+		cgen_asm(sv_q(Q_R002, 2 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R003, 3 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R100, 4 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R101, 5 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R102, 6 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R103, 7 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R200, 8 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R201, 9 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R202, 10 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R203, 11 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R300, 12 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R301, 13 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R302, 14 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R303, 15 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R400, 16 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R401, 17 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R402, 18 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R403, 19 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R500, 20 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R501, 21 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R502, 22 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R503, 23 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R600, 24 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R601, 25 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R602, 26 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R603, 27 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R700, 28 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R701, 29 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R702, 30 * 16, R_a0, 0))
+                cgen_asm(sv_q(Q_R703, 31 * 16, R_a0, 0))
 		: "=r"(ptr) : "r"(ptr) : "memory");
 }
 
+
+static inline unsigned int f2x (float f)
+{
+	union { float f; unsigned int i; } u = { .f = f };
+	return u.i;
+}
 
 void vfpu_diff (float r1 [32][4], float r2 [32][4])
 {
@@ -99,10 +105,7 @@ void vfpu_diff (float r1 [32][4], float r2 [32][4])
 			pspDebugScreenPrintf("-%2i% 7.3f% 7.3f% 7.3f% 7.3f %08x%08x%08x%08x\n", 
 						i,
 						r1[i][0], r1[i][1], r1[i][2], r1[i][3],
-						(unsigned) r1[i][0],
-						(unsigned) r1[i][1],
-						(unsigned) r1[i][2],
-						(unsigned) r1[i][3]);
+						f2x(r1[i][0]), f2x(r1[i][1]), f2x(r1[i][2]), f2x(r1[i][3]));
 	}
 
         for (i=0; i<32; i++) {
@@ -114,10 +117,7 @@ void vfpu_diff (float r1 [32][4], float r2 [32][4])
 			pspDebugScreenPrintf("+%2i% 7.3f% 7.3f% 7.3f% 7.3f %08x%08x%08x%08x\n", 
 						i,
 						r2[i][0], r2[i][1], r2[i][2], r2[i][3],
-						(unsigned) r2[i][0],
-						(unsigned) r2[i][1],
-						(unsigned) r2[i][2],
-						(unsigned) r2[i][3]);
+						f2x(r2[i][0]), f2x(r2[i][1]), f2x(r2[i][2]), f2x(r2[i][3]));
 	}
 	pspDebugScreenPrintf("\n");
 }
@@ -126,16 +126,20 @@ void vfpu_diff (float r1 [32][4], float r2 [32][4])
 static float vfpu_regs0 [32][4] __attribute__((aligned(16)));
 static float vfpu_regs1 [32][4] __attribute__((aligned(16)));
 
+//static unsigned long test_vector [4] __attribute__((aligned(16))) = { 0xffff0000, 0x00ff0000, 0x0000ff00, 0x0000ffff };
+static float test_vector [4] __attribute__((aligned(16))) = { 1.1, 2.2, 3.3, 4.4 };
+
 /**
  *  ok... this function is the place to actually try the behaviour of some yet-unknown instructions.
  */
-void vfpu_testcase (void)
+void vfpu_testcase (void *arg)
 {
-	__asm__(cgen_asm(vone_q(Q_C000)));
-	__asm__(cgen_asm(vadd_q(Q_C000, Q_C000, Q_C000)));
-	__asm__(cgen_asm(vadd_q(Q_C000, Q_C000, Q_C000)));
-	__asm__(cgen_asm(vadd_q(Q_C000, Q_C000, Q_C000)));
-	__asm__(cgen_asm(vt4444_q(Q_C010, Q_C000)));
+	register void *ptr __asm__ ("a0") = arg;
+	__asm__ volatile (
+		cgen_asm(lv_q(Q_R000, 0, R_a0))
+		cgen_asm(vf2iz_q(Q_R100, Q_R000, 0))
+//		cgen_asm(vus2i_s(0, S_S000))
+		: "=r"(ptr) : "r"(ptr) : "memory");
 }
 
 
@@ -158,7 +162,7 @@ int main (int argc, char **argv)
 
 		if (pad.Buttons & PSP_CTRL_CIRCLE) {
 			vfpu_save_regs(vfpu_regs0);
-			vfpu_testcase();
+			vfpu_testcase(test_vector);
 			vfpu_save_regs(vfpu_regs1);
 			vfpu_diff(vfpu_regs0, vfpu_regs1);
 		}

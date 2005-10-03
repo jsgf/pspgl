@@ -376,23 +376,29 @@
 | opcode 0xd8 | base[4-0] | rd[4-0] |         offset[15-2]       |  0  |rd[5]|
 +-------------+-----------+---------+----------------------------+-----+-----+
 
-  LoadVector.Quadword Relative to Address in General Purpose Register
+  LoadVector.Single/Quadword Relative to Address in General Purpose Register
   Final Address needs to be 16-byte aligned.
 
+    lv.s %vfpu_rd, offset(%base)
     lv.q %vfpu_rd, offset(%base)
 
-	%vfpu_rd:	VFPU Vector Destination Register (column0-31/row32-63)
+	%vfpu_rd:	VFPU Vector Destination Register ([s|q]reg)
 	%base:		GPR, specifies Source Address Base
 	offset:		signed Offset added to Source Address Base
 
-    fpu_vtr <- vector_at_address (offset + %gpr)
+    vfpu_regs[%vfpu_rd] <- vector_at_address (offset + %gpr)
 */
-#define lv_q(vfpu_rd,offset,base,cache_policy)			\
+#define lv_s(vfpu_rd,offset,base)				\
+	(0xc8000000 |						\
+	 ((base) << 21) |					\
+	 (((vfpu_rd) & 0x1f) << 16) | ((vfpu_rd) >> 5) |	\
+	 ((offset) & 0xfffc))
+
+#define lv_q(vfpu_rd,offset,base)				\
 	(0xd8000000 |						\
 	 ((base) << 21) |					\
 	 (((vfpu_rd) & 0x1f) << 16) | ((vfpu_rd) >> 5) |	\
-	 ((offset) & 0xfffc) |					\
-	 ((cache_policy) << 1))
+	 ((offset) & 0xfffc))
 
 
 /*
@@ -405,19 +411,27 @@
   StoreVector.Quadword Relative to Address in General Purpose Register
   Final Address needs to be 16-byte aligned.
 
+    sv.s %vfpu_rs, offset(%base), cache_policy
     sv.q %vfpu_rs, offset(%base), cache_policy
 
-	%vfpu_rs:	VFPU Vector Register (column0-31/row32-63)
+	%vfpu_rs:	VFPU Vector Register ([s|q]reg)
 	%base:		specifies Source Address Base
 	offset:		signed Offset added to Source Address Base
 	cache_policy:	0 = write-through, 1 = write-back
 
-    vector_at_address (offset + %gpr) <- %vfpu_rs
+    vector_at_address (offset + %gpr) <- vfpu_regs[%vfpu_rs]
 */
-#define sv_q(vfpu_rd,offset,base,cache_policy)			\
+#define sv_s(vfpu_rs,offset,base,cache_policy)			\
+	(0xe8000000 |						\
+	 ((base) << 21) |					\
+	 (((vfpu_rs) & 0x1f) << 16) | ((vfpu_rs) >> 5) |	\
+	 ((offset) & 0xfffc) |					\
+	 ((cache_policy) << 1))
+
+#define sv_q(vfpu_rs,offset,base,cache_policy)			\
 	(0xf8000000 |						\
 	 ((base) << 21) |					\
-	 (((vfpu_rd) & 0x1f) << 16) | ((vfpu_rd) >> 5) |	\
+	 (((vfpu_rs) & 0x1f) << 16) | ((vfpu_rs) >> 5) |	\
 	 ((offset) & 0xfffc) |					\
 	 ((cache_policy) << 1))
 
@@ -445,6 +459,72 @@
 #define vmov_p(vfpu_rd,vfpu_rs)  (0xd0000080 | ((vfpu_rs) << 8) | (vfpu_rd))
 #define vmov_t(vfpu_rd,vfpu_rs)  (0xd0008000 | ((vfpu_rs) << 8) | (vfpu_rd))
 #define vmov_q(vfpu_rd,vfpu_rs)  (0xd0008080 | ((vfpu_rs) << 8) | (vfpu_rd))
+
+
+/*
++------------------------------------+---------------------------------------+
+|31              23|22             16|15                                   0 |
++------------------+-----------------+---------------------------------------+
+|    opcode 0xdf   |  vfpu_rd[6-0]   |              immediate                |
++------------------+-----------------+---------------------------------------+
+
+  Set Single Vector Component to Immediate Integer
+
+    vimm.s %vfpu_rd, immediate   ; Set Vector Component to immediate Integer
+
+	immediate:	Integer, converted to Float before loading into sreg
+	%vfpu_rd:	VFPU Vector Destination Register (sreg 0..127)
+
+    vfpu_regs[%vfpu_rd] <- (float) immediate
+*/
+#define viim_s(vfpu_rd,immediate)  (0xdf000000 | ((vfpu_rd) << 16) | ((immediate) & 0xffff))
+
+
+/*
++------------------------------------+--------------------+---+--------------+
+|31                               16 | 15 | 14          8 | 7 | 6          0 |
++------------------------------------+--------------------+---+--------------+
+|    opcode 0xd03a0000               |    | vfpu_rs[6-0]  |   | vfpu_rd[6-0] |
++------------------------------------+--------------------+---+--------------+
+
+  Convert Unsigned Short to Integer
+
+    vus2i.s %vfpu_rd, %vfpu_rs   ; convert [sreg] vfpu_rs -> [preg] vfpu_rd
+    vus2i.p %vfpu_rd, %vfpu_rs   ; convert [preg] vfpu_rs -> [qreg] vfpu_rd 
+
+	%vfpu_rs:	VFPU Vector Source Register ([s|p]reg 0..127)
+	%vfpu_rd:	VFPU Vector Destination Register ([p|q]reg 0..127)
+
+    vfpu_regs[%vfpu_rd] <- (int) vfpu_regs[%vfpu_rs]
+*/
+#define vus2i_s(vfpu_rd,vfpu_rs)  (0xd03a0000 | ((vfpu_rd) << 16) | (vfpu_rd))
+#define vus2i_p(vfpu_rd,vfpu_rs)  (0xd03a0080 | ((vfpu_rd) << 16) | (vfpu_rd))
+
+
+/*
++----------------------+-------------+----+---------------+---+--------------+
+|31                 21 | 20       16 | 15 | 14          8 | 7 | 6          0 |
++----------------------+-------------+----+---------------+---+--------------+
+|  opcode 0xd2200000   |  shift[4-1] |    | vfpu_rs[6-0]  |   | vfpu_rd[6-0] |
++----------------------+-------------+----+---------------+---+--------------+
+
+  Float to Int, Truncated
+
+    vf2iz.s %vfpu_rd, %vfpu_rs, shift   ; Truncate and Convert Float to Integer (Single)
+    vf2iz.p %vfpu_rd, %vfpu_rs, shift   ; Truncate and Convert Float to Integer (Pair)
+    vf2iz.t %vfpu_rd, %vfpu_rs, shift   ; Truncate and Convert Float to Integer (Triple)
+    vf2iz.q %vfpu_rd, %vfpu_rs, shift   ; Truncate and Convert Float to Integer (Quad)
+
+	%vfpu_rs:	VFPU Vector Source Register ([s|p|t|q]reg 0..127)
+	%vfpu_rd:	VFPU Vector Destination Register ([s|p|t|q]reg 0..127)
+	shift:		Shift integer result by this amount
+
+    vfpu_regs[%vfpu_rd] <- ((int) vfpu_regs[%vfpu_rs]) << shift
+*/
+#define vf2iz_s(vfpu_rd,vfpu_rs,shift)  (0xd2200000 | ((shift) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
+#define vf2iz_p(vfpu_rd,vfpu_rs,shift)  (0xd2200080 | ((shift) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
+#define vf2iz_t(vfpu_rd,vfpu_rs,shift)  (0xd2208000 | ((shift) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
+#define vf2iz_q(vfpu_rd,vfpu_rs,shift)  (0xd2208080 | ((shift) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
 
 
 /*
@@ -723,8 +803,6 @@
 {"bvfl",    "?c,p",             0x49020000, 0xffe30000, CBL|RD_CC,      0,              AL      },
 {"bvt",     "?c,p",             0x49010000, 0xffe30000, CBD|RD_CC,      0,              AL      },
 {"bvtl",    "?c,p",             0x49030000, 0xffe30000, CBL|RD_CC,      0,              AL      },
-{"lv.s",    "?m0x,?o(b)",       0xc8000000, 0xfc000000, CLD|RD_s|WR_CC, 0,              AL      },
-{"sv.s",    "?m0x,?o(b)",       0xe8000000, 0xfc000000, SM|RD_s|RD_C2,  0,              AL      },
 {"vwb.q",   "?n3x,?o(b)",       0xf8000002, 0xfc000002, SM|RD_s|RD_C2,  0,              AL      },
 {"lvl.q",   "?n3x,?o(b)",       0xd4000000, 0xfc000002, CLD|RD_s|WR_CC, 0,              AL      },
 {"lvr.q",   "?n3x,?o(b)",       0xd4000002, 0xfc000002, CLD|RD_s|WR_CC, 0,              AL      },
@@ -740,7 +818,6 @@
 {"vdiv.q",  "?x3z,?s3y,?t3x",   0x63808080, 0xff808080, RD_C2,          0,              AL      },
 {"vmul.q",  "?d3d,?s3s,?t3t",   0x64008080, 0xff808080, RD_C2,          0,              AL      },
 {"vdot.q",  "?d0d,?s3s,?t3t",   0x64808080, 0xff808080, RD_C2,          0,              AL      },
-{"vscl.q",  "?d3d,?s3s,?t0x",   0x65008080, 0xff808080, RD_C2,          0,              AL      },
 {"vhdp.q",  "?d0d,?s3y,?t3t",   0x66008080, 0xff808080, RD_C2,          0,              AL      },
 {"vcmp.q",  "?f2,?s3s,?t3t",    0x6c008080, 0xff8080f0, RD_C2,          0,              AL      },
 {"vcmp.q",  "?f1,?s3s",         0x6c008080, 0xffff80f0, RD_C2,          0,              AL      },
@@ -786,7 +863,6 @@
 {"vfad.q",  "?d0d,?s3s",        0xd0468080, 0xffff8080, RD_C2,          0,              AL      },
 {"vavg.q",  "?d0d,?s3s",        0xd0478080, 0xffff8080, RD_C2,          0,              AL      },
 {"vf2in.q", "?d3m,?s3s,?b",     0xd2008080, 0xffe08080, RD_C2,          0,              AL      },
-{"vf2iz.q", "?d3m,?s3s,?b",     0xd2208080, 0xffe08080, RD_C2,          0,              AL      },
 {"vf2iu.q", "?d3m,?s3s,?b",     0xd2408080, 0xffe08080, RD_C2,          0,              AL      },
 {"vf2id.q", "?d3m,?s3s,?b",     0xd2608080, 0xffe08080, RD_C2,          0,              AL      },
 {"vi2f.q",  "?d3d,?s3w,?b",     0xd2808080, 0xffe08080, RD_C2,          0,              AL      },
@@ -806,7 +882,6 @@
 {"vdiv.t",  "?x2z,?s2y,?t2x",   0x63808000, 0xff808080, RD_C2,          0,              AL      },
 {"vmul.t",  "?d2d,?s2s,?t2t",   0x64008000, 0xff808080, RD_C2,          0,              AL      },
 {"vdot.t",  "?d0d,?s2s,?t2t",   0x64808000, 0xff808080, RD_C2,          0,              AL      },
-{"vscl.t",  "?d2d,?s2s,?t0x",   0x65008000, 0xff808080, RD_C2,          0,              AL      },
 {"vhdp.t",  "?d0d,?s2y,?t2t",   0x66008000, 0xff808080, RD_C2,          0,              AL      },
 {"vcrs.t",  "?d2d,?s2y,?t2x",   0x66808000, 0xff808080, RD_C2,          0,              AL      },
 {"vcmp.t",  "?f2,?s2s,?t2t",    0x6c008000, 0xff8080f0, RD_C2,          0,              AL      },
@@ -841,7 +916,6 @@
 {"vfad.t",  "?d0d,?s2s",        0xd0468000, 0xffff8080, RD_C2,          0,              AL      },
 {"vavg.t",  "?d0d,?s2s",        0xd0478000, 0xffff8080, RD_C2,          0,              AL      },
 {"vf2in.t", "?d2m,?s2s,?b",     0xd2008000, 0xffe08080, RD_C2,          0,              AL      },
-{"vf2iz.t", "?d2m,?s2s,?b",     0xd2208000, 0xffe08080, RD_C2,          0,              AL      },
 {"vf2iu.t", "?d2m,?s2s,?b",     0xd2408000, 0xffe08080, RD_C2,          0,              AL      },
 {"vf2id.t", "?d2m,?s2s,?b",     0xd2608000, 0xffe08080, RD_C2,          0,              AL      },
 {"vi2f.t",  "?d2d,?s2w,?b",     0xd2808000, 0xffe08080, RD_C2,          0,              AL      },
@@ -858,7 +932,6 @@
 {"vdiv.p",  "?x1z,?s1y,?t1x",   0x63800080, 0xff808080, RD_C2,          0,              AL      },
 {"vmul.p",  "?d1d,?s1s,?t1t",   0x64000080, 0xff808080, RD_C2,          0,              AL      },
 {"vdot.p",  "?d0d,?s1s,?t1t",   0x64800080, 0xff808080, RD_C2,          0,              AL      },
-{"vscl.p",  "?d1d,?s1s,?t0x",   0x65000080, 0xff808080, RD_C2,          0,              AL      },
 {"vhdp.p",  "?d0d,?s1y,?t1t",   0x66000080, 0xff808080, RD_C2,          0,              AL      },
 {"vdet.p",  "?d0d,?s1s,?t1x",   0x67000080, 0xff808080, RD_C2,          0,              AL      },
 {"vcmp.p",  "?f2,?s1s,?t1t",    0x6c000080, 0xff8080f0, RD_C2,          0,              AL      },
@@ -871,8 +944,7 @@
 {"vscmp.p", "?d1d,?s1s,?t1t",   0x6e800080, 0xff808080, RD_C2,          0,              AL      },
 {"vsge.p",  "?d1d,?s1s,?t1t",   0x6f000080, 0xff808080, RD_C2,          0,              AL      },
 {"vslt.p",  "?d1d,?s1s,?t1t",   0x6f800080, 0xff808080, RD_C2,          0,              AL      },
-{"vus2i.p", "?d3m,?s1y",        0xd03a0080, 0xffff8080, RD_C2,          0,              AL      },
-{"vs2i.p",  "?d3m,?s1y",        0xd03b0080, 0xffff8080, RD_C2,          0,              AL      },
+"vs2i.p",  "?d3m,?s1y",        0xd03b0080, 0xffff8080, RD_C2,          0,              AL      },
 {"vi2us.p", "?d0m,?s1w",        0xd03e0080, 0xffff8080, RD_C2,          0,              AL      },
 {"vi2s.p",  "?d0m,?s1w",        0xd03f0080, 0xffff8080, RD_C2,          0,              AL      },
 {"vabs.p",  "?d1d,?s1w",        0xd0010080, 0xffff8080, RD_C2,          0,              AL      },
@@ -902,7 +974,6 @@
 {"vfad.p",  "?d0d,?s1s",        0xd0460080, 0xffff8080, RD_C2,          0,              AL      },
 {"vavg.p",  "?d0d,?s1s",        0xd0470080, 0xffff8080, RD_C2,          0,              AL      },
 {"vf2in.p", "?d1m,?s1s,?b",     0xd2000080, 0xffe08080, RD_C2,          0,              AL      },
-{"vf2iz.p", "?d1m,?s1s,?b",     0xd2200080, 0xffe08080, RD_C2,          0,              AL      },
 {"vf2iu.p", "?d1m,?s1s,?b",     0xd2400080, 0xffe08080, RD_C2,          0,              AL      },
 {"vf2id.p", "?d1m,?s1s,?b",     0xd2600080, 0xffe08080, RD_C2,          0,              AL      },
 {"vi2f.p",  "?d1d,?s1w,?b",     0xd2800080, 0xffe08080, RD_C2,          0,              AL      },
@@ -927,7 +998,6 @@
 {"vscmp.s", "?d0d,?s0s,?t0t",   0x6e800000, 0xff808080, RD_C2,          0,              AL      },
 {"vsge.s",  "?d0d,?s0s,?t0t",   0x6f000000, 0xff808080, RD_C2,          0,              AL      },
 {"vslt.s",  "?d0d,?s0s,?t0t",   0x6f800000, 0xff808080, RD_C2,          0,              AL      },
-{"vus2i.s", "?d1m,?s0y",        0xd03a0000, 0xffff8080, RD_C2,          0,              AL      },
 {"vs2i.s",  "?d1m,?s0y",        0xd03b0000, 0xffff8080, RD_C2,          0,              AL      },
 {"vabs.s",  "?d0d,?s0w",        0xd0010000, 0xffff8080, RD_C2,          0,              AL      },
 {"vneg.s",  "?d0d,?s0w",        0xd0020000, 0xffff8080, RD_C2,          0,              AL      },
@@ -955,7 +1025,6 @@
 {"vocp.s",  "?d0d,?s0y",        0xd0440000, 0xffff8080, RD_C2,          0,              AL      },
 {"vsocp.s", "?d1z,?s0y",        0xd0450000, 0xffff8080, RD_C2,          0,              AL      },
 {"vf2in.s", "?d0m,?s0s,?b",     0xd2000000, 0xffe08080, RD_C2,          0,              AL      },
-{"vf2iz.s", "?d0m,?s0s,?b",     0xd2200000, 0xffe08080, RD_C2,          0,              AL      },
 {"vf2iu.s", "?d0m,?s0s,?b",     0xd2400000, 0xffe08080, RD_C2,          0,              AL      },
 {"vf2id.s", "?d0m,?s0s,?b",     0xd2600000, 0xffe08080, RD_C2,          0,              AL      },
 {"vi2f.s",  "?d0d,?s0w,?b",     0xd2800000, 0xffe08080, RD_C2,          0,              AL      },
@@ -965,7 +1034,6 @@
 {"vpfxs",   "?0,?1,?2,?3",      0xdc000000, 0xff000000, RD_C2,          0,              AL      },
 {"vpfxt",   "?0,?1,?2,?3",      0xdd000000, 0xff000000, RD_C2,          0,              AL      },
 {"vpfxd",   "?4,?5,?6,?7",      0xde000000, 0xff000000, RD_C2,          0,              AL      },
-{"viim.s",  "?t0d,j",           0xdf000000, 0xff800000, RD_C2,          0,              AL      },
 {"vfim.s",  "?t0d,?u",          0xdf800000, 0xff800000, RD_C2,          0,              AL      },
 {"vnop",    "",                 0xffff0000, 0xffffffff, RD_C2,          0,              AL      },
 {"vflush",  "",                 0xffff040d, 0xffffffff, RD_C2,          0,              AL      },
