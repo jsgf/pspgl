@@ -1025,6 +1025,121 @@
 #define vscl_q(vfpu_rd,vfpu_rs,vfpu_rt)  (0x65008080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
 
 
+/* 
++-----------------------------------------+--+--------------+-+--------------+ 
+|31                                    16 |15| 14         8 |7| 6         0  | 
++-----------------------------------------+--+--------------+-+--------------+ 
+| opcode 0xd0100000 (s)                   | 0| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0100080 (p)                   | 0| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
+| opcode 0xd0108000 (t)                   | 1| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0108080 (q)                   | 1| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
++-----------------------------------------+--+--------------+-+--------------+ 
+
+   Reciprocal.Single/Pair/Triple/Quad 
+
+   vrcp.s  %vfpu_rd, %vfpu_rs   ; calculate reciprocal (1/z) on single 
+   vrcp.p  %vfpu_rd, %vfpu_rs   ; calculate reciprocal (1/z) on pair 
+   vrcp.t  %vfpu_rd, %vfpu_rs   ; calculate reciprocal (1/z) on triple 
+   vrcp.q  %vfpu_rd, %vfpu_rs   ; calculate reciprocal (1/z) on quad 
+
+   %vfpu_rd:   VFPU Vector Target Register ([s|p|t|q]reg 0..127) 
+   %vfpu_rs:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+
+   vfpu_regs[%vfpu_rd] <- 1.0 / vfpu_regs[%vfpu_rs] 
+*/ 
+
+#define vrcp_s(vfpu_rd, vfpu_rs) (0xd0100000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vrcp_p(vfpu_rd, vfpu_rs) (0xd0100080 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vrcp_t(vfpu_rd, vfpu_rs) (0xd0108000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vrcp_q(vfpu_rd, vfpu_rs) (0xd0108080 | (vfpu_rs << 8) | (vfpu_rd)) 
+
+
+/* 
++-----------------------------------------+--+--------------+-+--------------+ 
+|31                                    16 |15| 14         8 |7| 6         0  | 
++-----------------------------------------+--+--------------+-+--------------+ 
+| opcode 0xd0140000 (s)                   | 0| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0140080 (p)                   | 0| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
+| opcode 0xd0148000 (t)                   | 1| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0148080 (q)                   | 1| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
++-----------------------------------------+--+--------------+-+--------------+ 
+
+   Exp2.Single/Pair/Triple/Quad (calculate 2 raised to the specified real number) 
+
+   vexp2.s  %vfpu_rd, %vfpu_rs   ; calculate 2 ** y 
+   vexp2.p  %vfpu_rd, %vfpu_rs   ; calculate 2 ** y 
+   vexp2.t  %vfpu_rd, %vfpu_rs   ; calculate 2 ** y 
+   vexp2.q  %vfpu_rd, %vfpu_rs   ; calculate 2 ** y 
+
+   %vfpu_rd:   VFPU Vector Target Register ([s|p|t|q]reg 0..127) 
+   %vfpu_rs:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+
+   vfpu_regs[%vfpu_rd] <- 2^(vfpu_regs[%vfpu_rs]) 
+*/ 
+
+#define vexp2_s(vfpu_rd, vfpu_rs) (0xd0140000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vexp2_p(vfpu_rd, vfpu_rs) (0xd0140080 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vexp2_t(vfpu_rd, vfpu_rs) (0xd0148000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vexp2_q(vfpu_rd, vfpu_rs) (0xd0148080 | (vfpu_rs << 8) | (vfpu_rd)) 
+
+
+/* 
++-----------------------------------------+--+--------------+-+--------------+ 
+|31                                    16 |15| 14         8 |7| 6         0  | 
++-----------------------------------------+--+--------------+-+--------------+ 
+| opcode 0xd0150000 (s)                   | 0| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0150080 (p)                   | 0| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
+| opcode 0xd0158000 (t)                   | 1| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0158080 (q)                   | 1| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
++-----------------------------------------+--+--------------+-+--------------+ 
+
+   Log2.Single/Pair/Triple/Quad (calculate logarithm base 2 of the specified real number) 
+
+   vlog2.s  %vfpu_rd, %vfpu_rs 
+   vlog2.p  %vfpu_rd, %vfpu_rs 
+   vlog2.t  %vfpu_rd, %vfpu_rs 
+   vlog2.q  %vfpu_rd, %vfpu_rs 
+
+   %vfpu_rd:   VFPU Vector Target Register ([s|p|t|q]reg 0..127) 
+   %vfpu_rs:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+
+   vfpu_regs[%vfpu_rd] <- log2(vfpu_regs[%vfpu_rs]) 
+*/ 
+
+#define vlog2_s(vfpu_rd, vfpu_rs) (0xd0150000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vlog2_p(vfpu_rd, vfpu_rs) (0xd0150080 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vlog2_t(vfpu_rd, vfpu_rs) (0xd0158000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vlog2_q(vfpu_rd, vfpu_rs) (0xd0158080 | (vfpu_rs << 8) | (vfpu_rd)) 
+
+/* 
++-----------------------------------------+--+--------------+-+--------------+ 
+|31                                    16 |15| 14         8 |7| 6         0  | 
++-----------------------------------------+--+--------------+-+--------------+ 
+| opcode 0xd0160000 (s)                   | 0| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0160080 (p)                   | 0| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
+| opcode 0xd0168000 (t)                   | 1| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0168080 (q)                   | 1| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
++-----------------------------------------+--+--------------+-+--------------+ 
+
+   SquareRoot.Single/Pair/Triple/Quad 
+
+   vsqrt.s  %vfpu_rd, %vfpu_rs   ; calculate square root 
+   vsqrt.p  %vfpu_rd, %vfpu_rs   ; calculate square root 
+   vsqrt.t  %vfpu_rd, %vfpu_rs   ; calculate square root 
+   vsqrt.q  %vfpu_rd, %vfpu_rs   ; calculate square root 
+
+   %vfpu_rd:   VFPU Vector Target Register ([s|p|t|q]reg 0..127) 
+   %vfpu_rs:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+
+   vfpu_regs[%vfpu_rd] <- sqrt(vfpu_regs[%vfpu_rs]) 
+*/ 
+
+#define vsqrt_s(vfpu_rd, vfpu_rs) (0xd0160000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vsqrt_p(vfpu_rd, vfpu_rs) (0xd0160080 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vsqrt_t(vfpu_rd, vfpu_rs) (0xd0168000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vsqrt_q(vfpu_rd, vfpu_rs) (0xd0168080 | (vfpu_rs << 8) | (vfpu_rd)) 
+
+
 /*
 +------------------------------------------+--------------+---+--------------+
 |31                                     15 | 14         8 | 7 | 6          0 |
