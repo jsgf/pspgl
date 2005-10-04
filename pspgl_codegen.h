@@ -1140,6 +1140,191 @@
 #define vsqrt_q(vfpu_rd, vfpu_rs) (0xd0168080 | (vfpu_rs << 8) | (vfpu_rd)) 
 
 
+/* 
++-----------------------------------------+--+--------------+-+--------------+ 
+|31                                    16 |15| 14         8 |7| 6         0  | 
++-----------------------------------------+--+--------------+-+--------------+ 
+| opcode 0xd0110000 (s)                   | 0| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0110080 (p)                   | 0| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
+| opcode 0xd0118000 (t)                   | 1| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0118080 (q)                   | 1| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
++-----------------------------------------+--+--------------+-+--------------+ 
+
+   ReciprocalSquareRoot.Single/Pair/Triple/Quad 
+
+   vrsq.s  %vfpu_rd, %vfpu_rs   ; calculate reciprocal sqrt (1/sqrt(x)) on single 
+   vrsq.p  %vfpu_rd, %vfpu_rs   ; calculate reciprocal sqrt (1/sqrt(x)) on pair 
+   vrsq.t  %vfpu_rd, %vfpu_rs   ; calculate reciprocal sqrt (1/sqrt(x)) on triple 
+   vrsq.q  %vfpu_rd, %vfpu_rs   ; calculate reciprocal sqrt (1/sqrt(x)) on quad 
+
+   %vfpu_rd:   VFPU Vector Target Register ([s|p|t|q]reg 0..127) 
+   %vfpu_rs:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+
+   vfpu_regs[%vfpu_rd] <- 1.0 / sqrt(vfpu_regs[%vfpu_rs]) 
+*/ 
+
+#define vrsq_s(vfpu_rd, vfpu_rs) (0xd0110000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vrsq_p(vfpu_rd, vfpu_rs) (0xd0110080 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vrsq_t(vfpu_rd, vfpu_rs) (0xd0118000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vrsq_q(vfpu_rd, vfpu_rs) (0xd0118080 | (vfpu_rs << 8) | (vfpu_rd)) 
+
+
+/* 
++-----------------------------------------+--+--------------+-+--------------+ 
+|31                                    16 |15| 14         8 |7| 6         0  | 
++-----------------------------------------+--+--------------+-+--------------+ 
+| opcode 0xd0120000 (s)                   | 0| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0120080 (p)                   | 0| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
+| opcode 0xd0128000 (t)                   | 1| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0128080 (q)                   | 1| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
++-----------------------------------------+--+--------------+-+--------------+ 
+
+   Sinus.Single/Pair/Triple/Quad 
+
+   vsin.s  %vfpu_rd, %vfpu_rs   ; calculate sin on single 
+   vsin.p  %vfpu_rd, %vfpu_rs   ; calculate sin on pair 
+   vsin.t  %vfpu_rd, %vfpu_rs   ; calculate sin on triple 
+   vsin.q  %vfpu_rd, %vfpu_rs   ; calculate sin on quad 
+
+   %vfpu_rd:   VFPU Vector Target Register ([s|p|t|q]reg 0..127) 
+   %vfpu_rs:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+
+   vfpu_regs[%vfpu_rd] <- sin(vfpu_regs[%vfpu_rs]) 
+
+  NOTE: the argument period range is scaled from 0.0 to 2.0 for numerical precisision.
+        Multiply input values by 2.0/pi to get into 0 ... 2pi range.
+        Multiply input values by 1.0/90.0 to get into 0deg ... 360deg range.
+*/ 
+
+
+#define vsin_s(vfpu_rd, vfpu_rs) (0xd0120000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vsin_p(vfpu_rd, vfpu_rs) (0xd0120080 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vsin_t(vfpu_rd, vfpu_rs) (0xd0128000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vsin_q(vfpu_rd, vfpu_rs) (0xd0128080 | (vfpu_rs << 8) | (vfpu_rd)) 
+
+/* 
++-----------------------------------------+--+--------------+-+--------------+ 
+|31                                    16 |15| 14         8 |7| 6         0  | 
++-----------------------------------------+--+--------------+-+--------------+ 
+| opcode 0xd0130000 (s)                   | 0| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0130080 (p)                   | 0| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
+| opcode 0xd0138000 (t)                   | 1| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0138080 (q)                   | 1| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
++-----------------------------------------+--+--------------+-+--------------+ 
+
+   Cosine.Single/Pair/Triple/Quad 
+
+   vcos.s  %vfpu_rd, %vfpu_rs   ; calculate cos on single 
+   vcos.p  %vfpu_rd, %vfpu_rs   ; calculate cos on pair 
+   vcos.t  %vfpu_rd, %vfpu_rs   ; calculate cos on triple 
+   vcos.q  %vfpu_rd, %vfpu_rs   ; calculate cos on quad 
+
+   %vfpu_rd:   VFPU Vector Target Register ([s|p|t|q]reg 0..127) 
+   %vfpu_rs:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+
+   vfpu_regs[%vfpu_rd] <- cos(vfpu_regs[%vfpu_rs]) 
+
+  NOTE: the argument period range is scaled from 0.0 to 2.0 for numerical precisision.
+        Multiply input values by 2.0/pi to get into 0 ... 2pi range.
+        Multiply input values by 1.0/90.0 to get into 0deg ... 360deg range.
+*/ 
+
+#define vcos_s(vfpu_rd, vfpu_rs) (0xd0130000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vcos_p(vfpu_rd, vfpu_rs) (0xd0130080 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vcos_t(vfpu_rd, vfpu_rs) (0xd0138000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vcos_q(vfpu_rd, vfpu_rs) (0xd0138080 | (vfpu_rs << 8) | (vfpu_rd)) 
+
+/* 
++-----------------------------------------+--+--------------+-+--------------+ 
+|31                                    16 |15| 14         8 |7| 6         0  | 
++-----------------------------------------+--+--------------+-+--------------+ 
+| opcode 0xd0170000 (s)                   | 0| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0170080 (p)                   | 0| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
+| opcode 0xd0178000 (t)                   | 1| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0178080 (q)                   | 1| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
++-----------------------------------------+--+--------------+-+--------------+ 
+
+   ArcSin.Single/Pair/Triple/Quad 
+
+   vasin.s  %vfpu_rd, %vfpu_rs   ; calculate arcsin 
+   vasin.p  %vfpu_rd, %vfpu_rs   ; calculate arcsin 
+   vasin.t  %vfpu_rd, %vfpu_rs   ; calculate arcsin 
+   vasin.q  %vfpu_rd, %vfpu_rs   ; calculate arcsin 
+
+   %vfpu_rd:   VFPU Vector Target Register ([s|p|t|q]reg 0..127) 
+   %vfpu_rs:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+
+   vfpu_regs[%vfpu_rd] <- arcsin(vfpu_regs[%vfpu_rs]) 
+
+  NOTE: the argument period range is scaled from 0.0 to 2.0 for numerical precisision.
+        Multiply input values by 2.0/pi to get into 0 ... 2pi range.
+        Multiply input values by 1.0/90.0 to get into 0deg ... 360deg range.
+*/ 
+
+#define vasin_s(vfpu_rd, vfpu_rs) (0xd0170000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vasin_p(vfpu_rd, vfpu_rs) (0xd0170080 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vasin_t(vfpu_rd, vfpu_rs) (0xd0178000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vasin_q(vfpu_rd, vfpu_rs) (0xd0178080 | (vfpu_rs << 8) | (vfpu_rd)) 
+
+
+/* 
++-----------------------------------------+--+--------------+-+--------------+ 
+|31                                    16 |15| 14         8 |7| 6         0  | 
++-----------------------------------------+--+--------------+-+--------------+ 
+| opcode 0xd0180000 (s)                   | 0| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0180080 (p)                   | 0| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
+| opcode 0xd0188000 (t)                   | 1| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd0188080 (q)                   | 1| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
++-----------------------------------------+--+--------------+-+--------------+ 
+
+   NegativeReciprocal.Single/Pair/Triple/Quad 
+
+   vnrcp.s  %vfpu_rd, %vfpu_rs   ; calculate negative reciprocal 
+   vnrcp.p  %vfpu_rd, %vfpu_rs   ; calculate negative reciprocal 
+   vnrcp.t  %vfpu_rd, %vfpu_rs   ; calculate negative reciprocal 
+   vnrcp.q  %vfpu_rd, %vfpu_rs   ; calculate negative reciprocal 
+
+   %vfpu_rd:   VFPU Vector Target Register ([s|p|t|q]reg 0..127) 
+   %vfpu_rs:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+
+   vfpu_regs[%vfpu_rd] <- -1.0 / vfpu_regs[%vfpu_rs] 
+*/ 
+
+#define vnrcp_s(vfpu_rd, vfpu_rs) (0xd0180000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vnrcp_p(vfpu_rd, vfpu_rs) (0xd0180080 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vnrcp_t(vfpu_rd, vfpu_rs) (0xd0188000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vnrcp_q(vfpu_rd, vfpu_rs) (0xd0188080 | (vfpu_rs << 8) | (vfpu_rd)) 
+
+
+/* 
++-----------------------------------------+--+--------------+-+--------------+ 
+|31                                    16 |15| 14         8 |7| 6         0  | 
++-----------------------------------------+--+--------------+-+--------------+ 
+| opcode 0xd01c0000 (s)                   | 0| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd01c0080 (p)                   | 0| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
+| opcode 0xd01c8000 (t)                   | 1| vfpu_rs[6-0] |0| vfpu_rd[6-0] | 
+| opcode 0xd01c8080 (q)                   | 1| vfpu_rs[6-0] |1| vfpu_rd[6-0] | 
++-----------------------------------------+--+--------------+-+--------------+ 
+
+   ReciprocalExp2.Single/Pair/Triple/Quad 
+
+   vrexp2.s  %vfpu_rd, %vfpu_rs   ; calculate 1/(2^y) 
+   vrexp2.p  %vfpu_rd, %vfpu_rs   ; calculate 1/(2^y) 
+   vrexp2.t  %vfpu_rd, %vfpu_rs   ; calculate 1/(2^y) 
+   vrexp2.q  %vfpu_rd, %vfpu_rs   ; calculate 1/(2^y) 
+
+   %vfpu_rd:   VFPU Vector Target Register ([s|p|t|q]reg 0..127) 
+   %vfpu_rs:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+
+   vfpu_regs[%vfpu_rd] <- 1/exp2(vfpu_regs[%vfpu_rs]) 
+*/ 
+
+#define vrexp2_s(vfpu_rd, vfpu_rs) (0xd01c0000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vrexp2_p(vfpu_rd, vfpu_rs) (0xd01c0080 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vrexp2_t(vfpu_rd, vfpu_rs) (0xd01c8000 | (vfpu_rs << 8) | (vfpu_rd)) 
+#define vrexp2_q(vfpu_rd, vfpu_rs) (0xd01c8080 | (vfpu_rs << 8) | (vfpu_rd)) 
+
+
 /*
 +------------------------------------------+--------------+---+--------------+
 |31                                     15 | 14         8 | 7 | 6          0 |
