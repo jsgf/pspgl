@@ -7,7 +7,7 @@ TARGET = test-vfpu
 OBJS = main.o
 
 PSPPATH := $(shell psp-config --pspsdk-path)
-LIBS = -lpspdebug -lpspdisplay -lpspge -lpspsdk -lpspctrl -lm -lc -lpspuser -lpspkernel
+LIBS = -lpspdebug -lpspdisplay -lpspge -lpspsdk -lpspctrl -lm -lc -lpspuser -lpsputility -lpspkernel
 CFLAGS = -g -Wall -O2 -MD -I$(PSPPATH)/include 
 LFLAGS = -g -Wall -O2 -DMODULE_NAME=$(TARGET) psp-setup.c -L$(PSPPATH)/lib $(LIBS)
 
