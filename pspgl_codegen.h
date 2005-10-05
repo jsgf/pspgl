@@ -1421,6 +1421,30 @@
 
 
 /*
++----------------------+--------------+----+--------------+---+--------------+
+|31                 23 | 22        16 | 15 | 14         8 | 7 | 6         0  |
++----------------------+--------------+----+--------------+---+--------------+
+|  opcode 0x65008080   | vfpu_rt[6-0] |    | vfpu_rs[6-0] |   | vfpu_rd[6-0] |
++----------------------+--------------+----+--------------+---+--------------+
+
+  MatrixScale.Pair/Triple/Quad, multiply all components by scale factor
+
+    vmscl.p %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Scale 2x2 Matrix by %vfpu_rt
+    vmscl.t %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Scale 3x3 Matrix by %vfpu_rt
+    vmscl.q %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Scale 4x4 Matrix by %vfpu_rt
+
+	%vfpu_rt:	VFPU Vector Source Register, Scale (sreg 0..127)
+	%vfpu_rs:	VFPU Vector Source Register, Matrix ([p|t|q]reg 0..127)
+	%vfpu_rd:	VFPU Vector Destination Register, Matrix ([s|p|t|q]reg 0..127)
+
+    vfpu_mtx[%vfpu_rd] <- vfpu_mtx[%vfpu_rs] * vfpu_reg[%vfpu_rt]
+*/
+#define vmscl_p(vfpu_rd,vfpu_rs,vfpu_rt)  (0xf2000080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
+#define vmscl_t(vfpu_rd,vfpu_rs,vfpu_rt)  (0xf2008000 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
+#define vmscl_q(vfpu_rd,vfpu_rs,vfpu_rt)  (0xf2008080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
+
+
+/*
 +--------------------------+--------------+--+--------------+-+--------------+
 |31                     23 | 22        16 |15| 14         8 |7| 6         0  |
 +--------------------------+--------------+--+--------------+-+--------------+
@@ -1612,7 +1636,6 @@
 {"vcmovf.q", "?d3d,?s3s,?e",    0xd2a88080, 0xfff88080, RD_C2,          0,              AL      },
 {"vtfm4.q", "?v3z,?s7y,?t3x",   0xf1808080, 0xff808080, RD_C2,          0,              AL      },
 {"vhtfm4.q", "?v3z,?s7y,?t3x",  0xf1808000, 0xff808080, RD_C2,          0,              AL      },
-{"vmscl.q", "?x7z,?s7y,?t0x",   0xf2008080, 0xff808080, RD_C2,          0,              AL      },
 {"vqmul.q", "?v3z,?s3y,?t3x",   0xf2808080, 0xff808080, RD_C2,          0,              AL      },
 {"vrot.q",  "?x3z,?s0y,?w",     0xf3a08080, 0xffe08080, RD_C2,          0,              AL      },
 {"vt4444.q", "?d1z,?s3w",       0xd0598080, 0xffff8080, RD_C2,          0,              AL      },
@@ -1651,7 +1674,6 @@
 {"vcmovf.t", "?d2d,?s2s,?e",    0xd2a88000, 0xfff88080, RD_C2,          0,              AL      },
 {"vtfm3.t", "?v2z,?s6y,?t2x",   0xf1008000, 0xff808080, RD_C2,          0,              AL      },
 {"vhtfm3.t", "?v2z,?s6y,?t2x",  0xf1000080, 0xff808080, RD_C2,          0,              AL      },
-{"vmscl.t", "?x6z,?s6y,?t0x",   0xf2008000, 0xff808080, RD_C2,          0,              AL      },
 {"vrot.t",  "?x2z,?s0y,?w",     0xf3a08000, 0xffe08080, RD_C2,          0,              AL      },
 {"vcrsp.t", "?d2z,?s2y,?t2x",   0xf2808000, 0xff808080, RD_C2,          0,              AL      },
 {"vsub.p",  "?d1d,?s1s,?t1t",   0x60800080, 0xff808080, RD_C2,          0,              AL      },
@@ -1694,7 +1716,6 @@
 {"vcmovf.p", "?d1d,?s1s,?e",    0xd2a80080, 0xfff88080, RD_C2,          0,              AL      },
 {"vtfm2.p", "?v1z,?s5y,?t1x",   0xf0800080, 0xff808080, RD_C2,          0,              AL      },
 {"vhtfm2.p", "?v1z,?s5y,?t1x",  0xf0800000, 0xff808080, RD_C2,          0,              AL      },
-{"vmscl.p", "?x5z,?s5y,?t0x",   0xf2000080, 0xff808080, RD_C2,          0,              AL      },
 {"vrot.p",  "?x1z,?s0y,?w",     0xf3a00080, 0xffe08080, RD_C2,          0,              AL      },
 {"vsub.s",  "?d0d,?s0s,?t0t",   0x60800000, 0xff808080, RD_C2,          0,              AL      },
 {"vdiv.s",  "?x0d,?s0s,?t0t",   0x63800000, 0xff808080, RD_C2,          0,              AL      },
