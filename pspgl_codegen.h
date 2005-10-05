@@ -838,36 +838,57 @@
    vcst.q %vfpu_rd, %a ; store constant into quad 
 
       %vfpu_rd:   VFPU Vector Destination Register ([s|p|t|q]reg 0..127) 
-      %a:         VFPU Constant ID    Value 
-               ================    ========================================== 
-               0  = Null           0 
-               1  = HUGE           340282346638528859811704183484516925440.0 
-               2  = SQRT(2)        1.41421 
-               3  = 1/SQRT(2)      0.70711 
-               4  = 2/SQRT(PI)     1.12838 
-               5  = 2/PI           0.63662 
-               6  = 1/PI           0.31831 
-               7  = PI/4           0.78540 
-               8  = PI/2           1.57080 
-               9  = PI             3.14159 
-               10 = E              2,71828 
-               11 = LOG2E          1.44270 
-               12 = LOG10E         0.43429 
-               13 = LN2            0.69315 
-               14 = LN10           2.30259 
-               15 = 2*PI           6.28319 
-               16 = PI/6           0.52360 
-               17 = LOG10TWO       0.30103 
-               18 = LOG2TEN        3.32193 
-               19 = SQRT(3)/2      0.86603 
-               20-31 = n/a         0 
+      %a:         VFPU Constant ID     Value 
+                  ================     ========================================== 
+                  0  = ZERO            0 
+                  1  = HUGE            340282346638528859811704183484516925440.0 
+                  2  = sqrt(2)         1.41421 
+                  3  = 1.0 / sqrt(2.0) 0.70711 
+                  4  = 2.0 / sqrt(PI)  1.12838 
+                  5  = 2.0 / PI        0.63662 
+                  6  = 1.0 / PI        0.31831 
+                  7  = PI/4.0          0.78540 
+                  8  = PI/2.0          1.57080 
+                  9  = PI              3.14159 
+                  10 = E               2,71828 
+                  11 = log2(E)         1.44270 
+                  12 = log10(E)        0.43429 
+                  13 = log2(2.0)       0.69315 
+                  14 = log2(10.0)      2.30259 
+                  15 = 2 * PI          6.28319 
+                  16 = PI / 6.0        0.52360 
+                  17 = log10(2)        0.30103 
+                  18 = log2(10.0)      3.32193 
+                  19 = sqrt(3.0) / 2.0 0.86603 
+                  20-31 = n/a          0 
 
-   vfpu_regs[%vfpu_rd] <- constants[%a] 
-*/ 
+   vfpu_regs[%vfpu_rd] <- constants[%a]   ; one of the VFPU_XXX constants below
+*/
 #define vcst_s(vfpu_rd, a) (0xd0600000 | ((a) << 16) | (vfpu_rd)) 
 #define vcst_p(vfpu_rd, a) (0xd0600080 | ((a) << 16) | (vfpu_rd)) 
 #define vcst_t(vfpu_rd, a) (0xd0608000 | ((a) << 16) | (vfpu_rd)) 
 #define vcst_q(vfpu_rd, a) (0xd0608080 | ((a) << 16) | (vfpu_rd)) 
+
+#define  VFPU_ZERO     0
+#define  VFPU_HUGE     1
+#define  VFPU_SQRT2    2
+#define  VFPU_SQRT1_2  3
+#define  VFPU_2_SQRTPI 4
+#define  VFPU_2_PI     5
+#define  VFPU_1_PI     6
+#define  VFPU_PI_4     7
+#define  VFPU_PI_2     8
+#define  VFPU_PI       9
+#define  VFPU_E        10
+#define  VFPU_LOG2E    11
+#define  VFPU_LOG10E   12
+#define  VFPU_LN2      13
+#define  VFPU_LN10     14
+#define  VFPU_2PI      15
+#define  VFPU_PI_6     16
+#define  VFPU_LOG10TWO 17
+#define  VFPU_LOG2TEN  18
+#define  VFPU_SQRT3_2  19
 
 
 /*
@@ -1418,9 +1439,8 @@
 	%vfpu_rs:	VFPU Matrix Source Register ([p|t|q]reg 0..127)
 	%vfpu_rt:	VFPU Matrix Source Register ([p|t|q]reg 0..127)
 
-    vfpu_mtx[%vfpu_rd] <- matrix_multiply(vfpu_mtx[%vfpu_rs], vfpu_mtx[%vfpu_rt])
+    vfpu_mtx[%vfpu_rd] <- vfpu_mtx[%vfpu_rt] * vfpu_mtx[%vfpu_rs]
 */
-
 #define vmmul_p(vfpu_rd, vfpu_rs, vfpu_rt) (0xf0000080 | (vfpu_rt << 16) | (vfpu_rs << 8) | (vfpu_rd)) 
 #define vmmul_t(vfpu_rd, vfpu_rs, vfpu_rt) (0xf0008000 | (vfpu_rt << 16) | (vfpu_rs << 8) | (vfpu_rd)) 
 #define vmmul_q(vfpu_rd, vfpu_rs, vfpu_rt) (0xf0008080 | (vfpu_rt << 16) | (vfpu_rs << 8) | (vfpu_rd)) 
@@ -1594,7 +1614,6 @@
 {"vhtfm4.q", "?v3z,?s7y,?t3x",  0xf1808000, 0xff808080, RD_C2,          0,              AL      },
 {"vmscl.q", "?x7z,?s7y,?t0x",   0xf2008080, 0xff808080, RD_C2,          0,              AL      },
 {"vqmul.q", "?v3z,?s3y,?t3x",   0xf2808080, 0xff808080, RD_C2,          0,              AL      },
-{"vmmov.q", "?x7z,?s7y",        0xf3808080, 0xffff8080, RD_C2,          0,              AL      },
 {"vrot.q",  "?x3z,?s0y,?w",     0xf3a08080, 0xffe08080, RD_C2,          0,              AL      },
 {"vt4444.q", "?d1z,?s3w",       0xd0598080, 0xffff8080, RD_C2,          0,              AL      },
 {"vt5551.q", "?d1z,?s3w",       0xd05a8080, 0xffff8080, RD_C2,          0,              AL      },
@@ -1633,7 +1652,6 @@
 {"vtfm3.t", "?v2z,?s6y,?t2x",   0xf1008000, 0xff808080, RD_C2,          0,              AL      },
 {"vhtfm3.t", "?v2z,?s6y,?t2x",  0xf1000080, 0xff808080, RD_C2,          0,              AL      },
 {"vmscl.t", "?x6z,?s6y,?t0x",   0xf2008000, 0xff808080, RD_C2,          0,              AL      },
-{"vmmov.t", "?x6z,?s6y",        0xf3808000, 0xffff8080, RD_C2,          0,              AL      },
 {"vrot.t",  "?x2z,?s0y,?w",     0xf3a08000, 0xffe08080, RD_C2,          0,              AL      },
 {"vcrsp.t", "?d2z,?s2y,?t2x",   0xf2808000, 0xff808080, RD_C2,          0,              AL      },
 {"vsub.p",  "?d1d,?s1s,?t1t",   0x60800080, 0xff808080, RD_C2,          0,              AL      },
@@ -1677,7 +1695,6 @@
 {"vtfm2.p", "?v1z,?s5y,?t1x",   0xf0800080, 0xff808080, RD_C2,          0,              AL      },
 {"vhtfm2.p", "?v1z,?s5y,?t1x",  0xf0800000, 0xff808080, RD_C2,          0,              AL      },
 {"vmscl.p", "?x5z,?s5y,?t0x",   0xf2000080, 0xff808080, RD_C2,          0,              AL      },
-{"vmmov.p", "?x5z,?s5y",        0xf3800080, 0xffff8080, RD_C2,          0,              AL      },
 {"vrot.p",  "?x1z,?s0y,?w",     0xf3a00080, 0xffe08080, RD_C2,          0,              AL      },
 {"vsub.s",  "?d0d,?s0s,?t0t",   0x60800000, 0xff808080, RD_C2,          0,              AL      },
 {"vdiv.s",  "?x0d,?s0s,?t0t",   0x63800000, 0xff808080, RD_C2,          0,              AL      },

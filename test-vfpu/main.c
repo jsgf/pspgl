@@ -24,11 +24,11 @@ void vfpu_init1 (void)
 {
         __asm__ volatile (
 		cgen_asm(vone_s(S_S000))
-		cgen_asm(vadd_s(S_S001, S_S000, S_S000))
-		cgen_asm(vadd_s(S_S002, S_S001, S_S000))
-		cgen_asm(vadd_s(S_S003, S_S002, S_S000))     /* R000 = ( 1  2  3  4) */
+		cgen_asm(vadd_s(S_S010, S_S000, S_S000))
+		cgen_asm(vadd_s(S_S020, S_S010, S_S000))
+		cgen_asm(vadd_s(S_S030, S_S020, S_S000))     /* R000 = ( 1  2  3  4) */
 		cgen_asm(vone_q(Q_R703))                     /* R703 = ( 1  1  1  1) */
-		cgen_asm(vscl_q(Q_R703, Q_R703, S_S003))     /* R703 = ( 4  4  4  4) */
+		cgen_asm(vscl_q(Q_R703, Q_R703, S_S030))     /* R703 = ( 4  4  4  4) */
 		cgen_asm(vadd_q(Q_R001, Q_R000, Q_R703))     /* R001 = ( 5  6  7  8) */
 		cgen_asm(vadd_q(Q_R002, Q_R001, Q_R703))     /* R002 = ( 9 10 11 12) */
 		cgen_asm(vadd_q(Q_R003, Q_R002, Q_R703))     /* R003 = (13 14 15 16) */
@@ -137,10 +137,9 @@ void vfpu_testcase (void *arg)
 {
 	register void *ptr __asm__ ("a0") = arg;
 	__asm__ volatile (
-		cgen_asm(lv_q(Q_R200, 0, R_a0))
-		cgen_asm(vf2iz_q(Q_R100, Q_R200, 25))
-		cgen_asm(vmov_q(Q_R000, Q_R100))
-		cgen_asm(vt4444_q(0, 0))
+		cgen_asm(vcst_q(Q_R100, VFPU_SQRT1_2))
+		cgen_asm(vcst_q(Q_R200, VFPU_SQRT2))	
+		cgen_asm(vcst_q(Q_R300, VFPU_PI))
 		: "=r"(ptr) : "r"(ptr) : "memory");
 }
 
@@ -154,8 +153,8 @@ int main (int argc, char **argv)
 	pspDebugScreenPrintf("VFPU test  --  vfpu_regs0 = %p, vfpu_regs1 = %p\n\n", vfpu_regs0, vfpu_regs1);
 	pspDebugScreenPrintf("press O (run VFPU test), Square (trap into breakpoint), X to exit\n\n");
 
-	vfpu_init();
-	//vfpu_init1();
+	//vfpu_init();
+	vfpu_init1();
 
 	while (1) {
 		SceCtrlData pad;
