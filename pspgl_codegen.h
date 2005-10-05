@@ -917,6 +917,93 @@
 #define vadd_q(vfpu_rd,vfpu_rs,vfpu_rt)  (0x60008080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd))
 
 
+/* 
++----------------------+--------------+----+--------------+---+--------------+ 
+|31                 23 | 22        16 | 15 | 14         8 | 7 | 6         0  | 
++----------------------+--------------+----+--------------+---+--------------+ 
+|  opcode 0x608 (s)    | vfpu_rt[6-0] | 0  | vfpu_rs[6-0] | 0 | vfpu_rd[6-0] | 
+|  opcode 0x608 (p)    | vfpu_rt[6-0] | 0  | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
+|  opcode 0x608 (t)    | vfpu_rt[6-0] | 1  | vfpu_rs[6-0] | 0 | vfpu_rd[6-0] | 
+|  opcode 0x608 (q)    | vfpu_rt[6-0] | 1  | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
++----------------------+--------------+----+--------------+---+--------------+ 
+
+   VectorSub.Single/Pair/Triple/Quad 
+
+    vsub.s %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Sub Single 
+    vsub.p %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Sub Pair 
+    vsub.t %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Sub Triple 
+    vsub.q %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Sub Quad 
+
+        %vfpu_rt:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+        %vfpu_rs:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+        %vfpu_rd:   VFPU Vector Destination Register ([s|p|t|q]reg 0..127) 
+
+    vfpu_regs[%vfpu_rd] <- vfpu_regs[%vfpu_rs] - vfpu_regs[%vfpu_rt] 
+*/ 
+#define vsub_s(vfpu_rd,vfpu_rs,vfpu_rt)  (0x60800000 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vsub_p(vfpu_rd,vfpu_rs,vfpu_rt)  (0x60800080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vsub_t(vfpu_rd,vfpu_rs,vfpu_rt)  (0x60808000 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vsub_q(vfpu_rd,vfpu_rs,vfpu_rt)  (0x60808080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+
+
+/* 
++----------------------+--------------+----+--------------+---+--------------+ 
+|31                 23 | 22        16 | 15 | 14         8 | 7 | 6         0  | 
++----------------------+--------------+----+--------------+---+--------------+ 
+|  opcode 0x638 (s)    | vfpu_rt[6-0] | 0  | vfpu_rs[6-0] | 0 | vfpu_rd[6-0] | 
+|  opcode 0x638 (p)    | vfpu_rt[6-0] | 0  | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
+|  opcode 0x638 (t)    | vfpu_rt[6-0] | 1  | vfpu_rs[6-0] | 0 | vfpu_rd[6-0] | 
+|  opcode 0x638 (q)    | vfpu_rt[6-0] | 1  | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
++----------------------+--------------+----+--------------+---+--------------+ 
+
+   VectorDiv.Single/Pair/Triple/Quad 
+
+    vdiv.s %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Sub Single 
+    vdiv.p %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Sub Pair 
+    vdiv.t %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Sub Triple 
+    vdiv.q %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Sub Quad 
+
+        %vfpu_rt:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+        %vfpu_rs:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+        %vfpu_rd:   VFPU Vector Destination Register ([s|p|t|q]reg 0..127) 
+
+    vfpu_regs[%vfpu_rd] <- vfpu_regs[%vfpu_rs] / vfpu_regs[%vfpu_rt] 
+*/ 
+#define vdiv_s(vfpu_rd,vfpu_rs,vfpu_rt)  (0x63800000 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vdiv_p(vfpu_rd,vfpu_rs,vfpu_rt)  (0x63800080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vdiv_t(vfpu_rd,vfpu_rs,vfpu_rt)  (0x63808000 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vdiv_q(vfpu_rd,vfpu_rs,vfpu_rt)  (0x63808080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+
+
+/* 
++----------------------+--------------+----+--------------+---+--------------+ 
+|31                 23 | 22        16 | 15 | 14         8 | 7 | 6         0  | 
++----------------------+--------------+----+--------------+---+--------------+ 
+|  opcode 0x640 (s)    | vfpu_rt[6-0] | 0  | vfpu_rs[6-0] | 0 | vfpu_rd[6-0] | 
+|  opcode 0x640 (p)    | vfpu_rt[6-0] | 0  | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
+|  opcode 0x640 (t)    | vfpu_rt[6-0] | 1  | vfpu_rs[6-0] | 0 | vfpu_rd[6-0] | 
+|  opcode 0x640 (q)    | vfpu_rt[6-0] | 1  | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
++----------------------+--------------+----+--------------+---+--------------+ 
+
+   VectorMul.Single/Pair/Triple/Quad 
+
+    vmul.s %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Sub Single 
+    vmul.p %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Sub Pair 
+    vmul.t %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Sub Triple 
+    vmul.q %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Sub Quad 
+
+        %vfpu_rt:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+        %vfpu_rs:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+        %vfpu_rd:   VFPU Vector Destination Register ([s|p|t|q]reg 0..127) 
+
+    vfpu_regs[%vfpu_rd] <- vfpu_regs[%vfpu_rs] * vfpu_regs[%vfpu_rt] 
+*/ 
+#define vmul_s(vfpu_rd,vfpu_rs,vfpu_rt)  (0x64000000 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vmul_p(vfpu_rd,vfpu_rs,vfpu_rt)  (0x64000080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vmul_t(vfpu_rd,vfpu_rs,vfpu_rt)  (0x64008000 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vmul_q(vfpu_rd,vfpu_rs,vfpu_rt)  (0x64008080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+
+
 /*
 +----------------------+--------------+----+--------------+---+--------------+
 |31                 23 | 22        16 | 15 | 14         8 | 7 | 6         0  |
@@ -1262,11 +1349,62 @@
 
    vfpu_regs[%vfpu_rd] <- 1/exp2(vfpu_regs[%vfpu_rs]) 
 */ 
-
 #define vrexp2_s(vfpu_rd, vfpu_rs) (0xd01c0000 | (vfpu_rs << 8) | (vfpu_rd)) 
 #define vrexp2_p(vfpu_rd, vfpu_rs) (0xd01c0080 | (vfpu_rs << 8) | (vfpu_rd)) 
 #define vrexp2_t(vfpu_rd, vfpu_rs) (0xd01c8000 | (vfpu_rs << 8) | (vfpu_rd)) 
 #define vrexp2_q(vfpu_rd, vfpu_rs) (0xd01c8080 | (vfpu_rs << 8) | (vfpu_rd)) 
+
+
+/* 
++----------------------+--------------+----+--------------+---+--------------+ 
+|31                 23 | 22        16 | 15 | 14         8 | 7 | 6         0  | 
++----------------------+--------------+----+--------------+---+--------------+ 
+|  opcode 0x648 (p)    | vfpu_rt[6-0] | 0  | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
+|  opcode 0x648 (t)    | vfpu_rt[6-0] | 1  | vfpu_rs[6-0] | 0 | vfpu_rd[6-0] | 
+|  opcode 0x648 (q)    | vfpu_rt[6-0] | 1  | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
++----------------------+--------------+----+--------------+---+--------------+ 
+
+   VectorDotProduct.Pair/Triple/Quad 
+
+    vdot.p %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Dot Product Pair 
+    vdot.t %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Dot Product Triple 
+    vdot.q %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Dot Product Quad 
+
+        %vfpu_rt:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+        %vfpu_rs:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+        %vfpu_rd:   VFPU Vector Destination Register ([s|p|t|q]reg 0..127) 
+
+    vfpu_regs[%vfpu_rd] <- dotproduct(vfpu_regs[%vfpu_rs], vfpu_regs[%vfpu_rt]) 
+*/ 
+#define vdot_p(vfpu_rd,vfpu_rs,vfpu_rt)  (0x64800080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vdot_t(vfpu_rd,vfpu_rs,vfpu_rt)  (0x64808000 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vdot_q(vfpu_rd,vfpu_rs,vfpu_rt)  (0x64808080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+
+
+/* 
++----------------------+--------------+----+--------------+---+--------------+ 
+|31                 23 | 22        16 | 15 | 14         8 | 7 | 6         0  | 
++----------------------+--------------+----+--------------+---+--------------+ 
+|  opcode 0x660 (p)    | vfpu_rt[6-0] | 0  | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
+|  opcode 0x660 (t)    | vfpu_rt[6-0] | 1  | vfpu_rs[6-0] | 0 | vfpu_rd[6-0] | 
+|  opcode 0x660 (q)    | vfpu_rt[6-0] | 1  | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
++----------------------+--------------+----+--------------+---+--------------+ 
+
+   VectorHomogenousDotProduct.Pair/Triple/Quad 
+
+    vhdp.p %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Dot Product Pair 
+    vhdp.t %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Dot Product Triple 
+    vhdp.q %vfpu_rd, %vfpu_rs, %vfpu_rt   ; Dot Product Quad 
+
+        %vfpu_rt:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+        %vfpu_rs:   VFPU Vector Source Register ([s|p|t|q]reg 0..127) 
+        %vfpu_rd:   VFPU Vector Destination Register ([s|p|t|q]reg 0..127) 
+
+    vfpu_regs[%vfpu_rd] <- homogenousdotproduct(vfpu_regs[%vfpu_rs], vfpu_regs[%vfpu_rt]) 
+*/ 
+#define vhdp_p(vfpu_rd,vfpu_rs,vfpu_rt)  (0x66000080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vhdp_t(vfpu_rd,vfpu_rs,vfpu_rt)  (0x66008000 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vhdp_q(vfpu_rd,vfpu_rs,vfpu_rt)  (0x66008080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
 
 
 /*
