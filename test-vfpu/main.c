@@ -127,7 +127,7 @@ static float vfpu_regs0 [32][4] __attribute__((aligned(16)));
 static float vfpu_regs1 [32][4] __attribute__((aligned(16)));
 
 //static unsigned long test_vector [4] __attribute__((aligned(16))) = { 0xffff0000, 0x00ff0000, 0x0000ff00, 0x0000ffff };
-static float test_vector [4] __attribute__((aligned(16))) = { 1.1, 2.2, 3.3, 4.4 };
+static float test_vector [4] __attribute__((aligned(16))) = { -1.1, 2.2, -0.3, 0.4 };
 //static float test_vector [4] __attribute__((aligned(16))) = { 1.0, 2.0, 3.0, 4.0 };
 
 /**
@@ -137,9 +137,9 @@ void vfpu_testcase (void *arg)
 {
 	register void *ptr __asm__ ("a0") = arg;
 	__asm__ volatile (
-		cgen_asm(vcst_q(Q_R100, VFPU_SQRT1_2))
-		cgen_asm(vcst_q(Q_R200, VFPU_SQRT2))	
-		cgen_asm(vcst_q(Q_R300, VFPU_PI))
+		cgen_asm(lv_q(Q_R100, 0, R_a0))
+		cgen_asm(vsat0_q(Q_R200, Q_R100))	
+		cgen_asm(vsat1_q(Q_R300, Q_R100))	
 		: "=r"(ptr) : "r"(ptr) : "memory");
 }
 

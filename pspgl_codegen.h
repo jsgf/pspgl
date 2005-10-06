@@ -1427,11 +1427,11 @@
 
     vfpu_regs[%vfpu_rd] <- abs(vfpu_regs[%vfpu_rs]) 
 */ 
-
 #define vabs_s(vfpu_rd,vfpu_rs)  (0xd0010000 | ((vfpu_rs) << 8) | (vfpu_rd)) 
 #define vabs_p(vfpu_rd,vfpu_rs)  (0xd0010080 | ((vfpu_rs) << 8) | (vfpu_rd)) 
 #define vabs_t(vfpu_rd,vfpu_rs)  (0xd0018000 | ((vfpu_rs) << 8) | (vfpu_rd)) 
 #define vabs_q(vfpu_rd,vfpu_rs)  (0xd0018080 | ((vfpu_rs) << 8) | (vfpu_rd)) 
+
 
 /* 
 +-------------------------------------+----+--------------+---+--------------+ 
@@ -1454,8 +1454,7 @@
         %vfpu_rs:   VFPU Vector Source Register (m[p|t|q]reg 0..127) 
 
     vfpu_regs[%vfpu_rd] <- -vfpu_regs[%vfpu_rs] 
-*/ 
-
+*/
 #define vneg_s(vfpu_rd,vfpu_rs)  (0xd0020000 | ((vfpu_rs) << 8) | (vfpu_rd)) 
 #define vneg_p(vfpu_rd,vfpu_rs)  (0xd0020080 | ((vfpu_rs) << 8) | (vfpu_rd)) 
 #define vneg_t(vfpu_rd,vfpu_rs)  (0xd0028000 | ((vfpu_rs) << 8) | (vfpu_rd)) 
@@ -1548,6 +1547,62 @@
 #define vmax_p(vfpu_rd,vfpu_rs,vfpu_rt)  (0x6D800080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
 #define vmax_t(vfpu_rd,vfpu_rs,vfpu_rt)  (0x6D808000 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
 #define vmax_q(vfpu_rd,vfpu_rs,vfpu_rt)  (0x6D808080 | ((vfpu_rt) << 16) | ((vfpu_rs) << 8) | (vfpu_rd)) 
+
+
+/* 
++-------------------------------------+----+--------------+---+--------------+ 
+|31                                16 | 15 | 14         8 | 7 | 6          0 | 
++-------------------------------------+----+--------------+---+--------------+ 
+| opcode 0xd0040000 (s)               |  0 | vfpu_rs[6-0] | 0 | vfpu_rd[6-0] | 
+| opcode 0xd0040080 (p)               |  0 | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
+| opcode 0xd0048000 (t)               |  1 | vfpu_rs[6-0] | 0 | vfpu_rd[6-0] | 
+| opcode 0xd0048080 (q)               |  1 | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
++-------------------------------------+----+--------------+---+--------------+ 
+
+  SaturateValue0.Single/Pair/Triple/Quad 
+
+    vsat0.s %vfpu_rd, %vfpu_rs    ; Clamp Value Single in Range 0.0...1.0
+    vsat0.p %vfpu_rd, %vfpu_rs    ; Clamp Value Pair in Range 0.0...1.0
+    vsat0.t %vfpu_rd, %vfpu_rs    ; Clamp Value Triple in Range 0.0...1.0
+    vsat0.q %vfpu_rd, %vfpu_rs    ; Clamp Value Quad in Range 0.0...1.0
+
+        %vfpu_rd:   VFPU Vector Destination Register (m[p|t|q]reg 0..127) 
+        %vfpu_rs:   VFPU Vector Source Register (m[p|t|q]reg 0..127) 
+
+    vfpu_regs[%vfpu_rd] <- vfpu_regs[%vfpu_rs] < 0.0 ? 0.0 : vfpu_regs[%vfpu_rs] > 1.0 ? 1.0 : vfpu_regs[%vfpu_rs]
+*/ 
+#define vsat0_s(vfpu_rd,vfpu_rs)  (0xd0040000 | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vsat0_p(vfpu_rd,vfpu_rs)  (0xd0040080 | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vsat0_t(vfpu_rd,vfpu_rs)  (0xd0048000 | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vsat0_q(vfpu_rd,vfpu_rs)  (0xd0048080 | ((vfpu_rs) << 8) | (vfpu_rd)) 
+
+
+/* 
++-------------------------------------+----+--------------+---+--------------+ 
+|31                                16 | 15 | 14         8 | 7 | 6          0 | 
++-------------------------------------+----+--------------+---+--------------+ 
+| opcode 0xd0050000 (s)               |  0 | vfpu_rs[6-0] | 0 | vfpu_rd[6-0] | 
+| opcode 0xd0050080 (p)               |  0 | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
+| opcode 0xd0058000 (t)               |  1 | vfpu_rs[6-0] | 0 | vfpu_rd[6-0] | 
+| opcode 0xd0058080 (q)               |  1 | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
++-------------------------------------+----+--------------+---+--------------+ 
+
+  SaturateValue1.Single/Pair/Triple/Quad 
+
+    vsat1.s %vfpu_rd, %vfpu_rs    ; Clamp Value Single in Range -1.0...1.0
+    vsat1.p %vfpu_rd, %vfpu_rs    ; Clamp Value Pair in Range -1.0...1.0
+    vsat1.t %vfpu_rd, %vfpu_rs    ; Clamp Value Triple in Range -1.0...1.0
+    vsat1.q %vfpu_rd, %vfpu_rs    ; Clamp Value Quad in Range -1.0...1.0
+
+        %vfpu_rd:   VFPU Vector Destination Register (m[p|t|q]reg 0..127) 
+        %vfpu_rs:   VFPU Vector Source Register (m[p|t|q]reg 0..127) 
+
+    vfpu_regs[%vfpu_rd] <- vfpu_regs[%vfpu_rs] < -1.0 ? -1.0 : vfpu_regs[%vfpu_rs] > 1.0 ? 1.0 : vfpu_regs[%vfpu_rs]
+*/ 
+#define vsat1_s(vfpu_rd,vfpu_rs)  (0xd0050000 | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vsat1_p(vfpu_rd,vfpu_rs)  (0xd0050080 | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vsat1_t(vfpu_rd,vfpu_rs)  (0xd0058000 | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vsat1_q(vfpu_rd,vfpu_rs)  (0xd0058080 | ((vfpu_rs) << 8) | (vfpu_rd)) 
 
 
 /*
