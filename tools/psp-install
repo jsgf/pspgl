@@ -73,7 +73,7 @@ if [ "$IMAGE" = ""  -o "$help" = "yes" ] ; then
 fi
 
 
-IMGTYPE=`file "$IMAGE" | grep "ELF 32-bit LSB MIPS-II executable, MIPS"`
+IMGTYPE=`file "$IMAGE" | grep "ELF" | grep "32-bit LSB" | grep "MIPS-II" | grep "executable"`
 
 if [ "$IMGTYPE" = "" ] ; then
 	echo "--------------------------------------------------------------------------------" 
