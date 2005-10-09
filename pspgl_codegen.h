@@ -697,6 +697,39 @@
 +-------------+-----------+---------+----------------------------+-----+-----+
 |31         26|25       21|20     16|15                        2 |  1  |  0  |
 +-------------+-----------+---------+----------------------------+-----+-----+
+| opcode 0xd4 | base[4-0] | rd[4-0] |         offset[15-2]       |  0  |rd[5]|
+| opcode 0xd4 | base[4-0] | rd[4-0] |         offset[15-2]       |  1  |rd[5]|
++-------------+-----------+---------+----------------------------+-----+-----+
+
+  LoadVectorLeft/Right.Quadword Relative to Address in General Purpose Register
+  Load unaligned Quadwords. lvl.q contains address of lower part, lvr.q the high one.
+
+    lvl.q %vfpu_rd, offset(%base)
+    lvr.q %vfpu_rd, offset(%base)
+
+	%vfpu_rd:	VFPU Vector Destination Register ([s|q]reg)
+	%base:		GPR, specifies Source Address Base
+	offset:		signed Offset added to Source Address Base
+
+    vfpu_regs[%vfpu_rd] <- vector_at_address (offset + %gpr)
+*/
+#define lvl_q(vfpu_rd,offset,base)				\
+	(0xd4000000 |						\
+	 ((base) << 21) |					\
+	 (((vfpu_rd) & 0x1f) << 16) | ((vfpu_rd) >> 5) |	\
+	 ((offset) & 0xfffc))
+
+#define lvr_q(vfpu_rd,offset,base)				\
+	(0xd4000002 |						\
+	 ((base) << 21) |					\
+	 (((vfpu_rd) & 0x1f) << 16) | ((vfpu_rd) >> 5) |	\
+	 ((offset) & 0xfffc))
+
+
+/*
++-------------+-----------+---------+----------------------------+-----+-----+
+|31         26|25       21|20     16|15                        2 |  1  |  0  |
++-------------+-----------+---------+----------------------------+-----+-----+
 | opcode 0xf8 | base[4-0] | rs[4-0] |         offset[15-2]       | c_p |rs[5]|
 +-------------+-----------+---------+----------------------------+-----+-----+
 
@@ -726,6 +759,39 @@
 	 (((vfpu_rs) & 0x1f) << 16) | ((vfpu_rs) >> 5) |	\
 	 ((offset) & 0xfffc) |					\
 	 ((cache_policy) << 1))
+
+
+/*
++-------------+-----------+---------+----------------------------+-----+-----+
+|31         26|25       21|20     16|15                        2 |  1  |  0  |
++-------------+-----------+---------+----------------------------+-----+-----+
+| opcode 0xf4 | base[4-0] | rs[4-0] |         offset[15-2]       |  0  |rs[5]|
+| opcode 0xf4 | base[4-0] | rs[4-0] |         offset[15-2]       |  1  |rs[5]|
++-------------+-----------+---------+----------------------------+-----+-----+
+
+  StoreVectorLeft/Right.Quadword Relative to Address in General Purpose Register
+  Store unaligned Quadwords. svl.q contains address of lower part, svr.q the high one.
+
+    svl.q %vfpu_rs, offset(%base), cache_policy
+    svr.q %vfpu_rs, offset(%base), cache_policy
+
+	%vfpu_rs:	VFPU Vector Register ([s|q]reg)
+	%base:		specifies Source Address Base
+	offset:		signed Offset added to Source Address Base
+
+    vector_at_address (offset + %gpr) <- vfpu_regs[%vfpu_rs]
+*/
+#define svl_q(vfpu_rs,offset,base)				\
+	(0xf4000000 |						\
+	 ((base) << 21) |					\
+	 (((vfpu_rs) & 0x1f) << 16) | ((vfpu_rs) >> 5) |	\
+	 ((offset) & 0xfffc))
+
+#define svr_q(vfpu_rs,offset,base)				\
+	(0xf4000002 |						\
+	 ((base) << 21) |					\
+	 (((vfpu_rs) & 0x1f) << 16) | ((vfpu_rs) >> 5) |	\
+	 ((offset) & 0xfffc))
 
 
 /*
@@ -1380,6 +1446,56 @@
 
 
 /* 
++-------------------------------------+----+--------------+---+--------------+ 
+|31                                16 | 15 | 14         8 | 7 | 6         0  | 
++-------------------------------------+----+--------------+---+--------------+ 
+|        opcode 0xd046 (p)            | 0  | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
+|        opcode 0xd046 (t)            | 1  | vfpu_rs[6-0] | 0 | vfpu_rd[6-0] | 
+|        opcode 0xd046 (q)            | 1  | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
++-------------------------------------+----+--------------+---+--------------+ 
+
+  ???.Pair/Triple/Quad  --  Accumulate Components of Vector into Single Float
+
+    vfad.p %vfpu_rd, %vfpu_rs  ; Accumulate Components of Pair 
+    vfad.t %vfpu_rd, %vfpu_rs  ; Accumulate Components of Triple 
+    vfad.q %vfpu_rd, %vfpu_rs  ; Accumulate Components of Quad 
+
+        %vfpu_rs:   VFPU Vector Source Register ([p|t|q]reg 0..127) 
+        %vfpu_rd:   VFPU Vector Destination Register (sreg 0..127) 
+
+    vfpu_regs[%vfpu_rd] <- Sum_Of_Components(vfpu_regs[%vfpu_rs]) 
+*/ 
+#define vfad_p(vfpu_rd,vfpu_rs)  (0xd0460080 | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vfad_t(vfpu_rd,vfpu_rs)  (0xd0468000 | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vfad_q(vfpu_rd,vfpu_rs)  (0xd0468080 | ((vfpu_rs) << 8) | (vfpu_rd)) 
+
+
+/* 
++-------------------------------------+----+--------------+---+--------------+ 
+|31                                16 | 15 | 14         8 | 7 | 6         0  | 
++-------------------------------------+----+--------------+---+--------------+ 
+|        opcode 0xd047 (p)            | 0  | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
+|        opcode 0xd047 (t)            | 1  | vfpu_rs[6-0] | 0 | vfpu_rd[6-0] | 
+|        opcode 0xd047 (q)            | 1  | vfpu_rs[6-0] | 1 | vfpu_rd[6-0] | 
++-------------------------------------+----+--------------+---+--------------+ 
+
+  VectorAverage.Pair/Triple/Quad  --  Average Components of Vector into Single Float
+
+    vavg.p %vfpu_rd, %vfpu_rs  ; Accumulate Components of Pair 
+    vavg.t %vfpu_rd, %vfpu_rs  ; Accumulate Components of Triple 
+    vavg.q %vfpu_rd, %vfpu_rs  ; Accumulate Components of Quad 
+
+        %vfpu_rs:   VFPU Vector Source Register ([p|t|q]reg 0..127) 
+        %vfpu_rd:   VFPU Vector Destination Register (sreg 0..127) 
+
+    vfpu_regs[%vfpu_rd] <- Average_Of_Components(vfpu_regs[%vfpu_rs]) 
+*/ 
+#define vavg_p(vfpu_rd,vfpu_rs)  (0xd0470080 | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vavg_t(vfpu_rd,vfpu_rs)  (0xd0478000 | ((vfpu_rs) << 8) | (vfpu_rd)) 
+#define vavg_q(vfpu_rd,vfpu_rs)  (0xd0478080 | ((vfpu_rs) << 8) | (vfpu_rd)) 
+
+
+/* 
 +----------------------+--------------+----+--------------+---+--------------+ 
 |31                 23 | 22        16 | 15 | 14         8 | 7 | 6         0  | 
 +----------------------+--------------+----+--------------+---+--------------+ 
@@ -1994,10 +2110,6 @@
 {"bvt",     "?c,p",             0x49010000, 0xffe30000, CBD|RD_CC,      0,              AL      },
 {"bvtl",    "?c,p",             0x49030000, 0xffe30000, CBL|RD_CC,      0,              AL      },
 {"vwb.q",   "?n3x,?o(b)",       0xf8000002, 0xfc000002, SM|RD_s|RD_C2,  0,              AL      },
-{"lvl.q",   "?n3x,?o(b)",       0xd4000000, 0xfc000002, CLD|RD_s|WR_CC, 0,              AL      },
-{"lvr.q",   "?n3x,?o(b)",       0xd4000002, 0xfc000002, CLD|RD_s|WR_CC, 0,              AL      },
-{"svl.q",   "?n3x,?o(b)",       0xf4000000, 0xfc000002, SM|RD_s|RD_C2,  0,              AL      },
-{"svr.q",   "?n3x,?o(b)",       0xf4000002, 0xfc000002, SM|RD_s|RD_C2,  0,              AL      },
 {"mtv",     "t,?d0z",           0x48e00000, 0xffe0ff80, LCD|WR_t|WR_C2, 0,              AL      },
 {"mfv",     "t,?d0z",           0x48600000, 0xffe0ff80, COD|RD_t|WR_CC|RD_C2, 0,        AL      },
 {"mtvc",    "t,?q",             0x48e00000, 0xffe0ff00, LCD|WR_t|WR_C2, 0,              AL      },
@@ -2014,7 +2126,6 @@
 {"vi2c.q",  "?d0m,?s3w",        0xd03d8080, 0xffff8080, RD_C2,          0,              AL      },
 {"vi2us.q", "?d1m,?s3w",        0xd03e8080, 0xffff8080, RD_C2,          0,              AL      },
 {"vi2s.q",  "?d1m,?s3w",        0xd03f8080, 0xffff8080, RD_C2,          0,              AL      },
-{"vidt.q",  "?d3d",             0xd0038080, 0xffffff80, RD_C2,          0,              AL      },
 {"vrndi.q", "?d3z",             0xd0218080, 0xffffff80, RD_C2,          0,              AL      },
 {"vrndf1.q", "?d3z",            0xd0228080, 0xffffff80, RD_C2,          0,              AL      },
 {"vrndf2.q", "?d3z",            0xd0238080, 0xffffff80, RD_C2,          0,              AL      },
@@ -2026,8 +2137,6 @@
 {"vbfy1.q", "?d3d,?s3s",        0xd0428080, 0xffff8080, RD_C2,          0,              AL      },
 {"vbfy2.q", "?d3d,?s3s",        0xd0438080, 0xffff8080, RD_C2,          0,              AL      },
 {"vocp.q",  "?d3d,?s3y",        0xd0448080, 0xffff8080, RD_C2,          0,              AL      },
-{"vfad.q",  "?d0d,?s3s",        0xd0468080, 0xffff8080, RD_C2,          0,              AL      },
-{"vavg.q",  "?d0d,?s3s",        0xd0478080, 0xffff8080, RD_C2,          0,              AL      },
 {"vf2in.q", "?d3m,?s3s,?b",     0xd2008080, 0xffe08080, RD_C2,          0,              AL      },
 {"vf2iu.q", "?d3m,?s3s,?b",     0xd2408080, 0xffe08080, RD_C2,          0,              AL      },
 {"vf2id.q", "?d3m,?s3s,?b",     0xd2608080, 0xffe08080, RD_C2,          0,              AL      },
@@ -2050,8 +2159,6 @@
 {"vrndf1.t", "?d2z",            0xd0228000, 0xffffff80, RD_C2,          0,              AL      },
 {"vrndf2.t", "?d2z",            0xd0238000, 0xffffff80, RD_C2,          0,              AL      },
 {"vocp.t",  "?d2d,?s2y",        0xd0448000, 0xffff8080, RD_C2,          0,              AL      },
-{"vfad.t",  "?d0d,?s2s",        0xd0468000, 0xffff8080, RD_C2,          0,              AL      },
-{"vavg.t",  "?d0d,?s2s",        0xd0478000, 0xffff8080, RD_C2,          0,              AL      },
 {"vf2in.t", "?d2m,?s2s,?b",     0xd2008000, 0xffe08080, RD_C2,          0,              AL      },
 {"vf2iu.t", "?d2m,?s2s,?b",     0xd2408000, 0xffe08080, RD_C2,          0,              AL      },
 {"vf2id.t", "?d2m,?s2s,?b",     0xd2608000, 0xffe08080, RD_C2,          0,              AL      },
@@ -2069,7 +2176,6 @@
 {"vslt.p",  "?d1d,?s1s,?t1t",   0x6f800080, 0xff808080, RD_C2,          0,              AL      },
 {"vi2us.p", "?d0m,?s1w",        0xd03e0080, 0xffff8080, RD_C2,          0,              AL      },
 {"vi2s.p",  "?d0m,?s1w",        0xd03f0080, 0xffff8080, RD_C2,          0,              AL      },
-{"vidt.p",  "?d1d",             0xd0030080, 0xffffff80, RD_C2,          0,              AL      },
 {"vrndi.p", "?d1z",             0xd0210080, 0xffffff80, RD_C2,          0,              AL      },
 {"vrndf1.p", "?d1z",            0xd0220080, 0xffffff80, RD_C2,          0,              AL      },
 {"vrndf2.p", "?d1z",            0xd0230080, 0xffffff80, RD_C2,          0,              AL      },
@@ -2078,8 +2184,6 @@
 {"vbfy1.p", "?d1d,?s1s",        0xd0420080, 0xffff8080, RD_C2,          0,              AL      },
 {"vocp.p",  "?d1d,?s1y",        0xd0440080, 0xffff8080, RD_C2,          0,              AL      },
 {"vsocp.p", "?d3z,?s1y",        0xd0450080, 0xffff8080, RD_C2,          0,              AL      },
-{"vfad.p",  "?d0d,?s1s",        0xd0460080, 0xffff8080, RD_C2,          0,              AL      },
-{"vavg.p",  "?d0d,?s1s",        0xd0470080, 0xffff8080, RD_C2,          0,              AL      },
 {"vf2in.p", "?d1m,?s1s,?b",     0xd2000080, 0xffe08080, RD_C2,          0,              AL      },
 {"vf2iu.p", "?d1m,?s1s,?b",     0xd2400080, 0xffe08080, RD_C2,          0,              AL      },
 {"vf2id.p", "?d1m,?s1s,?b",     0xd2600080, 0xffe08080, RD_C2,          0,              AL      },
