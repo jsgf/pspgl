@@ -131,7 +131,8 @@ extern void __pspgl_varray_draw (GLenum mode, GLenum index_type, const GLvoid *i
 
 
 /* glTexImage2D.c */
-const struct pspgl_texfmt *__pspgl_hardware_format(GLenum format, GLenum type);
+struct pspgl_teximg;
+extern void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level, struct pspgl_teximg *timg);
 
 static inline unsigned ispow2(unsigned n)
 {

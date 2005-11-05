@@ -47,11 +47,12 @@ static void set_mipmap_regs(unsigned level, struct pspgl_teximg *img)
 	}
 }
 
-static void set_texture_image(struct pspgl_texobj *tobj, unsigned level, struct pspgl_teximg *timg)
+void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level, struct pspgl_teximg *timg)
 {
 	if (tobj->images[level] != NULL) {
-		psp_log("replacing texture image %p at level %d with %p\n",
-			tobj->images[level], level, timg);
+		psp_log("replacing texture image %p(%d) at level %d with %p\n", 
+			tobj->images[level], tobj->images[level]->refcount,
+			level, timg);
 		__pspgl_teximg_free(tobj->images[level]);
 	}
 
@@ -74,7 +75,7 @@ static void set_texture_image(struct pspgl_texobj *tobj, unsigned level, struct 
 		sendCommandi(CMD_TEXFMT, tobj->texfmt->hwformat);
 	}
 	tobj->images[level] = timg;
-	set_mipmap_regs(level, timg);
+	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);
 }
 
 static inline GLboolean mipmap_filter(GLenum filter)
@@ -140,8 +141,11 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 	if (format != internalformat)
 		goto invalid_operation;
 
-	texfmt = __pspgl_hardware_format(internalformat, type);
+	texfmt = __pspgl_hardware_format(__pspgl_texformats, internalformat, type);
 	if (texfmt == NULL)
+		goto invalid_enum;
+
+	if (texfmt->hwformat >= GE_DXT1)
 		goto invalid_enum;
 
 	psp_log("selected texfmt %d for fmt=%x type=%x\n", texfmt->hwformat, internalformat, type);
@@ -154,16 +158,15 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 		goto out_of_memory;
 
 	if (texels) {
-		timg = __pspgl_teximg_new(texels, width, height, texfmt);
+		timg = __pspgl_teximg_new(texels, width, height, 0, texfmt);
 		if (timg == NULL)
 			goto out_of_memory;
 
-		set_texture_image(tobj, level, timg);
+		__pspgl_set_texture_image(tobj, level, timg);
 		__pspgl_teximg_free(timg); /* tobj has reference now */
 	} else
-		set_texture_image(tobj, level, NULL);
+		__pspgl_set_texture_image(tobj, level, NULL);
 
-	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);
 	__pspgl_update_texenv(tobj);
 	return;
 

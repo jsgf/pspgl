@@ -140,7 +140,7 @@ static void copy_index4(const struct pspgl_texfmt *fmt, void *to, const void *fr
 }
 
 
-static const struct pspgl_texfmt texformats[] = {
+const struct pspgl_texfmt __pspgl_texformats[] = {
 	/* format       type                        source sz   hwformat      hw size   converter               use tex alpha */
 	{ GL_RGB,	GL_UNSIGNED_BYTE,		3,	GE_RGBA_8888, 4,	copy_888_alpha,		GE_TEXENV_RGB  },
 	{ GL_RGB,	GL_UNSIGNED_SHORT_5_5_5_1,	2,	GE_RGBA_5551, 2,	copy_5551,		GE_TEXENV_RGB  },
@@ -176,23 +176,30 @@ static const struct pspgl_texfmt texformats[] = {
  	{ GL_COLOR_INDEX4_EXT,	GL_UNSIGNED_BYTE,	0,	GE_INDEX_4BIT, 0,	copy_index4,		0 /* ? */},
  	{ GL_COLOR_INDEX8_EXT,	GL_UNSIGNED_BYTE,	1,	GE_INDEX_8BIT, 1,	copy,			0 /* ? */},
  	{ GL_COLOR_INDEX16_EXT,	GL_UNSIGNED_SHORT,	2,	GE_INDEX_16BIT, 2,	copy,			0 /* ? */},
-};
-#define NTEXFORMATS	(sizeof(texformats)/sizeof(*texformats))
 
-const struct pspgl_texfmt *__pspgl_hardware_format(GLenum format, GLenum type)
+	{0,0}
+};
+
+const struct pspgl_texfmt *__pspgl_hardware_format(const struct pspgl_texfmt *table, GLenum format, GLenum type)
 {
 	int i;
 
-	for(i = 0; i < NTEXFORMATS; i++)
-		if (texformats[i].format == format &&
-		    texformats[i].type == type)
-			return &texformats[i];
+	for(i = 0; table[i].format != 0; i++)
+		if (table[i].format == format &&
+		    table[i].type == type)
+			return &table[i];
 
 	return NULL;
 }
 
-void __pspgl_convert_image(const void *pixels, int width, int height,
-			   void *to, const struct pspgl_texfmt *texfmt)
+static void convert_compressed_image(const void *pixels, unsigned width, unsigned height, unsigned size,
+				     void *to, const struct pspgl_texfmt *texfmt)
+{
+	(*texfmt->convert)(texfmt, to, pixels, size);
+}
+
+static void convert_image(const void *pixels, unsigned width, unsigned height,
+			  void *to, const struct pspgl_texfmt *texfmt)
 {
 	const unsigned char *src = pixels;
 	unsigned char *dest = to;
@@ -217,7 +224,7 @@ static void tobj_setstate(struct pspgl_texobj *tobj, unsigned reg, unsigned sett
 }
 
 
-struct pspgl_texobj *__pspgl_texobj_new(GLint id, GLenum target)
+struct pspgl_texobj *__pspgl_texobj_new(GLuint id, GLenum target)
 {
 	struct pspgl_texobj *tobj = malloc(sizeof(*tobj));
 	unsigned i;
@@ -240,6 +247,8 @@ void __pspgl_texobj_free(struct pspgl_texobj *tobj)
 {
 	int i;
 
+	assert(tobj->refcount > 0);
+
 	if (--tobj->refcount)
 		return;
 
@@ -254,11 +263,11 @@ void __pspgl_texobj_free(struct pspgl_texobj *tobj)
 }
 
 
-struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, int width, int height,
+struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, 
+					unsigned width, unsigned height, unsigned size,
 					const struct pspgl_texfmt *texfmt)
 {
 	struct pspgl_teximg *timg;
-	unsigned size;
 
 	timg = malloc(sizeof(*timg));
 	if (timg == NULL)
@@ -267,7 +276,8 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, int width, int heigh
 	memset(timg, 0, sizeof(*timg));
 	timg->refcount = 1;
 
-	size = width * height * texfmt->hwsize;
+	if (size == 0)
+		size = width * height * texfmt->hwsize;
 
 	/* XXX try to allocate edram? */
 	timg->image = memalign(16, size);
@@ -277,7 +287,10 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, int width, int heigh
 		return NULL;
 	}
 
-	__pspgl_convert_image(pixels, width, height, timg->image, texfmt);
+	if (texfmt->hwformat >= GE_DXT1)
+		convert_compressed_image(pixels, width, height, size, timg->image, texfmt);
+	else
+		convert_image(pixels, width, height, timg->image, texfmt);
 
 	/* Make texture data visible to hardware */
 	sceKernelDcacheWritebackRange(timg->image, size);

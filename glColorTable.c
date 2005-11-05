@@ -21,11 +21,11 @@ void glColorTable(GLenum target, GLenum internalformat,
 	if (!ispow2(width))
 		goto invalid_value;
 
-	fmt = __pspgl_hardware_format(format, type);
+	fmt = __pspgl_hardware_format(__pspgl_texformats, format, type);
 	if (fmt == 0)
 		goto invalid_enum;
 
-	cmap = __pspgl_teximg_new(data, width, 1, fmt);
+	cmap = __pspgl_teximg_new(data, width, 1, 0, fmt);
 	if (cmap == 0)
 		goto out_of_memory;
 

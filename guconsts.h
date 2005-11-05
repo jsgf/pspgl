@@ -269,6 +269,9 @@
 #define GE_INDEX_8BIT		5 /* texture */
 #define GE_INDEX_16BIT		6 /* texture */
 #define GE_INDEX_32BIT		7 /* texture */
+#define GE_DXT1			8 /* texture */
+#define GE_DXT3			9 /* texture */
+#define GE_DXT5			10 /* texture */
 
 /* Shading Model */
 #define GU_FLAT			(0)

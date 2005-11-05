@@ -44,6 +44,7 @@ libGL.a_OBJS = \
 	glColorMask.o \
 	glColorPointer.o \
 	glColorTable.o \
+	glCompressedTexImage2D.o \
 	glCullFace.o \
 	glDeleteLists.o \
 	glDeleteTextures.o \

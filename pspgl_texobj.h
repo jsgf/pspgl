@@ -45,16 +45,19 @@ struct pspgl_teximg {
 	const struct pspgl_texfmt *texfmt;
 };
 
+extern const struct pspgl_texfmt __pspgl_texformats[];
 
-extern struct pspgl_texobj* __pspgl_texobj_new (GLint id, GLenum target);
+extern struct pspgl_texobj* __pspgl_texobj_new (GLuint id, GLenum target);
 extern void __pspgl_texobj_free (struct pspgl_texobj *t);
 
-extern struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, int width, int height,
-					     const struct pspgl_texfmt *texfmt);
+extern struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, 
+					       unsigned width, unsigned height, unsigned size,
+					       const struct pspgl_texfmt *texfmt);
 extern void __pspgl_teximg_free(struct pspgl_teximg *timg);
 
 extern void __pspgl_update_texenv(struct pspgl_texobj *tobj);
 
+extern const struct pspgl_texfmt *__pspgl_hardware_format(const struct pspgl_texfmt *, GLenum format, GLenum type);
 
 #endif
 

@@ -16,6 +16,8 @@ char *gl_strings [] = {
 	"GL_EXT_blend_minmax "
 	"GL_EXT_blend_subtract "
  	"GL_EXT_paletted_texture "
+	"GL_ARB_texture_compression "
+	"GL_EXT_texture_compression_s3tc "
 };
 
 
