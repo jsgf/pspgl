@@ -14,6 +14,7 @@ struct pspgl_dlist {
 	unsigned long len;
 	int compile_and_run;
 	int qid;
+	struct pspgl_cleanup *cleanups;
 
 #if DLIST_CACHED
  	unsigned long __attribute__((aligned(16))) cmd_buf[DLIST_SIZE];
@@ -42,6 +43,26 @@ extern void __pspgl_dlist_await_completion (void);
 
 /* cancel the currently running wait queue */
 extern void __pspgl_dlist_cancel (void);
+
+/* 
+   Set a cleanup function for the current dlist.
+
+   In general, any in-memory object which can be pointed to by
+   hardware registers (textures, vertex buffers, color maps, etc) will
+   be reference counted.  When a sendCommand is first issued to point
+   a register at the in-memory object, its refcount should be
+   incremented.  When the hardware has finally finished using the
+   in-memory object (say, the reference has been replaced), we must
+   arrange for the refcount to be decremented, and possibly actually
+   free the object.  This function arranges for a cleanup function to
+   be called once the hardware has processed all preceding commands.
+
+   It isn't necessary to flush cached state changes to hardware before
+   calling this, since any out-of-date dead state sitting in hardware
+   registers will not be used again, even if it hasn't been updated
+   by the time the cleanup is called.
+ */
+extern void __pspgl_dlist_set_cleanup (void (*cleanup)(void *), void *);
 
 /**
  * insert END/FINISH commands at end of dlist.

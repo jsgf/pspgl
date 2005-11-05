@@ -88,6 +88,7 @@ struct pspgl_dlist* __pspgl_dlist_create (int compile_and_run,
 	d->done = done ? done : __pspgl_dlist_finalize_and_clone;
 	d->compile_and_run = compile_and_run;
 	d->qid = -1;
+	d->cleanups = NULL;
 
 #if !DLIST_CACHED
 	sceKernelDcacheWritebackInvalidateRange(d->_cmdbuf, sizeof(d->_cmdbuf));
@@ -99,6 +100,46 @@ struct pspgl_dlist* __pspgl_dlist_create (int compile_and_run,
 	return d;
 }
 
+struct pspgl_cleanup {
+	void (*cleanup)(void *);
+	void *cleanup_arg;
+
+	struct pspgl_cleanup *next;
+};
+
+void __pspgl_dlist_set_cleanup(void (*cleanup)(void *), void *arg)
+{
+	struct pspgl_dlist *list = pspgl_curctx->dlist[pspgl_curctx->dlist_idx];
+	struct pspgl_cleanup *c;
+
+	c = malloc(sizeof(*c));
+
+	if (c == NULL) {
+		/* XXX What to do?  Call cleanup now? */
+		psp_log("can't allocate cleanup for %p/%p\n", cleanup, arg);
+		return;
+	}
+
+	c->cleanup = cleanup;
+	c->cleanup_arg = arg;
+	c->next = list->cleanups;
+	list->cleanups = c;
+}
+
+static void sync_list(struct pspgl_dlist *list)
+{
+	struct pspgl_cleanup *cleanup, *next;
+	sceGeListSync(list->qid, PSP_GE_LIST_DONE);
+	list->qid = -1;
+
+	for(cleanup = list->cleanups; cleanup != NULL; cleanup = next) {
+		next = cleanup->next;
+
+		(*cleanup->cleanup)(cleanup->cleanup_arg);
+		free(cleanup);
+	}
+	list->cleanups = NULL;
+}
 
 /**
  *  flush and swap display list buffers in pspgl context. This is a callback only used for internal dlists.
@@ -117,10 +158,8 @@ struct pspgl_dlist* __pspgl_dlist_swap (struct pspgl_dlist *thiz)
 	next = pspgl_curctx->dlist[pspgl_curctx->dlist_idx];
 
 	/* wait until next is done */
-	if (next->qid != -1) {
-		sceGeListSync(next->qid, PSP_GE_LIST_DONE);
-		next->qid = -1;
-	}
+	if (next->qid != -1)
+		sync_list(next);
 	__pspgl_dlist_reset(next);
 
 	pspgl_curctx->dlist_current = next;
@@ -133,7 +172,7 @@ void __pspgl_dlist_submit(struct pspgl_dlist *d)
 {
 	for(; d != NULL; d = d->next) {
 		if (d->qid != -1)
-			sceGeListSync(d->qid, PSP_GE_LIST_DONE);
+			sync_list(d);
 		if (DLIST_CACHED)
 			sceKernelDcacheWritebackInvalidateRange(d->cmd_buf, sizeof(d->cmd_buf));
 		d->qid = sceGeListEnQueue(d->cmd_buf, &d->cmd_buf[d->len], 0, NULL);
@@ -149,8 +188,7 @@ void __pspgl_dlist_await_completion (void)
 		struct pspgl_dlist *d = pspgl_curctx->dlist[i];
 
 		if (d->qid != -1) {
-			sceGeListSync(d->qid, PSP_GE_LIST_DONE);
-			d->qid = -1;
+			sync_list(d);
 			__pspgl_dlist_reset(d);
 		}
 	}
@@ -178,7 +216,7 @@ void __pspgl_dlist_cancel (void)
 
 		if (d->qid != -1) {
 			sceGeListDeQueue(d->qid);
-			sceGeListSync(d->qid, PSP_GE_LIST_CANCEL_DONE);
+			sync_list(d);
 		}
 	}
 }
