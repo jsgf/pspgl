@@ -118,6 +118,7 @@ GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
 	buf->refcount = 1;
 	buf->mapped = 0;
 	buf->pinned = 0;
+	buf->generation = 0;
 
 	buf->pin_prevp = NULL;
 	buf->pin_next = NULL;
@@ -202,6 +203,10 @@ void *__pspgl_buffer_map(struct pspgl_buffer *data, GLenum access)
 		   no-op. */
 		p = __pspgl_uncached(p, data->size);
 		break;
+
+	default:
+		GLERROR(GL_INVALID_ENUM);
+		return NULL;
 	}
 
 	data->mapped++;
@@ -228,7 +233,13 @@ void __pspgl_buffer_unmap(struct pspgl_buffer *data, GLenum access)
 	case GL_WRITE_ONLY_ARB:
 		/* do nothing; all uncached */
 		break;
+
+	default:
+		return;
 	}
+
+	if (access != GL_READ_ONLY_ARB)
+		data->generation++;
 }
 
 /* Wait until the last hardware use of a databuffer has happened. If

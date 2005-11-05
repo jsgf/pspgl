@@ -7,6 +7,7 @@ struct pspgl_buffer {
 	short refcount;
 	short mapped;		/* internal map counter */
 	short pinned;		/* number of times this buffer is pinned */
+	short generation;	/* generation counter to detect changes */
 
 	/* Pointers for the pin list */
 	struct pspgl_buffer **pin_prevp;
