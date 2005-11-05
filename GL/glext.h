@@ -6496,21 +6496,20 @@ GLAPI void APIENTRY glDisableStatsPSP (GLenum);
 GLAPI void APIENTRY glResetStatsPSP (GLenum);
 GLAPI void APIENTRY glGetStatisticsuivPSP (GLenum, GLuint *);
 
+#endif /* GL_GLEXT_PROTOTYPES */
+
 #define GL_STATS_TIMING_PSP		0x11000
 #define GL_STATS_FRAMETIME_PSP		0x11001
 #define GL_STATS_APPTIME_PSP		0x11002
 #define GL_STATS_SWAPTIME_PSP		0x11003
 #define GL_STATS_CMDISSUES_PSP		0x11004
 #define GL_STATS_QUEUEWAITTIME_PSP	0x11005
-
-#endif /* GL_GLEXT_PROTOTYPES */
 #endif
 
 #ifndef GL_PSP_bezier_patch
 #define GL_PSP_bezier_patch 1
 #ifdef GL_GLEXT_PROTOTYPES
 GLAPI void APIENTRY glDrawBezierArraysPSP(GLenum mode, GLuint u, GLuint v, GLint first);
-GLAPI void APIENTRY glBezierSubdivisionPSP(GLuint u, GLuint v);
 GLAPI void APIENTRY glDrawBezierElementsPSP(GLenum mode, GLuint u, GLuint v,
 					    GLenum idx_type, const GLvoid *indices);
 GLAPI void APIENTRY glDrawBezierRangeElementsPSP(GLenum mode,
@@ -6518,7 +6517,35 @@ GLAPI void APIENTRY glDrawBezierRangeElementsPSP(GLenum mode,
 						 GLuint u, GLuint v,
 						 GLenum idx_type, const GLvoid *indices);
 
+GLAPI void APIENTRY glDrawSplineArraysPSP(GLenum mode, GLuint u, GLuint v,
+					  GLenum uflags, GLenum vflags,
+					  GLint first);
+GLAPI void APIENTRY glDrawSplineElementsPSP(GLenum mode, GLuint u, GLuint v,
+					    GLenum uflags, GLenum vflags,
+					    GLenum idx_type, const GLvoid *indices);
+GLAPI void APIENTRY glDrawSplineRangeElementsPSP(GLenum mode,
+						 GLuint start, GLuint end,
+						 GLuint u, GLuint v,
+						 GLenum uflags, GLenum vflags,
+						 GLenum idx_type, const GLvoid *indices);
+
+GLAPI void APIENTRY glPatchSubdivisionPSP(GLuint u, GLuint v);
+
 #endif	/* GL_GLEXT_PROTOTYPES */
+
+/* An "inner" spline patch edge is intended to be mated with the edge
+   of another patch, and the rendered primitive does use the last row
+   of the control mesh; the mated patch must use an overlapping part
+   of the control mesh to get surface continuity.  An "outer" spline
+   patch edge goes right to the edge of the control mesh.
+   
+   Each "INNER" or "OUTER" corresponds to [uv] = 1 or 0 respectively.
+ */
+#define GL_PATCH_INNER_INNER_PSP	11100
+#define GL_PATCH_INNER_OUTER_PSP	11101
+#define GL_PATCH_OUTER_INNER_PSP	11102
+#define GL_PATCH_OUTER_OUTER_PSP	11103
+
 #endif
 
 #ifdef __cplusplus

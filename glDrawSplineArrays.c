@@ -3,7 +3,9 @@
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
 
-void glDrawBezierArraysPSP(GLenum mode, GLuint u, GLuint v, GLint first)
+void glDrawSplineArraysPSP(GLenum mode, GLuint u, GLuint v,
+			   GLenum u_flags, GLenum v_flags,
+			   GLint first)
 {
 	struct pspgl_context *c = pspgl_curctx;
 	struct vertex_format vfmt, *vfmtp;
@@ -12,6 +14,12 @@ void glDrawBezierArraysPSP(GLenum mode, GLuint u, GLuint v, GLint first)
 	const void *buf;
 	unsigned prim;
 	unsigned count;
+
+	if (u_flags < GL_PATCH_INNER_INNER_PSP || u_flags > GL_PATCH_OUTER_OUTER_PSP ||
+	    v_flags < GL_PATCH_INNER_INNER_PSP || v_flags > GL_PATCH_OUTER_OUTER_PSP) {
+		GLERROR(GL_INVALID_ENUM);
+		return;
+	}
 
 	switch(mode) {
 	case GL_TRIANGLES:	prim = 0; break;
@@ -60,16 +68,14 @@ void glDrawBezierArraysPSP(GLenum mode, GLuint u, GLuint v, GLint first)
 	buf = vbuf->base + vbuf_offset;
 	buf += first * vfmtp->vertex_size;
 
+	u_flags &= 3;
+	v_flags &= 3;
+
 	__pspgl_context_render_setup(c, vfmtp->hwformat, buf, NULL);
-	__pspgl_context_writereg_uncached(c, CMD_BEZIER, (v << 8) | u);
+	__pspgl_context_writereg_uncached(c, CMD_SPLINE,
+					  (v_flags << 18) | (u_flags << 16) | (v << 8) | u);
 	__pspgl_context_pin_textures(c);
 	__pspgl_dlist_pin_buffer(vbuf);
 
 	__pspgl_buffer_free(vbuf);
-}
-
-
-void glPatchSubdivisionPSP(GLuint u, GLuint v)
-{
-	sendCommandi(CMD_PATCH_SUBDIV, (v << 8) | u);
 }

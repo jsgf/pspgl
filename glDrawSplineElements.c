@@ -1,8 +1,9 @@
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
 
-void glDrawBezierRangeElementsPSP(GLenum mode, GLuint start, GLuint end,
+void glDrawSplineRangeElementsPSP(GLenum mode, GLuint start, GLuint end,
 				  GLuint u, GLuint v,
+				  GLenum u_flags, GLenum v_flags,
 				  GLenum idx_type, const GLvoid *indices)
 {
 	struct pspgl_context *c = pspgl_curctx;
@@ -18,6 +19,12 @@ void glDrawBezierRangeElementsPSP(GLenum mode, GLuint start, GLuint end,
 	unsigned count;
 	int minidx = start;
 	int maxidx = end;
+
+	if (u_flags < GL_PATCH_INNER_INNER_PSP || u_flags > GL_PATCH_OUTER_OUTER_PSP ||
+	    v_flags < GL_PATCH_INNER_INNER_PSP || v_flags > GL_PATCH_OUTER_OUTER_PSP) {
+		GLERROR(GL_INVALID_ENUM);
+		return;
+	}
 
 	switch(mode) {
 	case GL_TRIANGLES:	prim = 0; break;
@@ -95,8 +102,12 @@ void glDrawBezierRangeElementsPSP(GLenum mode, GLuint start, GLuint end,
 	vtxp = vbuf->base + vbuf_offset;
 	idxp = ibuf->base + ibuf_offset;
 
+	u_flags &= 3;
+	v_flags &= 3;
+
 	__pspgl_context_render_setup(c, hwformat, vtxp, idxp);
-	__pspgl_context_writereg_uncached(c, CMD_BEZIER, (v << 8) | u);
+	__pspgl_context_writereg_uncached(c, CMD_SPLINE,
+					  (v_flags << 18) | (u_flags << 16) | (v << 8) | u);
 	__pspgl_context_pin_textures(c);
 	__pspgl_dlist_pin_buffer(vbuf);
 	__pspgl_dlist_pin_buffer(ibuf);
@@ -105,7 +116,8 @@ void glDrawBezierRangeElementsPSP(GLenum mode, GLuint start, GLuint end,
 	__pspgl_buffer_free(ibuf);	
 }
 
-void glDrawBezierElementsPSP(GLenum mode, GLuint u, GLuint v, 
+void glDrawSplineElementsPSP(GLenum mode, GLuint u, GLuint v, 
+			     GLenum u_flags, GLenum v_flags,
 			     GLenum idx_type, const GLvoid *indices)
 {
 	struct locked_arrays *l = &pspgl_curctx->vertex_array.locked;
@@ -120,5 +132,7 @@ void glDrawBezierElementsPSP(GLenum mode, GLuint u, GLuint v,
 		maxidx = l->first + l->count;
 	} 
 
-	glDrawBezierRangeElementsPSP(mode, minidx, maxidx, u, v, idx_type, indices);
+	glDrawSplineRangeElementsPSP(mode, minidx, maxidx, 
+				     u, v, u_flags, v_flags,
+				     idx_type, indices);
 }

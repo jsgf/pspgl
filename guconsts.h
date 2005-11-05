@@ -13,6 +13,7 @@
 
 #define CMD_PRIM		4
 #define CMD_BEZIER		5
+#define CMD_SPLINE		6
 
 #define CMD_BASE		16
 
