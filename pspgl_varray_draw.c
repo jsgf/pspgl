@@ -1,127 +1,77 @@
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
 
-static void varray_draw_locked(GLenum mode, GLint first, GLsizei count)
-{
-	struct locked_arrays *l = &pspgl_curctx->vertex_array.locked;
-	long prim = __pspgl_glprim2geprim(mode);
-	const void *buf;
-
-	first -= l->cached_first;
-
-	psp_log("mode=%d drawing %d-%d vertces from locked buffer\n",
-		mode, first, first+count);
-
-	buf = l->cached_array->base + l->cached_array_offset;
-	buf += first * l->vfmt.vertex_size;
-
-	__pspgl_context_render_prim(pspgl_curctx, prim, count, l->vfmt.hwformat, buf, NULL);
-	__pspgl_dlist_pin_buffer(l->cached_array);
-
-	/* If we're drawing a line-loop, draw the final edge
-	   XXX this pulls in all the indexed array code
-	 */
-	if (mode == GL_LINE_LOOP) {
-		GLushort idx[2] = { first+count-1, first };
-		struct pspgl_bufferobj *idxbuf;
-
-		/* temporarily set no index buffer */
-		idxbuf = pspgl_curctx->vertex_array.indexbuffer;
-		pspgl_curctx->vertex_array.indexbuffer = NULL;
-
-		psp_log("drawing closing line on loop: idx=%d %d\n", idx[0], idx[1]);
-
-		__pspgl_varray_draw_range_elts(GL_LINES, GL_UNSIGNED_SHORT, idx, 2,
-					       idx[1], idx[0]);
-
-		pspgl_curctx->vertex_array.indexbuffer = idxbuf;
-	}
-}
-
 void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 {
-	long prim = __pspgl_glprim2geprim(mode);
-	struct vertex_format vfmt;
-	const GLint vtx0 = first;	/* used for batching if there's a fan */
-	struct prim_info pi;
-	unsigned maxbatch;
-	GLsizei remains;
+	long prim;
+	struct vertex_format vfmt, *vfmtp;
+	struct pspgl_buffer *vbuf;
+	unsigned vbuf_offset;
+	const void *buf;
 
-	__pspgl_ge_vertex_fmt(pspgl_curctx, &vfmt);
-
+	prim = __pspgl_glprim2geprim(mode);
 	if (prim < 0) {
 		GLERROR(GL_INVALID_ENUM);
 		return;
 	}
 
-	pi = __pspgl_prim_info[prim];
-
 	if (count == 0)
 		return;
+
+	vbuf = NULL;
+	vbuf_offset = 0;
 
 	/* Check to see if we can use the locked array fast path */
 	if (__pspgl_cache_arrays()) {
 		/* FAST: draw from locked array */
-		varray_draw_locked(mode, first, count);
-		return;
+		struct locked_arrays *l = &pspgl_curctx->vertex_array.locked;
+
+		vbuf = l->cached_array;
+		vbuf_offset = l->cached_array_offset;
+		vfmtp = &l->vfmt;
+		first -= l->cached_first;
+
+		vbuf->refcount++;
 	}
 
-	__pspgl_ge_vertex_fmt(pspgl_curctx, &vfmt);
+	if (vbuf == NULL) {
+		/* SLOW: convert us some arrays */
+		vfmtp = &vfmt;
+		__pspgl_ge_vertex_fmt(pspgl_curctx, &vfmt);
 
-	pi = __pspgl_prim_info[prim];
+		if (vfmt.hwformat == 0)
+			return;
 
-	if (vfmt.hwformat == 0)
-		return;
+		vbuf = __pspgl_varray_convert(&vfmt, first, count);
+		vbuf_offset = 0;
 
-	maxbatch = MAX_VTX_BATCH / vfmt.vertex_size;
-
-	remains = count;
-	while(remains >= pi.minvtx) {
-		unsigned batch = (remains > maxbatch) ? maxbatch : remains;
-		unsigned batchsize;
-		unsigned char *buf;
-		unsigned done;
-
-		batch = (batch / pi.vtxmult) * pi.vtxmult; /* round down to multiple */
-		batchsize = batch * vfmt.vertex_size;
-		buf = __pspgl_dlist_insert_space(pspgl_curctx->dlist_current, batchsize);
-
-		if (prim == GE_TRIANGLE_FAN && first != vtx0) {
-			done = __pspgl_gen_varray(&vfmt, vtx0, 1, buf, batchsize);
-			done += __pspgl_gen_varray(&vfmt, first+1, remains-1,
-						   buf + vfmt.vertex_size,
-						   batchsize - vfmt.vertex_size);
-		} else
-			done = __pspgl_gen_varray(&vfmt, first, remains, buf, batchsize);
-
-		remains -= done;
-		first += done;
-
-		if ((remains+pi.overlap) > pi.minvtx) {
-			remains += pi.overlap;
-			first -= pi.overlap;
+		if (vbuf == NULL) {
+			GLERROR(GL_OUT_OF_MEMORY);
+			return;
 		}
-
-		__pspgl_context_render_prim(pspgl_curctx, prim, done, vfmt.hwformat, buf, NULL);
 	}
 
-	/* If we're drawing a line-loop, draw the final edge
-	   XXX this pulls in all the indexed array code
-	*/
-	if (mode == GL_LINE_LOOP) {
-		GLushort idx[2] = { vtx0+count-1, vtx0 };
-		struct pspgl_bufferobj *idxbuf;
+	buf = vbuf->base + vbuf_offset;
+	buf += first * vfmtp->vertex_size;
 
-		/* temporarily set no index buffer */
-		idxbuf = pspgl_curctx->vertex_array.indexbuffer;
-		pspgl_curctx->vertex_array.indexbuffer = NULL;
+	__pspgl_context_render_prim(pspgl_curctx, prim, count, vfmtp->hwformat, buf, NULL);
+	__pspgl_dlist_pin_buffer(vbuf);
+
+	if (mode == GL_LINE_LOOP) {
+		GLushort *idx = __pspgl_dlist_insert_space(pspgl_curctx->dlist_current,
+							   sizeof(GLushort) * 2);
+
+		assert(idx != NULL);
+
+		idx[0] = first+count-1;
+		idx[1] = first;
 
 		psp_log("drawing closing line on loop: idx=%d %d\n", idx[0], idx[1]);
-
-		__pspgl_varray_draw_range_elts(GL_LINES, GL_UNSIGNED_SHORT, idx, 2,
-					       idx[1], idx[0]);
-
-		pspgl_curctx->vertex_array.indexbuffer = idxbuf;
+		__pspgl_context_render_prim(pspgl_curctx, GE_LINES, 2,
+					    vfmtp->hwformat | GE_VINDEX_16BIT, buf, idx);
+		__pspgl_dlist_pin_buffer(vbuf);
 	}
+
+	__pspgl_buffer_free(vbuf);
 }
 

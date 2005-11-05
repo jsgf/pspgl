@@ -383,7 +383,10 @@ long __pspgl_glprim2geprim (GLenum glprim)
 	return geprim_tab[glprim];
 }
 
-
+/* Bind a new buffer object to an array's state, indicating the buffer
+   object should be used as the source of array data.  A NULL buffer
+   object means that the array's pointer should be treated
+   normally. */
 void __pspgl_varray_bind_buffer(struct pspgl_vertex_array *va,
 				struct pspgl_bufferobj *buf)
 {
@@ -398,7 +401,7 @@ void __pspgl_varray_bind_buffer(struct pspgl_vertex_array *va,
 	   gl*Pointer call changed the type/size of the array (we
 	   could check to see if this happened, but programs should be
 	   careful not to make redundant state changes, and it isn't
-	   very expensive to restore the cache_array anyway). */
+	   very expensive to restore the cached_array anyway). */
 	if (va->buffer &&
 	    pspgl_curctx->vertex_array.locked.cached_array == va->buffer->data) {
 		psp_log("uncaching array due to pointer update\n");
@@ -414,25 +417,143 @@ void __pspgl_varray_bind_buffer(struct pspgl_vertex_array *va,
 	va->buffer = buf;	
 }
 
-/* 
-   This table indicates how each primitive type uses vertices:
+/* Generate a new buffer containing a converted vertex array.  This is
+   used when the caller provides a set of arrays, but isn't using CVA
+   or VBOs.  It is also used if the VBO is not in hardware format. 
+   The caller must free the refcount on the returned buffer. */
+struct pspgl_buffer *__pspgl_varray_convert(const struct vertex_format *vfmt, 
+					    int first, int count)
+{
+	unsigned size = vfmt->vertex_size * count;
+	struct pspgl_buffer *buf;
+	void *bufp;
 
-    - The first column indicates the amount of overlap required in
-      order to split a primitive into pieces (for example, a split strip
-      needs the last two vertices from the previous piece to be copied).
-    - The second column indicates the minimum number of vertices needed
-      to draw anything at all.
-    - The third column indicates what multiple of vertices are required in
-      total (every triangle needs three complete vertices, but a strip can
-      make progress with single vertices after the first 2).
- */
+	if (size == 0)
+		return NULL;
 
-const struct prim_info __pspgl_prim_info[] = {
-	[GE_POINTS]         = { 0, 1, 1 },
-	[GE_LINES]          = { 0, 2, 2 },
-	[GE_SPRITES]        = { 0, 2, 2 },
-	[GE_TRIANGLES]      = { 0, 3, 3 },
-	[GE_LINE_STRIP]     = { 1, 2, 1 },
-	[GE_TRIANGLE_STRIP] = { 2, 3, 1 },
-	[GE_TRIANGLE_FAN]   = { 2, 3, 1 },
-};
+	buf = __pspgl_buffer_new(size, GL_STREAM_DRAW_ARB); /* used once */
+	if (buf == NULL) {
+		GLERROR(GL_OUT_OF_MEMORY);
+		return NULL;
+	}
+
+	bufp = __pspgl_buffer_map(buf, GL_WRITE_ONLY_ARB);
+	
+	if (__pspgl_gen_varray(vfmt, first, count, bufp, size) != count) {
+		__pspgl_buffer_free(buf);
+		buf = NULL;
+	} else
+		__pspgl_buffer_unmap(buf, GL_WRITE_ONLY_ARB);
+
+	return buf;
+}
+
+static int idx_sizeof(GLenum idx_type)
+{
+	int idxsize;
+
+	switch(idx_type) {
+	case GL_UNSIGNED_BYTE:	idxsize = 1; break;
+	case GL_UNSIGNED_SHORT:
+	case GL_UNSIGNED_INT:	idxsize = 2; break;
+	default:		idxsize = 0;
+	}
+
+	return idxsize;
+}
+
+/* Copy and convert an index array into hardware format; 32-bit
+   indices are truncated to 16 bits.  Offset is subtracted from the
+   indices if there's a non-0 minidx.  Expects from and to to be
+   appropriately mapped pointers.  Returns the appropriate hwformat
+   for the index type. */
+static unsigned convert_indices(void *to, const void *from, GLenum idx_type, 
+				int offset, GLsizei count)
+{
+	unsigned hwformat = 0;
+	unsigned i;
+
+	switch(idx_type) {
+	case GL_UNSIGNED_BYTE:
+		hwformat = GE_VINDEX_8BIT;
+		for(i = 0; i < count; i++) 
+			((GLubyte *)to)[i] = ((GLubyte *)from)[i] - offset;
+		break;
+
+	case GL_UNSIGNED_SHORT:
+		hwformat = GE_VINDEX_16BIT;
+		for(i = 0; i < count; i++)
+			((GLushort *)to)[i] = ((GLushort *)from)[i] - offset;
+		break;
+
+	case GL_UNSIGNED_INT:
+		hwformat = GE_VINDEX_16BIT;
+		for(i = 0; i < count; i++)
+			((GLushort *)to)[i] = ((GLuint *)from)[i] - offset;
+		break;
+
+	}
+
+	return hwformat;
+}
+
+/* Convert an array of indices into a hardware format. If the array is
+   already in a buffer object in a hardware format, we simply return a
+   reference to that buffer. *hwformat is also updated to include the
+   appropriate index type. The returned buffer will always have a
+   refcount which needs to be freed by the caller. */
+struct pspgl_buffer *__pspgl_varray_convert_indices(GLenum idxtype, const void *indices,
+						    int minidx, int count,
+						    unsigned *buffer_offset,
+						    unsigned *hwformat)
+{
+	const struct pspgl_bufferobj *idxbuf = pspgl_curctx->vertex_array.indexbuffer;
+	struct pspgl_buffer *ret;
+	void *retp;
+	const void *idxp;
+
+	ret = NULL;
+	*buffer_offset = 0;
+
+	if (idxbuf) {
+		if (idxbuf->mapped) {
+			GLERROR(GL_INVALID_OPERATION);
+			return NULL;
+		}
+
+		if (minidx == 0 &&
+		    (idxtype == GL_UNSIGNED_BYTE || idxtype == GL_UNSIGNED_SHORT)) {
+			/* Index buffer object in hardware format */
+			assert(idxbuf->data->mapped == 0);
+
+			if (idxtype == GL_UNSIGNED_BYTE)
+				*hwformat |= GE_VINDEX_8BIT;
+			else
+				*hwformat |= GE_VINDEX_16BIT;
+
+			*buffer_offset = indices - NULL;
+			ret = idxbuf->data;
+			ret->refcount++;
+		}
+	}
+
+	if (ret == NULL) {
+		/* Index buffer object, but not in hardware format,
+		   or no index buffer object */
+		ret = __pspgl_buffer_new(idx_sizeof(idxtype) * count, 
+					 GL_STREAM_DRAW_ARB);
+		if (ret == NULL)
+			return NULL;
+
+		/* map buffers appropriately for conversion */
+		retp = __pspgl_buffer_map(ret, GL_WRITE_ONLY_ARB);
+		idxp = __pspgl_bufferobj_map(idxbuf, GL_READ_ONLY_ARB, (void *)indices);
+
+		*hwformat |= convert_indices(retp, idxp, idxtype, minidx, count);
+
+		__pspgl_buffer_unmap(ret, GL_WRITE_ONLY_ARB);
+		__pspgl_bufferobj_unmap(idxbuf, GL_READ_ONLY_ARB);
+	}
+
+	return ret;
+}

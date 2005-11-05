@@ -99,10 +99,18 @@ GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
 	case GL_STREAM_DRAW_ARB:
 		/* fallthrough to allocation */
 		break;
+
+	default:
+		GLERROR(GL_INVALID_ENUM);
+		return GL_FALSE;
 	}
 
-	if (p == NULL)
+	if (p == NULL) {
 		p = memalign(CACHELINE_SIZE, size);
+
+		if (p == NULL)
+			return GL_FALSE;
+	}
 
   	/* put cache into appropriate unmapped state */
  	sceKernelDcacheWritebackInvalidateRange(p, size);
@@ -189,7 +197,7 @@ void *__pspgl_buffer_map(struct pspgl_buffer *data, GLenum access)
 		break;
 
 	case GL_WRITE_ONLY_ARB:
-		/* Write-only streams can be uncached to prevent cache
+		/* Write-only streams are uncached to prevent cache
 		   pollution.  If data->mapped != 0, this should be a
 		   no-op. */
 		p = __pspgl_uncached(p, data->size);

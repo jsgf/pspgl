@@ -231,17 +231,6 @@ unsigned __pspgl_ticks_to_us(unsigned long long ticks);
 
 
 /* pspgl_varray.c */
-struct prim_info {
-	unsigned overlap;	/* when starting a new batch, how many prev verts do we need */
-	unsigned minvtx;	/* what's the min needed to draw a single prim? */
-	unsigned vtxmult;	/* what multiple of verts needed per prim? */
-};
-
-extern const struct prim_info __pspgl_prim_info[];
-
-/* Max batch size of vertices we try to use; this is 1/4 the command
-   buffer at the moment. */
-#define MAX_VTX_BATCH	(DLIST_SIZE * sizeof(unsigned) / 4)
 
 extern unsigned __pspgl_gl_sizeof(GLenum type);
 extern long __pspgl_glprim2geprim (GLenum glprim);
@@ -251,6 +240,14 @@ extern GLboolean __pspgl_vertex_is_native(const struct vertex_format *vfmt);
 
 extern int __pspgl_gen_varray(const struct vertex_format *vfmt, int first, int count, 
 			 void *to, int space);
+
+
+extern struct pspgl_buffer *__pspgl_varray_convert(const struct vertex_format *vfmt, 
+						   int first, int count);
+extern struct pspgl_buffer *__pspgl_varray_convert_indices(GLenum idxtype, const void *indices,
+							   int first, int count,
+							   unsigned *buf_offset,
+							   unsigned *hwformat);
 
 
 extern void __pspgl_varray_draw (GLenum mode, GLint first, GLsizei count);
