@@ -2,9 +2,8 @@
 #include <string.h>
 #include <malloc.h>
 #include <pspge.h>
+#include <psputils.h>
 #include "pspgl_internal.h"
-
-void sceKernelDcacheWritebackInvalidateRange(void *start, unsigned int size);
 
 void __pspgl_dlist_enqueue_cmd (struct pspgl_dlist *d, unsigned long cmd)
 {

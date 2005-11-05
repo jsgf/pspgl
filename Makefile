@@ -43,6 +43,7 @@ libGL.a_OBJS = \
 	glColor.o \
 	glColorMask.o \
 	glColorPointer.o \
+	glColorTable.o \
 	glCullFace.o \
 	glDeleteLists.o \
 	glDeleteTextures.o \

@@ -1,7 +1,6 @@
 #ifndef __pspgl_misc_h__
 #define __pspgl_misc_h__
 
-struct pspgl_dlist;
 
 extern void __pspgl_log (const char *fmt, ...);
 

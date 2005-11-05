@@ -155,6 +155,9 @@
 #define CMD_TEX_STRIDE6		174
 #define CMD_TEX_STRIDE7		175
 
+#define CMD_SET_CLUT		176
+#define CMD_SET_CLUT_MSB	177
+
 #define CMD_TEX_SIZE0		184
 #define CMD_TEX_SIZE1		185
 #define CMD_TEX_SIZE2		186
@@ -166,6 +169,9 @@
 
 #define CMD_TEXMODE		194
 #define CMD_TEXFMT		195
+
+#define CMD_CLUT_BLKS		196
+#define CMD_CLUT_MODE		197
 
 #define CMD_TEXFILT		198
 #define CMD_TEXWRAP		199
@@ -255,12 +261,14 @@
 /* Vertex Declarations End */
 
 /* Pixel Formats */
-#define GU_PSM_5650		(0) /* Display, Texture, Palette */
-#define GU_PSM_5551		(1) /* Display, Texture, Palette */
-#define GU_PSM_4444		(2) /* Display, Texture, Palette */
-#define GU_PSM_8888		(3) /* Display, Texture, Palette */
-#define GU_PSM_T4		(4) /* Texture */
-#define GU_PSM_T8		(5) /* Texture */
+#define GE_RGB_565		0 /* display, texture, palette */
+#define GE_RGBA_5551		1 /* display, texture, palette */
+#define GE_RGBA_4444		2 /* display, texture, palette */
+#define GE_RGBA_8888		3 /* display, texture, palette */
+#define GE_INDEX_4BIT		4 /* texture */
+#define GE_INDEX_8BIT		5 /* texture */
+#define GE_INDEX_16BIT		6 /* texture */
+#define GE_INDEX_32BIT		7 /* texture */
 
 /* Shading Model */
 #define GU_FLAT			(0)

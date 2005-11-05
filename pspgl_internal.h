@@ -130,7 +130,13 @@ extern long __pspgl_glprim2geprim (GLenum glprim);
 extern void __pspgl_varray_draw (GLenum mode, GLenum index_type, const GLvoid *indices, GLint first, GLsizei count);
 
 
-/* glEnable.c */
+/* glTexImage2D.c */
+const struct pspgl_texfmt *__pspgl_hardware_format(GLenum format, GLenum type);
+
+static inline unsigned ispow2(unsigned n)
+{
+	return (n & (n-1)) == 0;
+}
 
 
 #define GLERROR(errcode)					\

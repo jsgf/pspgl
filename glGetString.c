@@ -15,6 +15,7 @@ char *gl_strings [] = {
 	"GL_ARB_texture_env_add "
 	"GL_EXT_blend_minmax "
 	"GL_EXT_blend_subtract "
+ 	"GL_EXT_paletted_texture "
 };
 
 

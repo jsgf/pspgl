@@ -30,6 +30,8 @@ struct pspgl_texobj {
 	uint32_t	ge_texreg[TEXOBJ_NTEXREG];
 	const struct pspgl_texfmt *texfmt;
 
+	struct pspgl_teximg *cmap;
+
 	struct pspgl_teximg *images[MIPMAP_LEVELS];
 };
 
@@ -50,6 +52,8 @@ extern void __pspgl_texobj_free (struct pspgl_texobj *t);
 extern struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, int width, int height,
 					     const struct pspgl_texfmt *texfmt);
 extern void __pspgl_teximg_free(struct pspgl_teximg *timg);
+
+extern void __pspgl_update_texenv(struct pspgl_texobj *tobj);
 
 
 #endif

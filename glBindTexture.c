@@ -55,6 +55,6 @@ void glBindTexture(GLenum target, GLuint id)
 	for(i = TEXSTATE_START; i <= TEXSTATE_END; i++)
 		sendCommandi(i, tobj->ge_texreg[i - TEXSTATE_START]);
 
-	__pspgl_context_writereg_masked(pspgl_curctx, CMD_TEXENV_FUNC, tobj->texfmt->texalpha, 0x100);
+	__pspgl_update_texenv(tobj);
 	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);
 }

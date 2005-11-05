@@ -102,6 +102,29 @@ typedef int             GLsizeiptr;
 #define GL_OES_read_format                1
 #define GL_OES_single_precision           1
 
+#define GL_EXT_paletted_texture	          1
+
+#ifdef GL_EXT_paletted_texture
+//#define GL_COLOR_INDEX1_EXT               0x80E2
+//#define GL_COLOR_INDEX2_EXT               0x80E3
+#define GL_COLOR_INDEX4_EXT               0x80E4
+#define GL_COLOR_INDEX8_EXT               0x80E5
+//#define GL_COLOR_INDEX12_EXT              0x80E6
+#define GL_COLOR_INDEX16_EXT              0x80E7
+//#define GL_TEXTURE_INDEX_SIZE_EXT         0x80ED
+
+GL_API void GL_APIENTRY glColorTable (GLenum target, GLenum internalformat, GLsizei width, GLenum format, GLenum type, const GLvoid *data);
+GL_API void GL_APIENTRY glColorTableEXT (GLenum target, GLenum internalformat, GLsizei width, GLenum format, GLenum type, const GLvoid *data);
+#endif
+
+#ifndef GL_EXT_texture_compression_s3tc
+#define GL_COMPRESSED_RGB_S3TC_DXT1_EXT   0x83F0
+#define GL_COMPRESSED_RGBA_S3TC_DXT1_EXT  0x83F1
+#define GL_COMPRESSED_RGBA_S3TC_DXT3_EXT  0x83F2
+#define GL_COMPRESSED_RGBA_S3TC_DXT5_EXT  0x83F3
+#endif
+
+
 /* ClearBufferMask */
 #define GL_DEPTH_BUFFER_BIT               0x00000100
 #define GL_STENCIL_BUFFER_BIT             0x00000400
