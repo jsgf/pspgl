@@ -20,6 +20,6 @@ void glScalef (GLfloat x, GLfloat y, GLfloat z)
 	m[10] *= z;
 	m[11] *= z;
 
-	pspgl_curctx->current_matrix_stack->dirty = 1;
+	if (!(pspgl_curctx->current_matrix_stack->flags & MF_DISABLED))
+		pspgl_curctx->current_matrix_stack->flags |= MF_DIRTY;
 }
-

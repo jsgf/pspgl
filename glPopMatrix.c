@@ -13,6 +13,7 @@ void glPopMatrix (void)
 	}
 
 	c->current_matrix = &curstk->stack[--curstk->depth];
-	curstk->dirty = 1;
+	if (!(curstk->flags & MF_DISABLED))
+		curstk->flags |= MF_DIRTY;
 }
 

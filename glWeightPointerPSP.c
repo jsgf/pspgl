@@ -1,9 +1,14 @@
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
 
-void glNormalPointer (GLenum type, GLsizei stride, const GLvoid *pointer)
+void glWeightPointerPSP(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
 {
-	struct pspgl_vertex_array *va = &pspgl_curctx->vertex_array.normal;
+	struct pspgl_vertex_array *va = &pspgl_curctx->vertex_array.weight;
+
+	if (size < 1 || size > NBONES) {
+		GLERROR(GL_INVALID_VALUE);
+		return;
+	}
 
 	if (type != GL_BYTE && type != GL_SHORT && type != GL_FLOAT) {
 		GLERROR(GL_INVALID_ENUM);
@@ -16,14 +21,14 @@ void glNormalPointer (GLenum type, GLsizei stride, const GLvoid *pointer)
 	}
 
 	if (stride == 0)
-		stride = __pspgl_gl_sizeof(type) * 3;
+		stride = __pspgl_gl_sizeof(type) * size;
 
-	psp_log("ptr=%p(%p) type=%x stride=%d\n",
+	psp_log("ptr=%p(%p) size=%d type=%x stride=%d\n",
 		pointer, __pspgl_bufferobj_deref(pspgl_curctx->vertex_array.arraybuffer,
 						 (void *)pointer),
-		type, stride);
+		size, type, stride);
 
-	va->size = 3;
+	va->size = size;
 	va->type = type;
 	va->stride = stride;
 	va->ptr = pointer;

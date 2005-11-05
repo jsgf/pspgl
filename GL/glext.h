@@ -6541,10 +6541,31 @@ GLAPI void APIENTRY glPatchSubdivisionPSP(GLuint u, GLuint v);
    
    Each "INNER" or "OUTER" corresponds to [uv] = 1 or 0 respectively.
  */
-#define GL_PATCH_INNER_INNER_PSP	11100
-#define GL_PATCH_INNER_OUTER_PSP	11101
-#define GL_PATCH_OUTER_INNER_PSP	11102
-#define GL_PATCH_OUTER_OUTER_PSP	11103
+#define GL_PATCH_INNER_INNER_PSP	0x11100
+#define GL_PATCH_INNER_OUTER_PSP	0x11101
+#define GL_PATCH_OUTER_INNER_PSP	0x11102
+#define GL_PATCH_OUTER_OUTER_PSP	0x11103
+
+#endif
+
+#ifndef GL_PSP_vertex_blend
+#define GL_PSP_vertex_blend 1
+
+#ifdef GL_GLEXT_PROTOTYPES
+GLAPI void APIENTRY glWeightPointerPSP(GLint size, GLenum type, GLsizei stride,
+				       const GLvoid *array);
+#endif /* GL_GLEXT_PROTOTYPES */
+
+#define GL_BONE0_PSP	0x11200
+#define GL_BONE1_PSP	0x11201
+#define GL_BONE2_PSP	0x11202
+#define GL_BONE3_PSP	0x11203
+#define GL_BONE4_PSP	0x11204
+#define GL_BONE5_PSP	0x11205
+#define GL_BONE6_PSP	0x11206
+#define GL_BONE7_PSP	0x11207
+#define GL_VERTEX_BLEND_PSP	0x86A7 /* reuse enum */
+#define GL_WEIGHT_ARRAY_PSP	0x86AD /* reuse enum */
 
 #endif
 

@@ -27,6 +27,9 @@ void glGetFloatv (GLenum pname, GLfloat *params)
 	case GL_MODELVIEW_MATRIX:	s = &pspgl_curctx->modelview_stack; goto get_matrix;
 	case GL_TEXTURE_MATRIX:		s = &pspgl_curctx->texture_stack; goto get_matrix;
 	case GL_PROJECTION_MATRIX:	s = &pspgl_curctx->projection_stack; goto get_matrix;
+	case GL_BONE0_PSP ... GL_BONE7_PSP:
+		s = &pspgl_curctx->bone_stacks[pname - GL_BONE0_PSP];
+		/* FALLTHROUGH */
 	get_matrix:
 		if (params) {
 			GLfloat *matrix = s->stack[s->depth].mat;

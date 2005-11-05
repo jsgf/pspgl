@@ -42,16 +42,21 @@ struct pspgl_matrix_stack {
 	struct pspgl_matrix *stack;
 	unsigned limit;
 	unsigned depth;
-	unsigned dirty;		/* hardware needs updating */
+	unsigned flags;
+#define MF_DIRTY	(1<<0)	/* hardware needs updating */
+#define MF_DISABLED	(1<<1)	/* always load with identity */
 };
 
-#define VARRAY_MAX	4	/* number of arrays */
+#define VARRAY_MAX	5	/* number of arrays */
 #define MAX_ATTRIB	VARRAY_MAX
 
 #define VA_VERTEX_BIT	(1<<0)
 #define VA_NORMAL_BIT	(1<<1)
 #define VA_COLOR_BIT	(1<<2)
 #define VA_TEXCOORD_BIT	(1<<3)
+#define VA_WEIGHT_BIT	(1<<4)
+
+#define NBONES		8
 
 struct vertex_format
 {
@@ -89,6 +94,7 @@ struct pspgl_context {
 		struct pspgl_vertex_array normal;
 		struct pspgl_vertex_array color;
 		struct pspgl_vertex_array texcoord;
+		struct pspgl_vertex_array weight;
 
 		struct locked_arrays {
 			GLint first;
@@ -139,6 +145,7 @@ struct pspgl_context {
 	struct pspgl_matrix_stack projection_stack;
 	struct pspgl_matrix_stack modelview_stack;
 	struct pspgl_matrix_stack texture_stack;
+	struct pspgl_matrix_stack bone_stacks[NBONES];
 
 	struct pspgl_matrix_stack *current_matrix_stack;
 	struct pspgl_matrix *current_matrix;

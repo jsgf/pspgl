@@ -2,7 +2,8 @@
 
 static void enable_state (GLenum cap, int enable)
 {
-	unsigned char opcode;
+	int i;
+	unsigned char opcode = 0;
 
 	switch (cap) {
 	case GL_FOG:
@@ -75,6 +76,19 @@ static void enable_state (GLenum cap, int enable)
 				  pspgl_curctx->viewport.height);
 		}
 		return;
+
+	case GL_VERTEX_BLEND_PSP:
+		/* There's no specific enable flag for vertex
+		   blending, but disabling the matricies (=identity)
+		   should have the same effect. */
+		for(i = 0; i < NBONES; i++) {
+			struct pspgl_matrix_stack *m = &pspgl_curctx->bone_stacks[i];
+
+			m->flags = (m->flags & ~MF_DISABLED) |
+				(enable ? 0 : MF_DISABLED) | MF_DIRTY;
+		}
+		break;
+
 	case GL_COLOR_MATERIAL:
 	case GL_NORMALIZE:
 	case GL_RESCALE_NORMAL:
@@ -92,7 +106,8 @@ static void enable_state (GLenum cap, int enable)
 		return;
 	}
 
-	sendCommandi(opcode, enable);
+	if (opcode)
+		sendCommandi(opcode, enable);
 }
 
 

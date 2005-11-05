@@ -73,20 +73,24 @@ void pspgl_context_writereg_mtx (struct pspgl_context *c, int cmd, GLfloat argf)
 }
 
 
-static void flush_matrix(struct pspgl_context *c, unsigned opcode, struct pspgl_matrix_stack *stk)
+static void flush_matrix(struct pspgl_context *c, unsigned opcode, int index,
+			 struct pspgl_matrix_stack *stk)
 {
-	GLfloat *m;
+	const GLfloat *m;
 	int n;
 	int i, j;
 
-	if (!stk->dirty)
+	if (!(stk->flags & MF_DIRTY))
 		return;
-	stk->dirty = 0;
+	stk->flags &= ~MF_DIRTY;
 
-	m = stk->stack[stk->depth].mat;
+	if (stk->flags & MF_DISABLED)
+		m = __pspgl_identity;
+	else
+		m = stk->stack[stk->depth].mat;
 	n = (opcode == CMD_MAT_PROJ_TRIGGER) ? 4 : 3;
 
-	__pspgl_context_writereg_uncached(c, opcode, 0);
+	__pspgl_context_writereg_uncached(c, opcode, index * n * 4);
 	opcode++;
 	for (j=0; j<4; j++)
 		for (i=0; i<n; i++)
@@ -95,9 +99,14 @@ static void flush_matrix(struct pspgl_context *c, unsigned opcode, struct pspgl_
 
 static void flush_pending_matrix_changes (struct pspgl_context *c)
 {
-	flush_matrix(c, CMD_MAT_PROJ_TRIGGER, &c->projection_stack);
-	flush_matrix(c, CMD_MAT_MODEL_TRIGGER, &c->modelview_stack);
-	flush_matrix(c, CMD_MAT_TEXTURE_TRIGGER, &c->texture_stack);
+	int i;
+
+	flush_matrix(c, CMD_MAT_PROJ_TRIGGER, 0, &c->projection_stack);
+	flush_matrix(c, CMD_MAT_MODEL_TRIGGER, 0, &c->modelview_stack);
+	flush_matrix(c, CMD_MAT_TEXTURE_TRIGGER, 0, &c->texture_stack);
+
+	for(i = 0; i < NBONES; i++)
+		flush_matrix(c, CMD_MAT_BONE_TRIGGER, i, &c->bone_stacks[i]);
 }
 
 /* Pin colour map and texture images in memory while there's a pending

@@ -50,9 +50,11 @@ EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
 	for (i=0; i<sizeof(c->ge_reg_touched)/sizeof(c->ge_reg_touched[0]); i++)
 		c->ge_reg_touched[i] |= ge_reg_touch_mask[i];
 	
-	c->projection_stack.dirty = 1;
-	c->modelview_stack.dirty = 1;
-	c->texture_stack.dirty = 1;
+	c->projection_stack.flags |= MF_DIRTY;
+	c->modelview_stack.flags |= MF_DIRTY;
+	c->texture_stack.flags |= MF_DIRTY;
+	for(i = 0; i < NBONES; i++)
+		c->bone_stacks[i].flags |= MF_DIRTY;
 
 	return __pspgl_vidmem_setup_write_and_display_buffer(c->draw);
 }

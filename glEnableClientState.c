@@ -18,6 +18,9 @@ static void enable_clientstate (GLenum array, GLboolean enable)
 	case GL_TEXTURE_COORD_ARRAY:
 		va->texcoord.enabled = enable;
 		break;
+	case GL_WEIGHT_ARRAY_PSP:
+		va->weight.enabled = enable;
+		break;
 	default:
 		GLERROR(GL_INVALID_ENUM);
 	}

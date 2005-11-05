@@ -9,5 +9,6 @@ void glLoadMatrixf (const GLfloat *m)
 	for (i=0; i<16; i++)
 		matrix[i] = m[i];
 
-	pspgl_curctx->current_matrix_stack->dirty = 1;
+	if (!(pspgl_curctx->current_matrix_stack->flags & MF_DISABLED))
+		pspgl_curctx->current_matrix_stack->flags |= MF_DIRTY;
 }

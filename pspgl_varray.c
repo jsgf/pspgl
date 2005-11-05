@@ -129,25 +129,29 @@ GLboolean __pspgl_vertex_is_native(const struct vertex_format *vfmt)
 
 	array = vfmt->attribs[0].array;
 	next = vfmt->attribs[1].array;
-	ptr = __pspgl_bufferobj_deref(array->buffer, (void *)array->ptr) +
-		(array->size * __pspgl_gl_sizeof(array->type));
+	ptr = __pspgl_bufferobj_deref(array->buffer, (void *)array->ptr) + 
+		vfmt->attribs[0].size;
 	cycle = __pspgl_bufferobj_deref(array->buffer, (void *)array->ptr) + array->stride;
 
 	/* Check each attribute array element is contigious with the
 	   following one */
-	for(i = 0; i < nattr-1; i++) {
+	i = 0;
+	while(i < nattr-1) {
 		const void *nextptr = __pspgl_bufferobj_deref(next->buffer, (void *)next->ptr);
 
-		psp_log("attr %d native=%d ptr+size=%p next->ptr=%p\n",
-			i, array->native, ptr, nextptr);
+		psp_log("attr %d array=%p next=%p, native=%d size=%d ptr(%p)+size=%p next(%d)->ptr=%p\n",
+			i, array, next, array->native, vfmt->attribs[0].size,
+			__pspgl_bufferobj_deref(array->buffer, (void *)array->ptr),
+			ptr, nextptr);
 
 		if (!array->native || ptr != nextptr)
 			return GL_FALSE;
 
+		i++;
 		array = next;
 		next = vfmt->attribs[i+1].array;
 		ptr = __pspgl_bufferobj_deref(array->buffer, (void *)array->ptr) +
-			(array->size * __pspgl_gl_sizeof(array->type));
+			vfmt->attribs[i].size;
 	}
 
 	psp_log("attr %d native=%d ptr+size=%p cycle=%p\n",
@@ -166,14 +170,16 @@ unsigned __pspgl_enabled_array_bits(void)
 	struct varray *v = &pspgl_curctx->vertex_array;
 	unsigned ret = 0;
 
-	if (v->vertex.enabled)
-		ret |= VA_VERTEX_BIT;
-	if (v->normal.enabled)
-		ret |= VA_NORMAL_BIT;
-	if (v->color.enabled)
-		ret |= VA_COLOR_BIT;
 	if (v->texcoord.enabled)
 		ret |= VA_TEXCOORD_BIT;
+	if (v->weight.enabled)
+		ret |= VA_WEIGHT_BIT;
+	if (v->color.enabled)
+		ret |= VA_COLOR_BIT;
+	if (v->normal.enabled)
+		ret |= VA_NORMAL_BIT;
+	if (v->vertex.enabled)
+		ret |= VA_VERTEX_BIT;
 
 	return ret;
 }
@@ -210,6 +216,26 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 		attr->size = ge_sizeof(hwtype) * 2;
 		offset += attr->size;
 
+		psp_log("attr %d: array=%p offset=%d size=%d\n",
+			attr-vfmt->attribs, attr->array, attr->offset, attr->size);
+		attr++;
+	}
+
+	if (varray->weight.enabled) {
+		unsigned hwtype = glfmt2gefmt(varray->weight.type);
+		unsigned nweights = varray->weight.size;
+
+		hwformat |= GE_WEIGHT_SHIFT(hwtype);
+		hwformat |= GE_WEIGHTS(nweights);
+
+		attr->array = &varray->weight;
+		offset = ROUNDUP(offset, ge_sizeof(hwtype));
+		attr->offset = offset;
+		attr->size = ge_sizeof(hwtype) * nweights;
+		offset += attr->size;
+
+		psp_log("attr %d: array=%p offset=%d size=%d\n",
+			attr-vfmt->attribs, attr->array, attr->offset, attr->size);
 		attr++;
 	}
 
@@ -241,6 +267,8 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 		attr->size = 4;
 		offset += 4;
 
+		psp_log("attr %d: array=%p offset=%d size=%d\n",
+			attr-vfmt->attribs, attr->array, attr->offset, attr->size);
 		attr++;
 	}
 
@@ -255,6 +283,8 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 		attr->size = ge_sizeof(hwtype) * 3;
 		offset += attr->size;
 
+		psp_log("attr %d: array=%p offset=%d size=%d\n",
+			attr-vfmt->attribs, attr->array, attr->offset, attr->size);
 		attr++;
 	}
 
@@ -283,6 +313,8 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 		attr->size = ge_sizeof(hwtype) * 3;
 		offset += attr->size;
 
+		psp_log("attr %d: array=%p offset=%d size=%d\n",
+			attr-vfmt->attribs, attr->array, attr->offset, attr->size);
 		attr++;
 	}
 

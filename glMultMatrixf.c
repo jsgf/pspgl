@@ -22,6 +22,7 @@ void glMultMatrixf (const GLfloat *m)
 		P(i,3) = ai0 * B(0,3) + ai1 * B(1,3) + ai2 * B(2,3) + ai3 * B(3,3);
 	}
 
-	pspgl_curctx->current_matrix_stack->dirty = 1;
+	if (!(pspgl_curctx->current_matrix_stack->flags & MF_DISABLED))
+		pspgl_curctx->current_matrix_stack->flags |= MF_DIRTY;
 }
 

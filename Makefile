@@ -122,6 +122,7 @@ libGL.a_OBJS = \
 	glVertexi.o \
 	glVertexPointer.o \
 	glViewport.o \
+	glWeightPointerPSP.o \
 	pspgl_buffers.o \
 	pspgl_context.o \
 	pspgl_dlist.o \

@@ -18,6 +18,7 @@ void glPushMatrix (void)
 
 	memcpy(c->current_matrix, c->current_matrix-1, sizeof(struct pspgl_matrix));
 
-	curstk->dirty = 1;
+	if (!(curstk->flags & MF_DISABLED))
+		curstk->flags |= MF_DIRTY;
 }
 
