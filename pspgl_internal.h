@@ -171,6 +171,9 @@ struct pspgl_surface {
 	void *depth_buffer;
 	int current_front;
 	int displayed;
+
+	unsigned red_mask, green_mask, blue_mask;
+	unsigned alpha_mask, stencil_mask;
 };
 
 
@@ -290,6 +293,23 @@ static inline uint32_t getReg(reg)
 	return pspgl_curctx->ge_reg[reg];
 }
 
+
+/* EGL stuff */
+struct pspgl_pixconfig
+{
+	unsigned char red_bits, green_bits, blue_bits;
+	unsigned char alpha_bits, stencil_bits;
+
+	signed char hwformat;
+};
+
+extern const struct pspgl_pixconfig __pspgl_pixconfigs[];
+
+/* Create a packed EGLconfig index */
+#define EGLCONFIGIDX(pix,depth)	(((depth!=0) << 4) | (pix))
+
+#define EGLCFG_PIXIDX(cfg)	((cfg) & 0xf)
+#define EGLCFG_HASDEPTH(cfg)	(((cfg) & 0x10) >> 4)
 
 #endif
 

@@ -115,11 +115,11 @@ int done = 0;
 
 
 static const EGLint attrib_list [] = {
-	EGL_RED_SIZE, 8,
-	EGL_GREEN_SIZE, 8,
-	EGL_BLUE_SIZE, 8,
-	EGL_ALPHA_SIZE, 8,
-	EGL_DEPTH_SIZE, 16,
+	EGL_RED_SIZE, 1,
+	EGL_GREEN_SIZE, 1,
+	EGL_BLUE_SIZE, 1,
+	EGL_ALPHA_SIZE, 0,
+	EGL_DEPTH_SIZE, 0,
 	EGL_NONE
 };
 
@@ -148,6 +148,11 @@ int main(int argc, char* argv[])
 	psp_log("EGL extensions \"%s\"\n", eglQueryString(dpy, EGL_EXTENSIONS));
 
 	EGLCHK(eglChooseConfig(dpy, attrib_list, &config, 1, &num_configs));
+
+	if (num_configs == 0) {
+		__pspgl_log("eglChooseConfig returned 0 configurations");
+		return 0;
+	}
 
 	psp_log("eglChooseConfige() returned config 0x%04x\n", (unsigned int) config);
 

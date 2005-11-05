@@ -82,12 +82,13 @@ static int mouse_x;
 static int mouse_y;
 
 
-static const EGLint attrib_list [] = {
-	EGL_RED_SIZE, 8,
-	EGL_GREEN_SIZE, 8,
-	EGL_BLUE_SIZE, 8,
-	EGL_ALPHA_SIZE, 8,
-	EGL_DEPTH_SIZE, 16,
+static EGLint attrib_list [] = {
+	EGL_RED_SIZE, 8,	/* 0 */
+	EGL_GREEN_SIZE, 8,	/* 2 */
+	EGL_BLUE_SIZE, 8,	/* 4 */
+	EGL_ALPHA_SIZE, 0,	/* 6 */
+	EGL_STENCIL_SIZE, 0,	/* 8 */
+	EGL_DEPTH_SIZE, 0,	/* 10 */
 	EGL_NONE
 };
 
@@ -114,9 +115,22 @@ int glutCreateWindow (const char *title)
 	psp_log("EGL version \"%s\"\n", eglQueryString(dpy, EGL_VERSION));
 	psp_log("EGL extensions \"%s\"\n", eglQueryString(dpy, EGL_EXTENSIONS));
 
+	if (glut_display_mode & GLUT_ALPHA)
+		attrib_list[7] = 8;
+	if (glut_display_mode & GLUT_STENCIL)
+		attrib_list[9] = 8;
+	if (glut_display_mode & GLUT_DEPTH)
+		attrib_list[11] = 16;
+
 	EGLCHK(eglChooseConfig(dpy, attrib_list, &config, 1, &num_configs));
 
-	psp_log("eglChooseConfige() returned config 0x%04x\n", (unsigned int) config);
+	if (num_configs == 0) {
+		__pspgl_log("glutCreateWindow: eglChooseConfig returned no configurations for display mode %x\n",
+			    glut_display_mode);
+		return 0;
+	}
+
+	psp_log("eglChooseConfig() returned config 0x%04x\n", (unsigned int) config);
 
 	EGLCHK(eglGetConfigAttrib(dpy, config, EGL_WIDTH, &width));
 	EGLCHK(eglGetConfigAttrib(dpy, config, EGL_HEIGHT, &height));

@@ -40,22 +40,12 @@ static void enable_state (GLenum cap, int enable)
 		opcode = CMD_ENA_DITHER;
 		break;
 	case GL_STENCIL_TEST:
-		if (enable && pspgl_curctx->draw->pixfmt == 0) {   /* no room for stencil bits */
-			GLERROR(GL_INVALID_OPERATION);
-			enable = GL_FALSE;
-		}
-		if (enable)
-			sendCommandi(CMD_ALPHA_MASK, pspgl_curctx->write_mask.stencil);
-		else
-			sendCommandi(CMD_ALPHA_MASK, pspgl_curctx->write_mask.alpha);
 		opcode = CMD_ENA_STENCIL_TEST;
+		enable = enable && pspgl_curctx->draw->stencil_mask;
 		break;
 	case GL_DEPTH_TEST:
-		if (enable && pspgl_curctx->draw->depth_buffer == 0) {
-			GLERROR(GL_INVALID_OPERATION);
-			enable = GL_FALSE;
-		}
 		opcode = CMD_ENA_DEPTH_TEST;
+		enable = enable && pspgl_curctx->draw->depth_buffer;
 		break;
 	case GL_LIGHT0:
 	case GL_LIGHT1:

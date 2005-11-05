@@ -3,6 +3,17 @@
 
 #include <GL/gl.h>
 
+/* Display mode bit masks. */
+#define GLUT_RGB			0
+#define GLUT_RGBA			GLUT_RGB
+//#define GLUT_INDEX			1
+#define GLUT_SINGLE			0
+#define GLUT_DOUBLE			2
+#define GLUT_ACCUM			4
+#define GLUT_ALPHA			8
+#define GLUT_DEPTH			16
+#define GLUT_STENCIL			32
+
 /* mouse buttons and state */
 #define GLUT_LEFT_BUTTON	0
 #define GLUT_MIDDLE_BUTTON	1
