@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <malloc.h>
-#include <psputils.h>
 
 #include "pspgl_internal.h"
 #include "pspgl_texobj.h"
@@ -262,57 +261,59 @@ void __pspgl_texobj_free(struct pspgl_texobj *tobj)
 	free(tobj);
 }
 
+static void heap_free(struct pspgl_buffer *buf)
+{
+	free(buf->base);
+}
 
 struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, 
 					unsigned width, unsigned height, unsigned size,
 					const struct pspgl_texfmt *texfmt)
 {
 	struct pspgl_teximg *timg;
+	void *img;
 
 	timg = malloc(sizeof(*timg));
 	if (timg == NULL)
  		return NULL;
 
 	memset(timg, 0, sizeof(*timg));
-	timg->refcount = 1;
 
 	if (size == 0)
 		size = width * height * texfmt->hwsize;
 
 	/* XXX try to allocate edram? */
-	timg->image = memalign(16, size);
+	img = memalign(CACHELINE_SIZE, size);
 
-	if (!timg->image) {
+	if (img == NULL) {
 		free(timg);
 		return NULL;
 	}
 
-	if (pixels) {
-		if (texfmt->hwformat >= GE_DXT1)
-			convert_compressed_image(pixels, width, height, size, timg->image, texfmt);
-		else
-			convert_image(pixels, width, height, timg->image, texfmt);
+	__pspgl_buffer_init(&timg->image, img, size, heap_free);
 
-		/* Make texture data visible to hardware */
-		sceKernelDcacheWritebackRange(timg->image, size);
+	if (pixels) {
+		void *p = __pspgl_buffer_map(&timg->image, GL_WRITE_ONLY_ARB);
+
+		if (texfmt->hwformat >= GE_DXT1)
+			convert_compressed_image(pixels, width, height, size, 
+						 p, texfmt);
+		else
+			convert_image(pixels, width, height, p, texfmt);
+
+		__pspgl_buffer_unmap(&timg->image, GL_WRITE_ONLY_ARB);
 	}
 
 	timg->width = width;
 	timg->height = height;
-	timg->stride = width;
 	timg->texfmt = texfmt;
-	timg->size = size;
 
 	return timg;
 }
 
 void __pspgl_teximg_free(struct pspgl_teximg *timg)
 {
-	if (--timg->refcount)
-		return;
-
-	free(timg->image);
-	free(timg);
+	__pspgl_buffer_free(&timg->image);
 }
 
 static GLboolean texfmt_is_indexed(const struct pspgl_texfmt *fmt)

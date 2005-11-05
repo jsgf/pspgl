@@ -60,6 +60,20 @@ void __pspgl_bufferobj_unmap(const struct pspgl_bufferobj *buf, GLenum access)
 		__pspgl_buffer_unmap(buf->data, access);
 }
 
+void __pspgl_buffer_init(struct pspgl_buffer *buf, 
+			     void *base, GLsizeiptr size, 
+			     void (*free)(struct pspgl_buffer *))
+{
+	buf->refcount = 1;
+	buf->mapped = 0;
+	buf->dlist_usage = 0;
+
+	buf->base = base;
+	buf->size = size;
+
+	buf->free = free;
+}
+
 struct pspgl_buffer *__pspgl_buffer_new(void *base, GLsizeiptr size,
 						void (*free)(struct pspgl_buffer *))
 {
@@ -67,16 +81,8 @@ struct pspgl_buffer *__pspgl_buffer_new(void *base, GLsizeiptr size,
 
 	ret = malloc(sizeof(*ret));
 
-	if (ret != NULL) {
-		ret->refcount = 1;
-		ret->mapped = 0;
-		ret->dlist_usage = 0;
-
-		ret->base = base;
-		ret->size = size;
-
-		ret->free = free;
-	}
+	if (ret != NULL)
+		__pspgl_buffer_init(ret, base, size, free);
 
 	return ret;
 }

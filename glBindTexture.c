@@ -76,9 +76,9 @@ void glBindTexture(GLenum target, GLuint id)
 	   new images. */
 	for(i = 0; i < MIPMAP_LEVELS; i++)
 		if (tobj->images[i])
-			tobj->images[i]->refcount++;
+			tobj->images[i]->image.refcount++;
 	if (tobj->cmap)
-		tobj->cmap->refcount++;
+		tobj->cmap->image.refcount++;
 
 	__pspgl_update_texenv(tobj);
 	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);

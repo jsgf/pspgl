@@ -45,8 +45,13 @@ void __pspgl_bufferobj_unmap(const struct pspgl_bufferobj *buf, GLenum access);
    is unknown/invalid, and sets GLERROR appropriately. */
 struct pspgl_bufferobj **__pspgl_bufferobj_for_target(GLenum target);
 
+
+
 struct pspgl_buffer *__pspgl_buffer_new(void *base, GLsizeiptr size,
 						void (*free)(struct pspgl_buffer *));
+void __pspgl_buffer_init(struct pspgl_buffer *buf, 
+			     void *base, GLsizeiptr size, 
+			     void (*free)(struct pspgl_buffer *));
 void __pspgl_buffer_free(struct pspgl_buffer *data);
 
 /* Map a buffer for access type "access".  May be called repeatedly. */

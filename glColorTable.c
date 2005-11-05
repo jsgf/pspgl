@@ -49,10 +49,10 @@ void glColorTable(GLenum target, GLenum internalformat,
 	}
 	tobj->cmap = cmap;
 
-	p = (unsigned long)cmap->image;
+	p = (unsigned long)cmap->image.base;
 
 	/* add reference for hardware (refcount is now 2) */
-	cmap->refcount++;
+	cmap->image.refcount++;
 
 	sendCommandi(CMD_SET_CLUT, p);
 	sendCommandi(CMD_SET_CLUT_MSB, (p >> 8) & 0xf0000);

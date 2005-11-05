@@ -8,8 +8,8 @@ static void convert_subimage(struct pspgl_teximg *img, const void *pixels,
 			     int xoffset, int yoffset, unsigned width, unsigned height)
 {
 	const unsigned pixsz = img->texfmt->hwsize;
-	unsigned char *to = img->image + (yoffset * img->stride + xoffset) * pixsz;
-	unsigned tostride = img->stride * pixsz;
+	unsigned char *to = img->image.base + (yoffset * img->width + xoffset) * pixsz;
+	unsigned tostride = img->width * pixsz;
 	unsigned fromstride = width * pixsz;
 	void (*convert)(const struct pspgl_texfmt *, void *to, const void *from, unsigned width);
 	convert = img->texfmt->convert;
@@ -66,9 +66,9 @@ void glTexSubImage2D( GLenum target, GLint level,
 	if (texfmt->hwformat >= GE_DXT1 || texfmt->hwformat == GE_INDEX_4BIT)
 		goto invalid_operation;
 
-	assert(timg->refcount > 0);
+	assert(timg->image.refcount > 0);
 
-	if (timg->refcount > 1) {
+	if (timg->image.refcount > 1) {
 		/* If the timg is currently busy, we can't change it
 		   in place, so make a copy before we modify it.
 
@@ -85,18 +85,24 @@ void glTexSubImage2D( GLenum target, GLint level,
 
 		if (timg2 == NULL)
 			goto out_of_memory;
+
+		__pspgl_buffer_map(&timg->image, GL_READ_ONLY_ARB);
+		__pspgl_buffer_map(&timg2->image, GL_WRITE_ONLY_ARB);
 		
-		memcpy(timg2->image, timg->image, timg2->size);
+		memcpy(timg2->image.base, timg->image.base, timg2->image.size);
 
 		__pspgl_set_texture_image(tobj, level, timg2);
 		__pspgl_teximg_free(timg2); /* tobj has reference now */
 
+		__pspgl_buffer_unmap(&timg->image, GL_READ_ONLY_ARB);
+
 		timg = timg2;
-	}
+	} else
+		__pspgl_buffer_map(&timg->image, GL_WRITE_ONLY_ARB);
 
 	convert_subimage(timg, pixels, xoffset, yoffset, width, height);
 
-	sceKernelDcacheWritebackRange(timg->image, timg->size);
+	__pspgl_buffer_unmap(&timg->image, GL_WRITE_ONLY_ARB);
 
 	return;
 

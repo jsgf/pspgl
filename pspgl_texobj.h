@@ -3,6 +3,8 @@
 
 #include <GL/gl.h>
 #include <GLES/egl.h>
+
+#include <pspgl_buffers.h>
 #include "guconsts.h"
 
 #define MIPMAP_LEVELS		8
@@ -36,12 +38,9 @@ struct pspgl_texobj {
 };
 
 struct pspgl_teximg {
-	unsigned	refcount;
-	void		*image;
-	unsigned	stride;	/* in texels */
- 
+	struct pspgl_buffer	image;
+
 	unsigned	width, height;
- 	unsigned	size;	/* texture image size in bytes */
 
 	const struct pspgl_texfmt *texfmt;
 };

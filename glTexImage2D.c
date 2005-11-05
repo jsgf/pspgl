@@ -33,7 +33,7 @@ static void dlist_cleanup_teximg(void *v)
 static void set_mipmap_regs(unsigned level, struct pspgl_teximg *img, struct pspgl_teximg *old_timg)
 {
 	if (img) {
-		unsigned ptr = (unsigned)img->image;
+		unsigned ptr = (unsigned)img->image.base;
 		unsigned w_lg2 = lg2(img->width);
 		unsigned h_lg2 = lg2(img->height);
 
@@ -44,11 +44,11 @@ static void set_mipmap_regs(unsigned level, struct pspgl_teximg *img, struct psp
 			img->stride);
 
 		sendCommandi(CMD_TEX_MIPMAP0 + level, ptr);
-		sendCommandi(CMD_TEX_STRIDE0 + level, ((ptr >> 8) & 0xf0000) | img->stride);
+		sendCommandi(CMD_TEX_STRIDE0 + level, ((ptr >> 8) & 0xf0000) | img->width);
 		sendCommandi(CMD_TEX_SIZE0 + level, (h_lg2 << 8) | w_lg2);
 
 		/* Add hardware's reference to the new timg. */
-		img->refcount++;
+		img->image.refcount++;
 	} else {
 		psp_log("set level %d image=NULL", level);
 
@@ -71,7 +71,7 @@ void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level, struct
 	tobj->images[level] = NULL;
 
 	if (timg) {
-		timg->refcount++; /* add tobj's reference to the image */
+		timg->image.refcount++; /* add tobj's reference to the image */
 
 		/* if we're changing texture formats, then invalidate all the other images */
 		if (tobj->texfmt != timg->texfmt) {
