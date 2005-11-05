@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <sys/mman.h>
 
+#include "../guconsts.h"
 
 static inline
 uint32_t swap32 (uint32_t x)
@@ -51,12 +52,217 @@ static const char *test_function [] = {
 	"NEVER", "ALWAYS", "EQUAL", "NOTEQUAL", "LESS", "LEQUAL", "GREATER", "GEQUAL"
 };
 
+static unsigned base;
+static unsigned vformat;
+static unsigned varray;
+static unsigned iarray;
+
+#define B2F(ptr, idx)	(((signed char *)ptr)[idx])
+#define S2F(ptr, idx)	(((signed short *)ptr)[idx])
+#define F2F(ptr, idx)	(((float*)ptr)[idx])
+
+#ifdef GE_TEXTURE_SHIFT
+static const void *
+process_vertex(const void *vtx)
+{
+	printf("\t{ ");
+
+	if(vformat & GE_TEXTURE_SHIFT(3)) {
+		float s,t;
+		switch(vformat & GE_TEXTURE_SHIFT(3)) {
+		case GE_TEXTURE_8BIT:
+			s = B2F(vtx, 0);
+			t = B2F(vtx, 1);
+			vtx += 2;
+			break;
+
+		case GE_TEXTURE_16BIT:
+			s = S2F(vtx, 0);
+			t = S2F(vtx, 1);
+			vtx += 4;
+			break;
+
+		case GE_TEXTURE_32BITF:
+			s = F2F(vtx, 0);
+			t = F2F(vtx, 1);
+			vtx += 8;
+			break;
+		}
+		printf(".st={ %g, %g }, ", s,t );
+	}
+
+	if (vformat & GE_WEIGHT_SHIFT(3)) {
+		int i;
+		int nweights = ((vformat >> 14) & 7) + 1;
+
+		printf(".weights[%d]={ ", nweights);
+
+		for(i = 0; i < nweights; i++) {
+			float w;
+
+			switch(vformat & GE_WEIGHT_SHIFT(3)) {
+			case GE_WEIGHT_8BIT:
+				w = B2F(vtx, 0);
+				vtx += 1;
+				break;
+
+			case GE_WEIGHT_16BIT:
+				w = S2F(vtx, 0);
+				vtx += 2;
+				break;
+
+			case GE_WEIGHT_32BITF:
+				w = F2F(vtx, 0);
+				vtx += 4;
+				break;
+			}
+			printf("%f, ", w);
+		}
+		printf(" }, ");
+
+	}
+
+	if (vformat & GE_COLOR_SHIFT(7)) {
+		unsigned char r,g,b,a;
+		unsigned short col;
+
+		switch(vformat & GE_COLOR_SHIFT(7)) {
+		case GE_COLOR_5650:
+			col = *(unsigned short *)vtx;
+			vtx += 2;
+
+			b = ((col >> 8) & 0xf8) * 255 / 0xf8;
+			g = ((col >> 3) & 0xfc) * 255 / 0xfc;
+			r = ((col << 3) & 0xf8) * 255 / 0xf8;
+			a = 255;
+			break;
+		case GE_COLOR_5551:
+			col = *(unsigned short *)vtx;
+			vtx += 2;
+
+			b = ((col >> 10) & 0x1f) * 255 / 0x1f;
+			g = ((col >>  5) & 0x1f) * 255 / 0x1f;
+			r = ((col      ) & 0x1f) * 255 / 0x1f;
+			a = ((col >> 15) & 0x01) * 255;
+
+			break;
+		case GE_COLOR_4444:
+			col = *(unsigned short *)vtx;
+			vtx += 2;
+
+			a = ((col >> 12) & 0x0f) * 255 / 0x0f;
+			b = ((col >>  8) & 0x0f) * 255 / 0x0f;
+			g = ((col >>  4) & 0x0f) * 255 / 0x0f;
+			r = ((col >>  0) & 0x0f) * 255 / 0x0f;
+
+			break;
+
+		case GE_COLOR_8888:
+			r = ((unsigned char *)vtx)[0];
+			g = ((unsigned char *)vtx)[1];
+			b = ((unsigned char *)vtx)[2];
+			a = ((unsigned char *)vtx)[3];
+			vtx += 4;
+			break;
+		}
+
+		printf(".rgba={%u,%u,%u,%u}, ", r,g,b,a);
+	}
+
+	if (vformat & GE_NORMAL_SHIFT(3)) {
+		float nx,ny,nz;
+
+		switch (vformat & GE_NORMAL_SHIFT(3)) {
+		case GE_NORMAL_8BIT:
+			nx = B2F(vtx, 0);
+			ny = B2F(vtx, 1);
+			nz = B2F(vtx, 2);
+			vtx += 3;
+			break;
+
+		case GE_NORMAL_16BIT:
+			nx = S2F(vtx, 0);
+			ny = S2F(vtx, 1);
+			nz = S2F(vtx, 2);
+			vtx += 8;
+			break;
+
+		case GE_NORMAL_32BITF:
+			nx = F2F(vtx, 0);
+			ny = F2F(vtx, 1);
+			nz = F2F(vtx, 2);
+			vtx += 12;
+			break;
+		}
+		printf(".norm={%g, %g, %g}, ", nx, ny, nz);
+	}
+
+	if (vformat & GE_VERTEX_SHIFT(3)) {
+		float x,y,z;
+
+		switch (vformat & GE_VERTEX_SHIFT(3)) {
+		case GE_VERTEX_8BIT:
+			x = B2F(vtx, 0);
+			y = B2F(vtx, 1);
+			z = B2F(vtx, 2);
+			vtx += 3;
+			break;
+
+		case GE_VERTEX_16BIT:
+			x = S2F(vtx, 0);
+			y = S2F(vtx, 1);
+			z = S2F(vtx, 2);
+			vtx += 6;
+			break;
+
+		case GE_VERTEX_32BITF:
+			x = F2F(vtx, 0);
+			y = F2F(vtx, 1);
+			z = F2F(vtx, 2);
+			vtx += 12;
+			break;
+		}
+		printf(".xyz={%g, %g, %g}, ", x, y, z);
+	}
+
+	printf("},\n");
+
+	vtx = (void *)((((unsigned long)vtx) + 3) & ~3);
+	return vtx;
+}
+
+static const void *
+process_index(const void *idxp)
+{
+	unsigned idx = 0;
+
+	switch(vformat & GE_VINDEX_SHIFT(3)) {
+	case GE_VINDEX_8BIT:
+		idx = *((unsigned char *)idxp);
+		idxp++;
+		break;
+
+	case GE_VINDEX_16BIT:
+		idx = *((unsigned short *)idxp);
+		idxp += 2;
+		break;
+
+	default:
+		printf("?\n");
+	}
+
+	printf("%u, ", idx);
+
+	return idxp;
+}
+#endif
 
 static
-void process_insn (uint32_t insn)
+unsigned process_insn (uint32_t insn)
 {
 	uint8_t opcode = insn >> 24;
 	uint32_t arg = insn & 0x00ffffff;
+	unsigned next = 0;
 
 	switch (opcode) {
 	case 0x00:
@@ -64,13 +270,21 @@ void process_insn (uint32_t insn)
 		break;
 	case 0x01:
 		DUMP("Vertex Address (BASE) + 0x%08x", arg);
+		varray = arg + base;
 		break;
 	case 0x02:
 		DUMP("Index Address (BASE) + 0x%08x", arg);
+		iarray = arg + base;
 		break;
-	case 0x04:
-		DUMP("Primitive Kick: %d vertices, type %d", arg & 0xffff, arg >> 16);
+	case 0x04: {
+		static const char *prims[] = { "points", "lines", "line-strip",
+					       "triangles", "triangle-strip",
+					       "triangle-fan", "sprites" };
+		DUMP("Primitive Kick: %d vertices, type %d %s", arg & 0xffff,
+		     arg >> 16,
+		     ((arg >> 16) < 7) ? prims[arg >> 16] : "?");
 		break;
+	}
 	case 0x05:
 		DUMP("Bezier Patch Kick: count: %d in U, %d in V-direction", arg & 0xff, arg >> 8);
 		break;
@@ -83,6 +297,7 @@ void process_insn (uint32_t insn)
 		break;
 	case 0x08:
 		DUMP("Jump to Address (BASE) + 0x%08x", arg);
+		next = base + arg;
 		break;
 	case 0x09:
 		DUMP("Conditional Jump to Address (BASE) + 0x%08x", arg);
@@ -104,9 +319,11 @@ void process_insn (uint32_t insn)
 		break;
 	case 0x10:
 		DUMP("BASE Address 0x%08x", (arg << 8) & 0xff000000);
+		base = (arg << 8) & 0xff000000;
 		break;
 	case 0x12:
 		DUMP("Vertex Type 0x%08x", arg);
+		vformat = arg;
 		break;
 	case 0x13:
 		DUMP("Offset Address 0x%08x", arg);
@@ -450,6 +667,15 @@ void process_insn (uint32_t insn)
 	case 0xe1:
 		DUMP("Fixedcol DST %06x", arg);
 		break;
+	case 0xdf:
+		DUMP("Blend func op=%d dst=%d src=%d", (arg >> 8) & 3, (arg >> 4) & 0xf, arg & 0xf);
+		break;
+	case 0xe0:
+		DUMP("Fixedcol SRC %06x", arg);
+		break;
+	case 0xe1:
+		DUMP("Fixedcol DST %06x", arg);
+		break;
 	case 0xe2 ... 0xe5:
 		DUMP("Dither Matrix %d", opcode - 0xe2);
 		break;
@@ -477,6 +703,8 @@ void process_insn (uint32_t insn)
 	default:
 		;
 	}
+
+	return next;
 }
 
 
@@ -505,14 +733,52 @@ void process_chunk (uint32_t tag, uint32_t *buf, unsigned long len)
 		}
 		break;
 	case PSPGL_GE_DUMP_DLIST:
-		adr = le32_to_cpu(buf[0]);
+		adr = le32_to_cpu(buf[0]) & 0x0fffffff;
 		len -= 4;
 		buf++;
-		for (i=0; i<len/4; i++) {
+		for (i=0; i<len/4;) {
 			uint32_t insn = le32_to_cpu(buf[i]);
+			unsigned next;
 			printf("dlist 0x%08x: 0x%08x    ", adr+4*i, insn);
-			process_insn(insn);
+			next = process_insn(insn);
 			printf("\n");
+#ifdef GE_TEXTURE_SHIFT
+			if ((insn & 0xff000000) == (4 << 24)) {
+				unsigned count = insn & 0xffff;
+				int idx = (varray - adr) / 4;
+				const void *ptr = &buf[idx];
+
+				if (idx >= 0 && idx < len/4) {
+					while(count--)
+						ptr = process_vertex(ptr);
+				} else
+					printf("\tout of line varray at %08x\n",
+					       varray);
+
+				if (vformat & GE_VINDEX_SHIFT(3)) {
+					unsigned count = insn & 0xffff;
+					int idx = (iarray - adr) / 4;
+					const void *ptr = &buf[idx];
+
+					if (idx >= 0 && idx < len/4) {
+						printf("\tidx={ ");
+						while(count--)
+							ptr = process_index(ptr);
+						printf("}\n");
+					} else
+						printf("\tout of line index array at %08x\n",
+						       iarray);
+				}
+			}
+#endif
+
+			if (next) {
+				printf("  skipping...\n");
+				for(i++; i < (next - adr) / 4; i++)
+					printf("      0x%08x: 0x%08x\n",
+					       adr+4*i, le32_to_cpu(buf[i]));
+			} else
+				i++;
 		}
 		break;
 	case PSPGL_GE_DUMP_REGISTERS:
