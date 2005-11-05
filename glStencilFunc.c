@@ -14,6 +14,6 @@ void glStencilFunc( GLenum func, GLint ref, GLuint mask)
 
 	func &= 0x0007;
 
-	sendCommandi(220, (mask << 16) | (sref << 8) | stenciltestfunc_mapping[func]);
+	sendCommandi(CMD_STENCIL_FUNC, (mask << 16) | (sref << 8) | stenciltestfunc_mapping[func]);
 }
 

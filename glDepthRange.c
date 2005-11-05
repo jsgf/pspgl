@@ -4,8 +4,8 @@
 void glDepthRangef (GLclampf zNear, GLclampf zFar)
 {
 	/* z Scale and Offset */
-	sendCommandf(68, (zNear - zFar) / 2);
-	sendCommandf(71, (zNear + zFar) / 2 + pspgl_curctx->depth_offset);
+	sendCommandf(CMD_VIEWPORT_SZ, (zNear - zFar) / 2);
+	sendCommandf(CMD_VIEWPORT_TZ, (zNear + zFar) / 2 + pspgl_curctx->depth_offset);
 
 	if (zNear > zFar) {
 		GLfloat temp = zNear;
@@ -14,8 +14,8 @@ void glDepthRangef (GLclampf zNear, GLclampf zFar)
 	}
 
 	/* Far and Near Clip Planes */
-	sendCommandi(214, (int) zNear);
-	sendCommandi(215, (int) zFar);
+	sendCommandi(CMD_CLIP_NEAR, (int) zNear);
+	sendCommandi(CMD_CLIP_FAR, (int) zFar);
 }
 
 

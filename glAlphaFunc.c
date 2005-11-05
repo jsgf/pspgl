@@ -15,5 +15,5 @@ void glAlphaFunc (GLenum func, GLclampf ref)
 
 	func &= 0x0007;
 
-	sendCommandi(219, (amsk << 16) | (aref << 8) | alphatestfunc_mapping[func]);
+	sendCommandi(CMD_ALPHA_FUNC, (amsk << 16) | (aref << 8) | alphatestfunc_mapping[func]);
 }

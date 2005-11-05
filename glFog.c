@@ -17,11 +17,11 @@ void glFogf (GLenum pname, GLfloat param)
 			distance = 1.0f / distance;
 		else
 			GLERROR(GL_INVALID_VALUE);
-		sendCommandf(206, distance);
+		sendCommandf(CMD_FOG_NEAR, distance);
 		break;
 	case GL_FOG_END:
 		pspgl_curctx->fog.far = param;
-		sendCommandf(205, pspgl_curctx->fog.far);
+		sendCommandf(CMD_FOG_FAR, pspgl_curctx->fog.far);
 		break;
 	/**
 	case XXXX:
@@ -45,7 +45,7 @@ void glFogfv (GLenum pname, const GLfloat *param)
 {
 	switch (pname) {
 	case GL_FOG_COLOR:
-		sendCommandi(207, COLOR3(param));
+		sendCommandi(CMD_FOG_COLOR, COLOR3(param));
 		break;
 	default:
 		glFogf(pname, param[0]);

@@ -10,5 +10,5 @@ void glDepthFunc (GLenum func)
 		return;
 	}
 
-	sendCommandi(222, depthfunc_mapping[func - GL_NEVER]);
+	sendCommandi(CMD_DEPTH_FUNC, depthfunc_mapping[func - GL_NEVER]);
 }

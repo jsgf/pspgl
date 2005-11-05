@@ -98,18 +98,18 @@ EGLBoolean pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s)
 
 	/* XXX: ?!? how to set up the stencil buffer base ptr ?!? */
 
-	sendCommandi(210, s->pixfmt);
+	sendCommandi(CMD_PSM, s->pixfmt);
 
 	adr = (unsigned long) s->color_buffer[current_back];
 	psp_log("color buffer adr 0x%08x\n", adr);
-	sendCommandi(156, ((adr & 0x0000ffffff)));
-	sendCommandi(157, ((adr & 0x00ff000000) >> 8) | s->pixelperline);
+	sendCommandi(CMD_DRAWBUF, ((adr & 0x0000ffffff)));
+	sendCommandi(CMD_DRAWBUFWIDTH, ((adr & 0x00ff000000) >> 8) | s->pixelperline);
 
 	if (s->depth_buffer) {
 		adr = (unsigned long) s->depth_buffer;
 		psp_log("depth buffer adr 0x%08x\n", adr);
-		sendCommandi(158, ((adr & 0x0000ffffff)));
-		sendCommandi(159, ((adr & 0x00ff000000) >> 8) | s->pixelperline);
+		sendCommandi(CMD_DEPTHBUF, ((adr & 0x0000ffffff)));
+		sendCommandi(CMD_DEPTHBUFWIDTH, ((adr & 0x00ff000000) >> 8) | s->pixelperline);
 	}
 
 	if (s->displayed) {

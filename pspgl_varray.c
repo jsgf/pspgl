@@ -189,17 +189,17 @@ void pspgl_varray_draw (GLenum mode, GLenum index_type, const GLvoid *indices, G
 			GLERROR(GL_INVALID_ENUM);
 			return;
 		}
-		sendCommandi(16, (((unsigned long) indices) >> 8) & 0xf0000);
-		sendCommandiUncached(2, ((unsigned long) indices) & 0xffffff);
+		sendCommandiUncached(CMD_BASE, (((unsigned long) indices) >> 8) & 0xf0000);
+		sendCommandiUncached(CMD_INDEXPTR, ((unsigned long) indices) & 0xffffff);
 	}
 
 	/* Texture Sync, need to await end of transfer if any is pending */
-	sendCommandi(204, 0);
+	sendCommandiUncached(CMD_TEXCACHE_SYNC, 0);
 
-	sendCommandi(18, vertex_fmt);
-	sendCommandi(16, (adr >> 8) & 0xf0000);
-	sendCommandi(1, adr & 0xffffff);
-	sendCommandiUncached(4, (prim << 16) | count);
+ 	sendCommandi(CMD_VERTEXTYPE, vertex_fmt);
+ 	sendCommandiUncached(CMD_BASE, (adr >> 8) & 0xf0000);
+ 	sendCommandiUncached(CMD_VERTEXPTR, adr & 0xffffff);
+ 	sendCommandiUncached(CMD_PRIM, (prim << 16) | count);
 
 	/* XXX TODO: we handle line loops as line strips. Here we need to render the final, closing line, too. */
 }

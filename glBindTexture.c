@@ -24,13 +24,13 @@ void glBindTexture (GLenum target, GLuint texture)
 		uint32_t *texreg;
 		unsigned long i;
 
-		memcpy(c->texobj_current->ge_texreg_160x201, &c->ge_reg[160], sizeof(c->texobj_current->ge_texreg_160x201));
+		memcpy(c->texobj_current->ge_texreg_160x201, &c->ge_reg[CMD_TEX_MIPMAP0], sizeof(c->texobj_current->ge_texreg_160x201));
 		c->texobj_current = texobj;
 
-		for (i=160, texreg=c->texobj_current->ge_texreg_160x201; i<201; i++, texreg++)
+		for (i=CMD_TEX_MIPMAP0, texreg=c->texobj_current->ge_texreg_160x201; i<CMD_TEXENV_FUNC; i++, texreg++)
 			pspgl_context_writereg(c, i, *texreg);
 
-		pspgl_context_writereg_masked(c, 201, c->texobj0.ge_texreg_160x201[201-160], 0xffff00);
+		pspgl_context_writereg_masked(c, CMD_TEXENV_FUNC, c->texobj0.ge_texreg_160x201[CMD_TEXENV_FUNC-CMD_TEX_MIPMAP0], 0xffff00);
 	}
 }
 

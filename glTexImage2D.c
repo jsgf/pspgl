@@ -79,15 +79,15 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat, GLsizei wid
 		goto invalid_enum;
 	}
 
-	sendCommandi(194, 0);
-	sendCommandi(195, pixfmt);
+	sendCommandi(CMD_TEXMODE, 0);
+	sendCommandi(CMD_TEXFMT, pixfmt);
 
-	sendCommandi(160 + level, ((unsigned long) texels) & 0xffffff);
-	sendCommandi(168 + level, ((((unsigned long) texels) >> 8) & 0x0f0000) | width);
-	sendCommandi(184 + level, (log2height << 8) | log2width);
+	sendCommandi(CMD_TEX_MIPMAP0 + level, ((unsigned long) texels) & 0xffffff);
+	sendCommandi(CMD_TEX_STRIDE0 + level, ((((unsigned long) texels) >> 8) & 0x0f0000) | width);
+	sendCommandi(CMD_TEX_SIZE0 + level, (log2height << 8) | log2width);
 
 	/* Texture Flush */
-	sendCommandi(203, 0);
+	sendCommandi(CMD_TEXCACHE_FLUSH, 0);
 	return;
 
 invalid_enum:

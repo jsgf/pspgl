@@ -27,7 +27,7 @@ void update_clamp (struct pspgl_context *c, int shift, GLenum param)
 	switch (param) {
 	case GL_REPEAT:
 	case GL_CLAMP:
-		pspgl_context_writereg_masked(c, 199, (param - GL_REPEAT) << shift, 0xff << shift);
+		pspgl_context_writereg_masked(c, CMD_TEXWRAP, (param - GL_REPEAT) << shift, 0xff << shift);
 		break;
 	default:
 		GLERROR(GL_INVALID_ENUM);
@@ -45,7 +45,7 @@ void update_texfilter (struct pspgl_context *c, int shift, GLenum param)
 	case GL_LINEAR_MIPMAP_NEAREST:
 	case GL_NEAREST_MIPMAP_LINEAR:
 	case GL_LINEAR_MIPMAP_LINEAR:
-		pspgl_context_writereg_masked(c, 198, filter_gl2ge(param) << shift, 0xff << shift);
+		pspgl_context_writereg_masked(c, CMD_TEXFILT, filter_gl2ge(param) << shift, 0xff << shift);
 		break;
 	default:
 		GLERROR(GL_INVALID_ENUM);

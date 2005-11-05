@@ -15,13 +15,13 @@ void glLightfv (GLenum light, GLenum pname, const GLfloat *params)
 
 	switch (pname) {
 	case GL_AMBIENT:
-		sendCommandi(143+3*light, COLOR3(params));
+		sendCommandi(CMD_LIGHT0_AMB_COL+3*light, COLOR3(params));
 		break;
 	case GL_DIFFUSE:
-		sendCommandi(144+3*light, COLOR3(params));
+		sendCommandi(CMD_LIGHT0_DIF_COL+3*light, COLOR3(params));
 		break;
 	case GL_SPECULAR:
-		sendCommandi(145+3*light, COLOR3(params));
+		sendCommandi(CMD_LIGHT0_SPC_COL+3*light, COLOR3(params));
 		break;
 	case GL_POSITION:
 		scale = 1.0 / params[3];
@@ -29,30 +29,31 @@ void glLightfv (GLenum light, GLenum pname, const GLfloat *params)
 			scale = 0.001;
 		else if (scale < 0 && scale > -0.001)
 			scale = -0.001;
-		sendCommandf(99+3*light, scale * params[0]);
-		sendCommandf(100+3*light, scale * params[1]);
-		sendCommandf(101+3*light, scale * params[2]);
+		sendCommandf(CMD_LIGHT0_POS_X+3*light, scale * params[0]);
+		sendCommandf(CMD_LIGHT0_POS_Y+3*light, scale * params[1]);
+		sendCommandf(CMD_LIGHT0_POS_Z+3*light, scale * params[2]);
 		break;
 	case GL_SPOT_DIRECTION:
-		sendCommandf(111+3*light, params[0]);
-		sendCommandf(112+3*light, params[1]);
-		sendCommandf(113+3*light, params[2]);
+		sendCommandf(CMD_LIGHT0_VEC_X+3*light, params[0]);
+		sendCommandf(CMD_LIGHT0_VEC_Y+3*light, params[1]);
+		sendCommandf(CMD_LIGHT0_VEC_Z+3*light, params[2]);
 		break;
 	case GL_SPOT_EXPONENT:
-		sendCommandf(139+light, params[0]);
+		sendCommandf(CMD_LIGHT0_SPOT_EXP+light, params[0]);
 		break;
 	case GL_SPOT_CUTOFF:
-		pspgl_context_writereg_masked(c, 95+light, ((params[0] == 0.0) ? 0 : (params[0] == 180.0) ? 1 : 2) << 8, 0x00ff00);
-		sendCommandf(135+light, params[0]);
+		pspgl_context_writereg_masked(c, CMD_LIGHT0_TYPE+light,
+					      ((params[0] == 0.0) ? 0 : (params[0] == 180.0) ? 1 : 2) << 8, 0x00ff00);
+		sendCommandf(CMD_LIGHT0_CUTOFF+light, params[0]);
 		break;
 	case GL_CONSTANT_ATTENUATION:
-		sendCommandf(123+3*light, params[0]);
+		sendCommandf(CMD_LIGHT0_ATT_CONST+3*light, params[0]);
 		break;
 	case GL_LINEAR_ATTENUATION:
-		sendCommandf(124+3*light, params[0]);
+		sendCommandf(CMD_LIGHT0_ATT_LINEAR+3*light, params[0]);
 		break;
 	case GL_QUADRATIC_ATTENUATION:
-		sendCommandf(125+3*light, params[0]);
+		sendCommandf(CMD_LIGHT0_ATT_QUAD+3*light, params[0]);
 		break;
 	default:
 		GLERROR(GL_INVALID_ENUM);

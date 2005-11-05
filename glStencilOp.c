@@ -8,22 +8,22 @@ int map_sfunc (GLenum opcode)
 
 	switch (opcode) {
 	case GL_ZERO:
-		ret = 1;
+		ret = GU_ZERO;
 		break;
 	case GL_INVERT:
-		ret = 3;
+		ret = GU_INVERT;
 		break;
 	case GL_KEEP:
-		ret = 0;
+		ret = GU_KEEP;
 		break;
 	case GL_REPLACE:
-		ret = 2;
+		ret = GU_REPLACE;
 		break;
 	case GL_INCR:
-		ret = 4;
+		ret = GU_INCR;
 		break;
 	case GL_DECR:
-		ret = 5;
+		ret = GU_DECR;
 		break;
 	default:
 		GLERROR(GL_INVALID_ENUM);
@@ -35,5 +35,5 @@ int map_sfunc (GLenum opcode)
 
 void glStencilOp (GLenum fail, GLenum zfail, GLenum zpass)
 {
-	sendCommandi(221, (map_sfunc(zpass) << 16) | (map_sfunc(zfail) << 8) | map_sfunc(fail));
+	sendCommandi(CMD_STENCIL_OP, (map_sfunc(zpass) << 16) | (map_sfunc(zfail) << 8) | map_sfunc(fail));
 }

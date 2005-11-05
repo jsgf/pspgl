@@ -17,18 +17,18 @@ void glViewport (GLint x, GLint y, GLsizei width, GLsizei height)
 	}
 
 	/* Viewport / Screen Offset */
-	sendCommandi(76, (2048 - width/2) << 4);
-	sendCommandi(77, (2048 - height/2) << 4);
+	sendCommandi(CMD_OFFSETX, (2048 - width/2) << 4);
+	sendCommandi(CMD_OFFSETY, (2048 - height/2) << 4);
 
 	/* Viewport Size (X/Y, Width/Height) */
-	sendCommandf(66, (float) (width/2));
-	sendCommandf(67, (float) (-height/2));
+	sendCommandf(CMD_VIEWPORT_SX, (float) (width/2));
+	sendCommandf(CMD_VIEWPORT_SY, (float) (-height/2));
 
 	/* Viewport Center (X/Y) */
-	sendCommandf(69, (float) (2048));
-	sendCommandf(70, (float) (2048));
+	sendCommandf(CMD_VIEWPORT_TX, (float) (2048));
+	sendCommandf(CMD_VIEWPORT_TY, (float) (2048));
 
 	/* Drawing Rectangle */
-	sendCommandi(21, (y << 10) | x);
-	sendCommandi(22, (((y + height)-1) << 10) | ((x + width)-1));
+	sendCommandi(CMD_REGION1, (y << 10) | x);
+	sendCommandi(CMD_REGION2, (((y + height)-1) << 10) | ((x + width)-1));
 }

@@ -3,6 +3,6 @@
 
 void glDepthMask (GLboolean flag)
 {
-	sendCommandi(231, flag ? 0 : ~0);
+	sendCommandi(CMD_DEPTH_MASK, flag ? 0 : ~0);
 }
 

@@ -19,11 +19,11 @@ void glBlendFunc (GLenum sfactor, GLenum dfactor)
 
 	switch (dfactor) {
 	case GL_ZERO:
-		sendCommandi(225, 0x000000);
+		sendCommandi(CMD_FIXEDCOL_DST, 0x000000);
 		dstfunc = GE_FIX;
 		break;
 	case GL_ONE:
-		sendCommandi(225, 0xffffff);
+		sendCommandi(CMD_FIXEDCOL_DST, 0xffffff);
 		dstfunc = GE_FIX;
 		break;
 	case GL_DST_COLOR:
@@ -53,11 +53,11 @@ void glBlendFunc (GLenum sfactor, GLenum dfactor)
 
 	switch (sfactor) {
 	case GL_ZERO:
-		sendCommandi(224, 0x000000);
+		sendCommandi(CMD_FIXEDCOL_SRC, 0x000000);
 		srcfunc = GE_FIX;
 		break;
 	case GL_ONE:
-		sendCommandi(224, 0xffffff);
+		sendCommandi(CMD_FIXEDCOL_SRC, 0xffffff);
 		srcfunc = GE_FIX;
 		break;
 	case GL_SRC_ALPHA:
@@ -86,6 +86,6 @@ void glBlendFunc (GLenum sfactor, GLenum dfactor)
 		return;
 	}
 
-	pspgl_context_writereg_masked(pspgl_curctx, 223, (dstfunc << 4) | srcfunc, 0x0ff);
+	pspgl_context_writereg_masked(pspgl_curctx, CMD_BLEND_FUNC, (dstfunc << 4) | srcfunc, 0x0ff);
 }
 

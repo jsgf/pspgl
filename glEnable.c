@@ -6,28 +6,28 @@ void pspgl_enable_state (GLenum cap, int enable)
 
 	switch (cap) {
 	case GL_FOG:
-		opcode = 31;
+		opcode = CMD_ENA_FOG;
 		break;
 	case GL_LIGHTING:
-		opcode = 23;
+		opcode = CMD_ENA_LIGHTING;
 		break;
 	case GL_TEXTURE_2D:
-		opcode = 30;
+		opcode = CMD_ENA_TEXTURE;
 		break;
 	case GL_CULL_FACE:
-		opcode = 29;
+		opcode = CMD_ENA_CULL;
 		break;
 	case GL_ALPHA_TEST:
-		opcode = 34;
+		opcode = CMD_ENA_ALPHA_TEST;
 		break;
 	case GL_BLEND:
-		opcode = 33;
+		opcode = CMD_ENA_BLEND;
 		break;
 	case GL_COLOR_LOGIC_OP:
-		opcode = 40;
+		opcode = CMD_ENA_LOGIC;
 		break;
 	case GL_DITHER:
-		opcode = 32;
+		opcode = CMD_ENA_DITHER;
 		break;
 	case GL_STENCIL_TEST:
 		if (enable && pspgl_curctx->draw->pixfmt == 0) {   /* no room for stencil bits */
@@ -35,27 +35,27 @@ void pspgl_enable_state (GLenum cap, int enable)
 			enable = GL_FALSE;
 		}
 		if (enable)
-			sendCommandi(233, pspgl_curctx->write_mask.stencil);
+			sendCommandi(CMD_ALPHA_MASK, pspgl_curctx->write_mask.stencil);
 		else
-			sendCommandi(233, pspgl_curctx->write_mask.alpha);
-		opcode = 36;
+			sendCommandi(CMD_ALPHA_MASK, pspgl_curctx->write_mask.alpha);
+		opcode = CMD_ENA_STENCIL_TEST;
 		break;
 	case GL_DEPTH_TEST:
 		if (enable && pspgl_curctx->draw->depth_buffer == 0) {
 			GLERROR(GL_INVALID_OPERATION);
 			enable = GL_FALSE;
 		}
-		opcode = 35;
+		opcode = CMD_ENA_DEPTH_TEST;
 		break;
 	case GL_LIGHT0:
 	case GL_LIGHT1:
 	case GL_LIGHT2:
 	case GL_LIGHT3:
-		opcode = cap - GL_LIGHT0 + 24;
+		opcode = cap - GL_LIGHT0 + CMD_ENA_LIGHT0;
 		break;
 	case GL_LINE_SMOOTH:
 	case GL_POINT_SMOOTH:
-		opcode = 37;	/* XXX : antialiasing. both line and point? */
+		opcode = CMD_ENA_ANTIALIAS;	/* XXX : antialiasing. both line and point? */
 		break;
 	case GL_SCISSOR_TEST:
 		pspgl_curctx->scissor_test.enabled = enable;

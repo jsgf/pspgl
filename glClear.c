@@ -36,12 +36,12 @@ void glClear (GLbitfield mask)
 			static const char stencil_shift [] = { 31, 28, 24 };
 			clearmask &= 0x00ffffff;
 			clearmask |= (pspgl_curctx->clear.stencil) << stencil_shift[pspgl_curctx->draw->pixfmt-1];
-			cmd |= 1 << 9;
+			cmd |= GU_STENCIL_BUFFER_BIT << 8;
 		}
 	}
 
 	if (pspgl_curctx->draw->depth_buffer && (mask & GL_DEPTH_BUFFER_BIT))
-		cmd |= 1 << 10;
+		cmd |= GU_DEPTH_BUFFER_BIT << 8;
 
 	vbuf[0].color = clearmask;
 	vbuf[0].x = 0.0;
@@ -54,15 +54,15 @@ void glClear (GLbitfield mask)
 	vbuf[1].z = pspgl_curctx->clear.depth;
 
 	/* enable clear mode */
-	sendCommandi(211, cmd);
+	sendCommandi(CMD_CLEARMODE, cmd);
 
 	/* draw array */
-	sendCommandi(18, 0x80019c);              /* xform: 2D, vertex format: RGB8888 (uint32), xyz (float32) */
-	sendCommandi(16, (((unsigned long) vbuf) >> 8) & 0xf0000); /* vertex array BASE */
-	sendCommandi(1, ((unsigned long) vbuf) & 0xffffff);        /* vertex array, Adress */
-	sendCommandiUncached(4, (6 << 16) | 2);			   /* sprite (type 6), 2 vertices */
+	sendCommandi(CMD_VERTEXTYPE, GU_COLOR_8888 | GU_VERTEX_32BITF | GU_TRANSFORM_2D);              /* xform: 2D, vertex format: RGB8888 (uint32), xyz (float32) */
+	sendCommandiUncached(CMD_BASE, (((unsigned long) vbuf) >> 8) & 0xf0000); /* vertex array BASE */
+	sendCommandiUncached(CMD_VERTEXPTR, ((unsigned long) vbuf) & 0xffffff);        /* vertex array, Adress */
+	sendCommandiUncached(CMD_PRIM, (GU_SPRITES << 16) | 2);          /* sprite (type 6), 2 vertices */
 
 	/* leave clear mode */
-	sendCommandi(211, 0);
+	sendCommandi(CMD_CLEARMODE, 0);
 }
 

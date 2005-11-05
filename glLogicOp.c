@@ -7,7 +7,7 @@ void glLogicOp (GLenum opcode)
 		GLERROR(GL_INVALID_ENUM);
 	} else {
 		opcode &= 0x000f;
-		sendCommandi(230, opcode);
+		sendCommandi(CMD_LOGICOP, opcode);
 	}
 }
 

@@ -38,10 +38,10 @@ void glTexEnvfv (GLenum target, GLenum pname, const GLfloat *params)
 		default:
 			goto invalid_enum;
 		}
-		pspgl_context_writereg_masked(pspgl_curctx, 201, mode, 0x0000ff);
+		pspgl_context_writereg_masked(pspgl_curctx, CMD_TEXENV_FUNC, mode, 0x0000ff);
 		break;
 	case GL_TEXTURE_ENV_COLOR:
-		pspgl_context_writereg(pspgl_curctx, 202, COLOR3(params));
+		pspgl_context_writereg(pspgl_curctx, CMD_TEXENV_COL, COLOR3(params));
 		break;
 	default:
 		goto invalid_enum;

@@ -4,6 +4,8 @@
 #include <GL/gl.h>
 #include <GLES/egl.h>
 
+#include "guconsts.h"
+
 #include "pspgl_dlist.h"
 #include "pspgl_hash.h"
 #include "pspgl_misc.h"
