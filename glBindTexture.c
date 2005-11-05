@@ -1,36 +1,60 @@
 #include <string.h>
 #include "pspgl_internal.h"
+#include "pspgl_texobj.h"
 
-
-void glBindTexture (GLenum target, GLuint texture)
+void glBindTexture(GLenum target, GLuint id)
 {
-	struct pspgl_context *c = pspgl_curctx;
+	struct pspgl_texobj *tobj, *bound;
 	struct hashtable *hash = &pspgl_curctx->shared->texture_objects;
-	struct pspgl_texobj *texobj = (texture == 0) ? &c->texobj0 : __pspgl_hash_lookup(hash, texture);
+	unsigned i;
 
-	if (!texobj) {
-		if (!(texobj = __pspgl_texobj_new())) {
+	bound = pspgl_curctx->texture.bound;
+	tobj = __pspgl_hash_lookup(hash, id);
+
+	if (tobj != NULL) {
+		if (tobj->target == 0)
+			tobj->target = target;
+		else if (tobj->target != target) {
+			GLERROR(GL_INVALID_OPERATION);
+			return;
+		}
+	} else {
+		/* if this is a new id, create the texture */
+		tobj = __pspgl_texobj_new(id, target);
+		psp_log("id %u unknown; creating new texture %p\n", id, tobj);
+		if (tobj == NULL) {
 			GLERROR(GL_OUT_OF_MEMORY);
 			return;
 		}
-		__pspgl_hash_insert(hash, texture, texobj);
-		texobj->target = target;
-	} else if (texobj->target != target) {
-		GLERROR(GL_INVALID_OPERATION);
+		__pspgl_hash_insert(hash, id, tobj);
+	}
+
+	if (bound == tobj)
 		return;
+
+	if (bound != NULL) {
+		/* XXX trigger release of previous texture resources
+		   in queue */
+
+		psp_log("unbinding previous texture %p\n", bound);
+
+		/* save per-texture state in texture object */
+		for(i = TEXSTATE_START; i <= TEXSTATE_END; i++)
+			bound->ge_texreg[i - TEXSTATE_START] = getReg(i);
+
+		__pspgl_texobj_free(bound);
 	}
 
-	if (c->texobj_current != texobj) {
-		uint32_t *texreg;
-		unsigned long i;
+	psp_log("binding to %u (%p)\n", id, tobj);
 
-		memcpy(c->texobj_current->ge_texreg_160x201, &c->ge_reg[CMD_TEX_MIPMAP0], sizeof(c->texobj_current->ge_texreg_160x201));
-		c->texobj_current = texobj;
+	tobj->refcount++;
+	pspgl_curctx->texture.bound = tobj;
 
-		for (i=CMD_TEX_MIPMAP0, texreg=c->texobj_current->ge_texreg_160x201; i<CMD_TEXENV_FUNC; i++, texreg++)
-			__pspgl_context_writereg(c, i, *texreg);
+	/* restore texture state */
+	psp_log("updating register state\n");
+	for(i = TEXSTATE_START; i <= TEXSTATE_END; i++)
+		sendCommandi(i, tobj->ge_texreg[i - TEXSTATE_START]);
 
-		__pspgl_context_writereg_masked(c, CMD_TEXENV_FUNC, c->texobj0.ge_texreg_160x201[CMD_TEXENV_FUNC-CMD_TEX_MIPMAP0], 0xffff00);
-	}
+	__pspgl_context_writereg_masked(pspgl_curctx, CMD_TEXENV_FUNC, tobj->texfmt->texalpha, 0x100);
+	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);
 }
-

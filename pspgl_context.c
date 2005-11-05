@@ -17,7 +17,7 @@ void __pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd, unsig
 
 void __pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd, unsigned long argi, unsigned long mask)
 {
-	unsigned long new = (c->ge_reg[cmd] & ~mask) | (argi & mask);
+	unsigned long new = (cmd << 24) | (c->ge_reg[cmd] & ~mask) | (argi & mask & 0xffffff);
 
 	if (new != c->ge_reg[cmd]) {
 		c->ge_reg[cmd] = new;

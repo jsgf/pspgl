@@ -5,6 +5,7 @@ struct pspgl_dlist;
 
 extern void __pspgl_log (const char *fmt, ...);
 
+typedef unsigned uint32_t;
 
 enum pspgl_dump_tag {
 	PSPGL_GE_DUMP_MATRIX    = 1,

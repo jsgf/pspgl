@@ -9,7 +9,6 @@
 #include "pspgl_dlist.h"
 #include "pspgl_hash.h"
 #include "pspgl_misc.h"
-#include "pspgl_texobj.h"
 
 
 #define NUM_CMDLISTS	16
@@ -73,9 +72,6 @@ struct pspgl_context {
 	GLint matrix_stack_depth[3];
 	GLfloat (* (matrix_stack [3])) [16];
 
-	struct pspgl_texobj texobj0;
-	struct pspgl_texobj *texobj_current;
-
 	struct pspgl_shared_context *shared;
 
 	struct pspgl_surface *read;
@@ -97,6 +93,9 @@ struct pspgl_context {
 	struct {
 		GLfloat near, far;
 	} fog;
+ 	struct {
+		struct pspgl_texobj	*bound;	/* currently bound texture */
+ 	} texture;
 };
 
 
@@ -189,6 +188,11 @@ do {									\
 	union { float f; int i; } arg = { .f = argf };			\
 	sendCommandi(cmd, arg.i >> 8);					\
 } while (0)
+
+static inline uint32_t getReg(reg)
+{
+	return pspgl_curctx->ge_reg[reg];
+}
 
 
 #endif

@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "pspgl_internal.h"
-
+#include "pspgl_texobj.h"
 
 void glDeleteTextures (GLsizei n, const GLuint *textures)
 {
@@ -16,7 +16,7 @@ void glDeleteTextures (GLsizei n, const GLuint *textures)
 		if (textures[i] != 0) {
 			struct pspgl_texobj *tobj = __pspgl_hash_remove(hash, textures[i]);
 			if (tobj) {
-				if (tobj == pspgl_curctx->texobj_current)
+				if (tobj == pspgl_curctx->texture.bound)
 					glBindTexture(tobj->target, 0);
 				free(tobj);
 			}

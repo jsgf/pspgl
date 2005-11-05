@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "pspgl_internal.h"
-
+#include "pspgl_texobj.h"
 
 EGLBoolean eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 {

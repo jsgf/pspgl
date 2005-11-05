@@ -101,13 +101,6 @@ void __pspgl_ge_init (struct pspgl_context *c)
 		glLoadIdentity();
 	}
 
-	/* set up default texobj0 */
-	memcpy(&c->texobj0, &__pspgl_texobj_default, sizeof(c->texobj0));
-	c->texobj_current = &c->texobj0;
-
-	/* load register set of new texture object, all related registers are marked as dirty in MakeCurrent() */
-	memcpy(&c->ge_reg[160], c->texobj_current->ge_texreg_160x201, sizeof(c->texobj_current->ge_texreg_160x201));
-
 	glScissor(0, 0, c->draw->width, c->draw->height);
 	glViewport(0, 0, c->draw->width, c->draw->height);
 	glDepthRange(0.0, 1.0);

@@ -1,72 +1,83 @@
 #include <stdlib.h>
 #include <string.h>
+#include "pspgl_misc.h"
 #include "pspgl_texobj.h"
 
-
-const
-struct pspgl_texobj __pspgl_texobj_default = {
-	.ge_texreg_160x201 = {
-		0xa0000000, /* ge_reg 0xa0/160 */
-		0xa1000000,
-		0xa2000000,
-		0xa3000000,
-		0xa4000000,
-		0xa5000000,
-		0xa6000000,
-		0xa7000000,
-		0xa8000000,
-		0xa9000000,
-		0xaa000000,
-		0xab000000,
-		0xac000000,
-		0xad000000,
-		0xae000000,
-		0xaf000000,
-		0xb0000000,
-		0xb1000000,
-		0xb2000000,
-		0xb3000000,
-		0xb4000000,
-		0xb5000000,
-		0xb6000000,
-		0xb7000000,
-		0xb8000000,
-		0xb9000000,
-		0xba000000,
-		0xbb000000,
-		0xbc000000,
-		0xbd000000,
-		0xbe000000,
-		0xbf000000,
-		0xc0000000,
-		0xc1000000,
-		0xc2000000,
-		0xc3000000,
-		0xc4000000,
-		0xc5000000,
-		0xc6000000,
-		0xc7000000,
-		0xc8000000,
-		0xc9000000  /* ge_reg 0xc9/201 */
-	},
-	.priority = 0.5,
-	.target = GL_TEXTURE_2D
-};
-
-
-struct pspgl_texobj* __pspgl_texobj_new (void)
+static void tobj_setstate(struct pspgl_texobj *tobj, unsigned reg, unsigned setting)
 {
-	struct pspgl_texobj *t = malloc(sizeof(struct pspgl_texobj));
+	assert(reg >= TEXSTATE_START && reg <= TEXSTATE_END);
 
-	if (t)
-		memcpy(t, &__pspgl_texobj_default, sizeof(struct pspgl_texobj));
-
-	return t;
+	tobj->ge_texreg[reg - TEXSTATE_START] = (reg << 24) | (setting & 0xffffff);
 }
 
 
-void __pspgl_texobj_free (struct pspgl_texobj *t)
+struct pspgl_texobj *__pspgl_texobj_new(GLint id, GLenum target)
 {
-	free(t);
+	struct pspgl_texobj *tobj = malloc(sizeof(*tobj));
+	unsigned i;
+
+	memset(tobj, 0, sizeof(*tobj));
+
+	tobj->refcount = 1;
+	tobj->target = target;
+
+	for(i = TEXSTATE_START; i <= TEXSTATE_END; i++)
+		tobj_setstate(tobj, i, 0);
+
+	tobj_setstate(tobj, CMD_TEXFILT, (GE_TEX_FILTER_LINEAR << 8) | GE_TEX_FILTER_LINEAR);
+	tobj_setstate(tobj, CMD_TEXWRAP, (GE_TEX_WRAP_REPEAT << 8) | GE_TEX_WRAP_REPEAT);
+
+	return tobj;
 }
 
+void __pspgl_texobj_free(struct pspgl_texobj *tobj)
+{
+	int i;
+
+	if (--tobj->refcount)
+		return;
+
+	for(i = 0; i < MIPMAP_LEVELS; i++)
+		if (tobj->images[i] != NULL)
+			__pspgl_teximg_free(tobj->images[i]);
+
+	free(tobj);
+}
+
+
+struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, int width, int height,
+					const struct pspgl_texfmt *texfmt)
+{
+	struct pspgl_teximg *timg;
+	unsigned size;
+
+	timg = malloc(sizeof(*timg));
+
+	memset(timg, 0, sizeof(*timg));
+	timg->refcount = 1;
+
+	size = width * height * texfmt->hwsize;
+
+	timg->image = malloc(size); /* XXX try to allocate edram */
+
+	__pspgl_convert_image(pixels, width, height, timg->image, texfmt);
+
+	/* Make texture data visible to hardware */
+	sceKernelDcacheWritebackRange(timg->image, size);
+
+	timg->width = width;
+	timg->height = height;
+	timg->stride = width;
+	timg->texfmt = texfmt;
+
+	return timg;
+}
+
+void __pspgl_teximg_free(struct pspgl_teximg *timg)
+{
+	if (--timg->refcount)
+		return;
+
+	free(timg->image);
+	free(timg);
+}

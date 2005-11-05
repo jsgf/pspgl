@@ -11,7 +11,7 @@ void glEnd (void)
 			GLERROR(GL_INVALID_ENUM);
 		} else {
 			__pspgl_context_flush_pending_matrix_changes(pspgl_curctx);
-			sendCommandiUncached(CMD_TEXCACHE_SYNC, 0);			/* Texture Sync, need to await end of transfer if any is pending */
+
 			sendCommandi(CMD_VERTEXTYPE, GU_TEXTURE_32BITF | GU_COLOR_8888 | GU_NORMAL_32BITF | GU_VERTEX_32BITF);              /* xform: 3D, vertex format: t2f_c4ub_n3f_v3f */
 			sendCommandi(CMD_BASE, (adr >> 8) & 0xf0000); /* vertex array BASE */
 			sendCommandi(CMD_VERTEXPTR, adr & 0xffffff);        /* vertex array, Adress */

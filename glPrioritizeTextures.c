@@ -1,5 +1,5 @@
 #include "pspgl_internal.h"
-
+#include "pspgl_texobj.h"
 
 void glPrioritizeTextures (GLsizei n, const GLuint *textures, const GLclampf *priorities)
 {
