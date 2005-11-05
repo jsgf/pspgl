@@ -10,7 +10,7 @@ void __pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd, unsig
 
 	if (new != c->ge_reg[cmd]) {
 		c->ge_reg[cmd] = new;
-		c->ge_reg_touched[cmd/32] |= (1 << (31 - cmd % 32));
+		c->ge_reg_touched[cmd/32] |= (1 << (cmd % 32));
 	}
 }
 
@@ -21,7 +21,7 @@ void __pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd
 
 	if (new != c->ge_reg[cmd]) {
 		c->ge_reg[cmd] = new;
-		c->ge_reg_touched[cmd/32] |= (1 << (31 - cmd % 32));
+		c->ge_reg_touched[cmd/32] |= (1 << (cmd % 32));
 	}
 }
 
@@ -31,28 +31,23 @@ void __pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd
  */
 void __pspgl_context_flush_pending_state_changes (struct pspgl_context *c)
 {
-	unsigned long i;
-	struct pspgl_dlist *d = pspgl_curctx->dlist_current;
+	unsigned i;
 
-	for (i=0; i<256/32; i++) {
-		register uint32_t word = c->ge_reg_touched[i];
-		int idx = 32 * i;
+	for(i = 0; i < 256; i += 32) {
+		uint32_t word = c->ge_reg_touched[i/32];
+		unsigned j;
 
-		while (word) {
-			register unsigned long count;
+		c->ge_reg_touched[i/32] = 0;
 
-			/* count leading zeros */
-			__asm__("clz %0, %1" : "=r" (count) : "r" (word));
-			word <<= count;
-			idx += count;
+		if (word && 0)
+			psp_log("setting i %d word %08x dlist=%p\n",
+				i, word, c->dlist_current);
 
-			/* count leading ones */
-			__asm__("clo %0, %1" : "=r" (count) : "r" (word));
-			for (; count>0; count--, word<<=1)
-				__pspgl_dlist_enqueue_cmd(d, c->ge_reg[idx++]);
+		for(j = i; word != 0; j++, word >>= 1) {
+			if (word & 1)
+				__pspgl_dlist_enqueue_cmd(c->dlist_current,
+							  c->ge_reg[j]);
 		}
-
-		c->ge_reg_touched[i] = 0;
 	}
 }
 
