@@ -326,8 +326,7 @@ static void draw_range_elts_locked(GLenum mode, GLenum idx_type, const void *ind
 
 	sendCommandi(CMD_VERTEXTYPE, hwformat);
 
-	vtxbuf = l->cached_array->array;
-	l->cached_array->refcount++;
+	vtxbuf = l->cached_array->base;
 
 	sendCommandiUncached(CMD_BASE, ((unsigned)vtxbuf >> 8) & 0xf0000);
 	sendCommandiUncached(CMD_VERTEXPTR, ((unsigned)vtxbuf) & 0xffffff);
@@ -336,7 +335,7 @@ static void draw_range_elts_locked(GLenum mode, GLenum idx_type, const void *ind
 
 	sendCommandiUncached(CMD_PRIM, (prim << 16) | count);
 
-	__pspgl_dlist_set_cleanup(__pspgl_dlist_cleanup_varray, l->cached_array);
+	__pspgl_buffer_dlist_use(l->cached_array);
 	if (directidx)
 		__pspgl_buffer_dlist_use(pspgl_curctx->vertex_array.indexbuffer->data);
 }

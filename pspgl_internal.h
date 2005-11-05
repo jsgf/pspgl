@@ -96,10 +96,7 @@ struct pspgl_context {
 
 			struct vertex_format vfmt;
 
-			struct array_buffer {
-				void *array;
-				int refcount;
-			} *cached_array;
+			struct pspgl_buffer *cached_array;
 		} locked;
 
 		struct pspgl_bufferobj *arraybuffer;
@@ -211,7 +208,6 @@ extern void  __pspgl_vidmem_free (void * ptr);
 extern EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s);
 
 /* glLockArraysEXT.c */
-extern void __pspgl_dlist_cleanup_varray(void *);
 extern GLboolean __pspgl_cache_arrays(void);
 extern void __pspgl_uncache_arrays(void);
 

@@ -4,68 +4,48 @@
 #include <psputils.h>
 
 #include "pspgl_internal.h"
+#include "pspgl_buffers.h"
 
 /* Maximum size of cached vertices */
 #define MAX_CACHED_ARRAY	(128*1024)
 
-static struct array_buffer *alloc_array_buffer(unsigned bytes)
+static void vidmem_free(struct pspgl_buffer *data)
 {
-	struct array_buffer *b = malloc(sizeof(*b));
+	__pspgl_vidmem_free(data->base);
+}
 
-	if (b == NULL)
-		return NULL;
+static void heap_free(struct pspgl_buffer *data)
+{
+	free(data->base);
+}
+
+static struct pspgl_buffer *alloc_array_buffer(unsigned bytes)
+{
+	void *p;
+	void (*freep)(struct pspgl_buffer *);
+	struct pspgl_buffer *data;
 
 	/* Try placing cached array in EDRAM; seems to be good for
 	   about 20% performance improvement. */
-	b->array = __pspgl_vidmem_alloc(bytes);
+	p = __pspgl_vidmem_alloc(bytes);
+	freep = vidmem_free;
 
-	if (b->array == NULL)
-		b->array = memalign(16, bytes);
+	if (p == NULL) {
+		p = memalign(16, bytes);
+		freep = heap_free;
+	}
 
-	if (b->array == NULL) {
-		free(b);
+	if (p == NULL)
 		return NULL;
+
+	data = __pspgl_buffer_new(p, bytes, freep);
+
+	if (data == NULL) {
+		struct pspgl_buffer d = { .base = p };
+		(*freep)(&d);
 	}
 
-	b->refcount = 1;
-
-	return b;
-}
-
-static int is_edram_addr(void *p)
-{
-	static void *edram_start, *edram_end;
-	static unsigned edram_size;
-
-	if (edram_size == 0) {
-		edram_start = sceGeEdramGetAddr();
-		edram_end = edram_start + sceGeEdramGetSize();
-	}
-
-	return edram_start <= p && p < edram_end;
-}
-
-static void free_array_buffer(struct array_buffer *b)
-{
-	assert(b->refcount > 0);
-
-	if (--b->refcount)
-		return;
-
-	if (is_edram_addr(b->array))
-		__pspgl_vidmem_free(b->array);
-	else
-		free(b->array);
-	free(b);
-}
-
-void __pspgl_dlist_cleanup_varray(void *v)
-{
-	struct array_buffer *b = v;
-
-	psp_log("b(%p)->refcount=%d\n", b, b->refcount);
-
-	free_array_buffer(b);
+	return data;
 }
 
 /* Cache current arrays into a buffer in hardware form, if possible.
@@ -74,7 +54,7 @@ void __pspgl_dlist_cleanup_varray(void *v)
 GLboolean __pspgl_cache_arrays(void)
 {
 	struct locked_arrays *l = &pspgl_curctx->vertex_array.locked;
-	struct array_buffer *cached;
+	struct pspgl_buffer *cached;
 	unsigned size;
 	int count;
 
@@ -108,14 +88,17 @@ GLboolean __pspgl_cache_arrays(void)
 
 	l->cached_array = cached;
 
-	count = __pspgl_gen_varray(&l->vfmt, l->first, l->count, cached->array, size);
+	void *p = __pspgl_buffer_map(cached, GL_WRITE_ONLY_ARB);
+
+	count = __pspgl_gen_varray(&l->vfmt, l->first, l->count, p, size);
+
+	__pspgl_buffer_unmap(cached, GL_WRITE_ONLY_ARB);
+
 	if (count != l->count) {
 		psp_log("failed: wanted %d vertices, only got %d\n", l->count, count);
 		__pspgl_uncache_arrays();
 		return GL_FALSE; /* conversion failed */
 	}
-
-	sceKernelDcacheWritebackInvalidateRange(cached->array, size);
 
 	psp_log("OK: vertex arrays cached\n");
 
@@ -150,7 +133,7 @@ void __pspgl_uncache_arrays(void)
 	struct locked_arrays *l = &pspgl_curctx->vertex_array.locked;
 
 	if (l->cached_array)
-		free_array_buffer(l->cached_array);
+		__pspgl_buffer_free(l->cached_array);
 
 	l->cached_array = NULL;
 	l->vfmt.hwformat = 0;

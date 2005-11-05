@@ -1,4 +1,5 @@
 #include "pspgl_internal.h"
+#include "pspgl_buffers.h"
 
 static void varray_draw_locked(GLenum mode, GLint first, GLsizei count)
 {
@@ -8,12 +9,10 @@ static void varray_draw_locked(GLenum mode, GLint first, GLsizei count)
 
 	first -= l->first;
 
-	l->cached_array->refcount++;
-
 	psp_log("mode=%d drawing %d-%d vertces from locked buffer\n",
 		mode, first, first+count);
 
-	buf = (unsigned long)l->cached_array->array;
+	buf = (unsigned long)l->cached_array->base;
 	buf += first * l->vfmt.vertex_size;
 
 	sendCommandi(CMD_VERTEXTYPE, l->vfmt.hwformat);
@@ -22,7 +21,7 @@ static void varray_draw_locked(GLenum mode, GLint first, GLsizei count)
 	sendCommandiUncached(CMD_VERTEXPTR, ((unsigned)buf) & 0xffffff);
 	sendCommandiUncached(CMD_PRIM, (prim << 16) | count);
 
-	__pspgl_dlist_set_cleanup(__pspgl_dlist_cleanup_varray, l->cached_array);
+	__pspgl_buffer_dlist_use(l->cached_array);
 
 	/* If we're drawing a line-loop, draw the final edge
 	   XXX this pulls in all the indexed array code
