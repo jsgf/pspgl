@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "pspgl_internal.h"
+#include "pspgl_buffers.h"
 
 unsigned __pspgl_gl_sizeof(GLenum type)
 {
@@ -128,21 +129,25 @@ GLboolean __pspgl_vertex_is_native(const struct vertex_format *vfmt)
 
 	array = vfmt->attribs[0].array;
 	next = vfmt->attribs[1].array;
-	ptr = array->ptr + (array->size * __pspgl_gl_sizeof(array->type));
-	cycle = array->ptr + array->stride;
+	ptr = __pspgl_bufferobj_deref(array->buffer, (void *)array->ptr) +
+		(array->size * __pspgl_gl_sizeof(array->type));
+	cycle = __pspgl_bufferobj_deref(array->buffer, (void *)array->ptr) + array->stride;
 
 	/* Check each attribute array element is contigious with the
 	   following one */
 	for(i = 0; i < nattr-1; i++) {
-		psp_log("attr %d native=%d ptr+size=%p next->ptr=%p\n",
-			i, array->native, ptr, next->ptr);
+		psp_log("attr %d native=%d ptr+size=%p next->ptr=%p (abs %p)\n",
+			i, array->native, ptr, next->ptr,
+			__pspgl_bufferobj_deref(next->buffer, next->ptr));
 
-		if (!array->native || ptr != next->ptr)
+		if (!array->native || 
+		    ptr != __pspgl_bufferobj_deref(next->buffer, (void *)next->ptr))
 			return GL_FALSE;
 
 		array = next;
 		next = vfmt->attribs[i+1].array;
-		ptr = array->ptr + (array->size * __pspgl_gl_sizeof(array->type));
+		ptr = __pspgl_bufferobj_deref(array->buffer, (void *)array->ptr) +
+			(array->size * __pspgl_gl_sizeof(array->type));
 	}
 
 	psp_log("attr %d native=%d ptr+size=%p cycle=%p\n",
@@ -303,6 +308,7 @@ int __pspgl_gen_varray(const struct vertex_format *vfmt, int first, int count,
 	int i;
 	unsigned char *dest = to;
 	int nvtx = space / vfmt->vertex_size;
+	void *ptrs[MAX_ATTRIB];
 
 	if (nvtx > count)
 		nvtx = count;
@@ -310,20 +316,28 @@ int __pspgl_gen_varray(const struct vertex_format *vfmt, int first, int count,
 	/* Check to see if the user was kind enough to supply the
 	   arrays in hardware format. */
 	if (__pspgl_vertex_is_native(vfmt)) {
+		struct pspgl_vertex_array *va;
+		void *from;
+
 		psp_log("arrays in native layout\n");
-		memcpy(to,
-		       vfmt->attribs[0].array->ptr + (first * vfmt->attribs[0].array->stride),
-		       nvtx * vfmt->vertex_size);
+
+		va = vfmt->attribs[0].array;
+
+		from = __pspgl_bufferobj_map(va->buffer, GL_READ_ONLY_ARB, (void *)va->ptr);
+		from += va->stride * first;
+
+		memcpy(to, from, nvtx * vfmt->vertex_size);
+
+		__pspgl_bufferobj_unmap(va->buffer, GL_READ_ONLY_ARB);
+
 		return nvtx;
 	}
 
 	for(i = 0; i < vfmt->nattrib; i++) {
 		struct pspgl_vertex_array *a = vfmt->attribs[i].array;
 
-		if (a->enabled)
-			a->tmpptr = a->ptr + (first * a->stride);
-		else
-			a->tmpptr = NULL;
+		ptrs[i] = __pspgl_bufferobj_map(a->buffer, GL_READ_ONLY_ARB, (void *)a->ptr) +
+			(first * a->stride);
 	}
 
 	for(i = 0; i < nvtx; i++) {
@@ -334,14 +348,21 @@ int __pspgl_gen_varray(const struct vertex_format *vfmt, int first, int count,
 			struct pspgl_vertex_array *a = attr->array;
 
 			if (attr->convert)
-				(*attr->convert)(&dest[attr->offset], a->tmpptr, attr);
+				(*attr->convert)(&dest[attr->offset], ptrs[j], attr);
 			else
-				memcpy(&dest[attr->offset], a->tmpptr, attr->size);
+				memcpy(&dest[attr->offset], ptrs[j], attr->size);
 
-			a->tmpptr += a->stride;
+			ptrs[j] += a->stride;
 		}
 		dest += vfmt->vertex_size;
 	}
+
+	for(i = 0; i < vfmt->nattrib; i++) {
+		struct pspgl_vertex_array *a = vfmt->attribs[i].array;
+
+		__pspgl_bufferobj_unmap(a->buffer, GL_READ_ONLY_ARB);
+	}
+
 
 	return nvtx;
 }
@@ -360,6 +381,21 @@ long __pspgl_glprim2geprim (GLenum glprim)
 	return geprim_tab[glprim];
 }
 
+
+void __pspgl_varray_bind_buffer(struct pspgl_vertex_array *va,
+				struct pspgl_bufferobj *buf)
+{
+	if (buf && buf->mapped) {
+		GLERROR(GL_INVALID_OPERATION);
+		return;
+	}
+
+	if (va->buffer != NULL)
+		__pspgl_bufferobj_free(va->buffer);
+	va->buffer = buf;
+	if (buf)
+		buf->refcount++;
+}
 
 /* 
    This table indicates how each primitive type uses vertices:

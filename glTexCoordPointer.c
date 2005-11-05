@@ -3,6 +3,7 @@
 
 void glTexCoordPointer (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
 {
+	struct pspgl_vertex_array *va = &pspgl_curctx->vertex_array.texcoord;
 	GLboolean native;
 
 	if (size < 2 || size > 4) {
@@ -28,9 +29,11 @@ void glTexCoordPointer (GLint size, GLenum type, GLsizei stride, const GLvoid *p
 	psp_log("ptr=%p size=%d type=%x stride=%d native=%d\n",
 		pointer, size, type, stride, native);
 
-	pspgl_curctx->vertex_array.texcoord.size = size;
-	pspgl_curctx->vertex_array.texcoord.type = type;
-	pspgl_curctx->vertex_array.texcoord.stride = stride;
-	pspgl_curctx->vertex_array.texcoord.ptr = pointer;
-	pspgl_curctx->vertex_array.texcoord.native = native;
+	va->size = size;
+	va->type = type;
+	va->stride = stride;
+	va->ptr = pointer;
+	va->native = native;
+
+	__pspgl_varray_bind_buffer(va, pspgl_curctx->vertex_array.arraybuffer);
 }

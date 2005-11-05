@@ -3,6 +3,7 @@
 
 void glColorPointer (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
 {
+	struct pspgl_vertex_array *va = &pspgl_curctx->vertex_array.color;
 	GLboolean native;
 
 	if (size != 3 && size != 4) {
@@ -28,8 +29,11 @@ void glColorPointer (GLint size, GLenum type, GLsizei stride, const GLvoid *poin
 	psp_log("ptr=%p size=%d type=%x stride=%d native=%d\n",
 		pointer, size, type, stride, native);
 
-	pspgl_curctx->vertex_array.color.size = size;
-	pspgl_curctx->vertex_array.color.type = type;
-	pspgl_curctx->vertex_array.color.stride = stride;
-	pspgl_curctx->vertex_array.color.ptr = pointer;
+	va->size = size;
+	va->type = type;
+	va->stride = stride;
+	va->ptr = pointer;
+	va->native = native;
+
+	__pspgl_varray_bind_buffer(va, pspgl_curctx->vertex_array.arraybuffer);
 }

@@ -45,6 +45,20 @@ void *__pspgl_bufferobj_deref(const struct pspgl_bufferobj *bufp, void *off)
 	return bufp->data->base + (off - NULL);
 }
 
+void *__pspgl_bufferobj_map(const struct pspgl_bufferobj *buf, GLenum access, void *off)
+{
+	if (buf && buf->data)
+		off += __pspgl_buffer_map(buf->data, access) - NULL;
+
+	return off;
+}
+
+void __pspgl_bufferobj_unmap(const struct pspgl_bufferobj *buf, GLenum access)
+{
+	if (buf && buf->data)
+		__pspgl_buffer_unmap(buf->data, access);
+}
+
 struct pspgl_buffer *__pspgl_buffer_new(void *base, GLsizeiptr size,
 						void (*free)(struct pspgl_buffer *))
 {
@@ -70,6 +84,8 @@ void __pspgl_buffer_free(struct pspgl_buffer *data)
 
 	if (data->free)
 		(*data->free)(data);
+	else
+		free(data->base);
 
 	free(data);
 }
@@ -79,6 +95,14 @@ struct pspgl_bufferobj **__pspgl_bufferobj_for_target(GLenum target)
 	struct pspgl_bufferobj **ret = NULL;
 
 	switch(target) {
+	case GL_ARRAY_BUFFER_ARB:
+		ret = &pspgl_curctx->vertex_array.arraybuffer;
+		break;
+
+	case GL_ELEMENT_ARRAY_BUFFER_ARB:
+		ret = &pspgl_curctx->vertex_array.indexbuffer;
+		break;
+
 	default:
 		GLERROR(GL_INVALID_ENUM);
 		break;
@@ -87,41 +111,60 @@ struct pspgl_bufferobj **__pspgl_bufferobj_for_target(GLenum target)
 	return ret;
 }
 
-void *__pspgl_bufferobj_map(struct pspgl_bufferobj *buf, GLenum access)
+void *__pspgl_buffer_map(struct pspgl_buffer *data, GLenum access)
 {
-	void *p = buf->data->base;
+	void *p = data->base;
+
+	assert(data->mapped >= 0);
 
 	switch(access) {
 	case GL_READ_WRITE_ARB:
 		/* FALLTHROUGH */
+
 	case GL_READ_ONLY_ARB:
-		/* need to invalidate if written by hardware */
-		sceKernelDcacheInvalidateRange(buf->data->base, buf->data->size);
+		/* Need to invalidate if written by hardware, but only the first time */
+		if (!data->mapped)
+			sceKernelDcacheInvalidateRange(data->base, data->size);
 		break;
 
 	case GL_WRITE_ONLY_ARB:
 		/* Write-only streams can be uncached to prevent cache
-		   pollution */
-		p = __pspgl_uncached(p, buf->data->size);
+		   pollution.  If data->mapped != 0, this should be a
+		   no-op. */
+		p = __pspgl_uncached(p, data->size);
 		break;
 	}
+
+	data->mapped++;
 
 	return p;
 }
 
-void __pspgl_bufferobj_unmap(struct pspgl_bufferobj *buf, GLenum access)
+void __pspgl_buffer_unmap(struct pspgl_buffer *data, GLenum access)
 {
+	assert(data->mapped > 0);
+
+	if (--data->mapped > 0)
+		return;
+
 	switch(access) {
 	case GL_READ_ONLY_ARB:
 		/* do nothing; no dirty cache lines */
 		break;
 
 	case GL_READ_WRITE_ARB:
-		sceKernelDcacheWritebackInvalidateRange(buf->data->base, buf->data->size);
+		sceKernelDcacheWritebackInvalidateRange(data->base, data->size);
 		break;
 
 	case GL_WRITE_ONLY_ARB:
 		/* do nothing; all uncached */
 		break;
 	}
+}
+
+void __pspgl_dlist_cleanup_buffer(void *v)
+{
+	struct pspgl_buffer *data = v;
+
+	__pspgl_buffer_free(data);
 }

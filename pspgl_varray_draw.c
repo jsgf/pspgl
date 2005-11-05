@@ -29,11 +29,18 @@ static void varray_draw_locked(GLenum mode, GLint first, GLsizei count)
 	 */
 	if (mode == GL_LINE_LOOP) {
 		GLushort idx[2] = { first+count-1, first };
+		struct pspgl_bufferobj *idxbuf;
+
+		/* temporarily set no index buffer */
+		idxbuf = pspgl_curctx->vertex_array.indexbuffer;
+		pspgl_curctx->vertex_array.indexbuffer = NULL;
 
 		psp_log("drawing closing line on loop: idx=%d %d\n", idx[0], idx[1]);
 
 		__pspgl_varray_draw_range_elts(GL_LINES, GL_UNSIGNED_SHORT, idx, 2,
 					       idx[1], idx[0]);
+
+		pspgl_curctx->vertex_array.indexbuffer = idxbuf;
 	}
 }
 
@@ -61,7 +68,12 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 
 	__pspgl_context_flush_pending_matrix_changes(pspgl_curctx);
 
-	/* check to see if we can use the locked array fast path */
+	/* Check to see if we can use the locked array fast path
+
+	   XXX TODO: if the vertices are in buffers and in hardware
+	   format, they can be drawn directly from the buffers without
+	   conversion.
+	 */
 	if (first >= l->first &&
 	    (first + count) <= (l->first + l->count) &&
 	    __pspgl_cache_arrays()) {
@@ -118,11 +130,18 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 	*/
 	if (mode == GL_LINE_LOOP) {
 		GLushort idx[2] = { vtx0+count-1, vtx0 };
+		struct pspgl_bufferobj *idxbuf;
+
+		/* temporarily set no index buffer */
+		idxbuf = pspgl_curctx->vertex_array.indexbuffer;
+		pspgl_curctx->vertex_array.indexbuffer = NULL;
 
 		psp_log("drawing closing line on loop: idx=%d %d\n", idx[0], idx[1]);
 
 		__pspgl_varray_draw_range_elts(GL_LINES, GL_UNSIGNED_SHORT, idx, 2,
 					       idx[1], idx[0]);
+
+		pspgl_curctx->vertex_array.indexbuffer = idxbuf;
 	}
 }
 

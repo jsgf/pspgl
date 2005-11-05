@@ -3,6 +3,8 @@
 
 void glNormalPointer (GLenum type, GLsizei stride, const GLvoid *pointer)
 {
+	struct pspgl_vertex_array *va = &pspgl_curctx->vertex_array.normal;
+
 	if (type != GL_BYTE && type != GL_SHORT && type != GL_FLOAT) {
 		GLERROR(GL_INVALID_ENUM);
 		return;
@@ -19,9 +21,11 @@ void glNormalPointer (GLenum type, GLsizei stride, const GLvoid *pointer)
 	psp_log("ptr=%p type=%x stride=%d\n",
 		pointer, type, stride);
 
-	pspgl_curctx->vertex_array.normal.size = 3;
-	pspgl_curctx->vertex_array.normal.type = type;
-	pspgl_curctx->vertex_array.normal.stride = stride;
-	pspgl_curctx->vertex_array.normal.ptr = pointer;
-	pspgl_curctx->vertex_array.normal.native = GL_TRUE;
+	va->size = 3;
+	va->type = type;
+	va->stride = stride;
+	va->ptr = pointer;
+	va->native = GL_TRUE;
+
+	__pspgl_varray_bind_buffer(va, pspgl_curctx->vertex_array.arraybuffer);
 }

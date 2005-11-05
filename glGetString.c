@@ -21,6 +21,7 @@ char *gl_strings [] = {
 	"GL_EXT_vertex_array " 
 	"GL_EXT_compiled_vertex_array "
 	"GL_PSP_statistics "
+	"GL_ARB_vertex_buffer_object "
 };
 
 

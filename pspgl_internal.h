@@ -22,7 +22,8 @@ struct pspgl_vertex_array {
 	GLsizei stride;
 	GLboolean native;	/* size and type match hardware */
 	const GLvoid *ptr;
-	const GLvoid *tmpptr;	/* used while walking an array */
+
+	struct pspgl_bufferobj *buffer;
 };
 
 
@@ -100,6 +101,9 @@ struct pspgl_context {
 				int refcount;
 			} *cached_array;
 		} locked;
+
+		struct pspgl_bufferobj *arraybuffer;
+		struct pspgl_bufferobj *indexbuffer;
 	} vertex_array;
 
 	struct {
@@ -252,6 +256,8 @@ extern void __pspgl_varray_draw_elts (GLenum mode, GLenum index_type, const GLvo
 				 GLsizei count);
 extern void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type, const void *indices, 
 				      GLsizei count, unsigned minidx, unsigned maxidx);
+extern void __pspgl_varray_bind_buffer(struct pspgl_vertex_array *va,
+				       struct pspgl_bufferobj *buf);
 
 
 /* glTexImage2D.c */
