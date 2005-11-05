@@ -41,7 +41,8 @@ struct pspgl_teximg {
 	unsigned	stride;	/* in texels */
  
 	unsigned	width, height;
- 
+ 	unsigned	size;	/* texture image size in bytes */
+
 	const struct pspgl_texfmt *texfmt;
 };
 

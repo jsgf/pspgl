@@ -101,6 +101,7 @@ libGL.a_OBJS = \
 	glTexCoordPointer.o \
 	glTexEnv.o \
 	glTexImage2D.o \
+	glTexSubImage2D.o \
 	glTexParameter.o \
 	glTranslatef.o \
 	glVertex.o \

@@ -162,6 +162,9 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 	struct pspgl_teximg *timg;
 	const struct pspgl_texfmt *texfmt;
 
+	if (target != GL_TEXTURE_2D)
+		goto invalid_enum;
+
 	if (!ispow2(width) || !ispow2(height))
 		goto invalid_value;
 
@@ -190,15 +193,12 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 	if (tobj == NULL)
 		goto out_of_memory;
 
-	if (texels) {
-		timg = __pspgl_teximg_new(texels, width, height, 0, texfmt);
-		if (timg == NULL)
-			goto out_of_memory;
+	timg = __pspgl_teximg_new(texels, width, height, 0, texfmt);
+	if (timg == NULL)
+		goto out_of_memory;
 
-		__pspgl_set_texture_image(tobj, level, timg);
-		__pspgl_teximg_free(timg); /* tobj has reference now */
-	} else
-		__pspgl_set_texture_image(tobj, level, NULL);
+	__pspgl_set_texture_image(tobj, level, timg);
+	__pspgl_teximg_free(timg); /* tobj has reference now */
 
 	__pspgl_update_texenv(tobj);
 	return;

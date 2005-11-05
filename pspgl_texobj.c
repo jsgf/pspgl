@@ -287,18 +287,21 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels,
 		return NULL;
 	}
 
-	if (texfmt->hwformat >= GE_DXT1)
-		convert_compressed_image(pixels, width, height, size, timg->image, texfmt);
-	else
-		convert_image(pixels, width, height, timg->image, texfmt);
+	if (pixels) {
+		if (texfmt->hwformat >= GE_DXT1)
+			convert_compressed_image(pixels, width, height, size, timg->image, texfmt);
+		else
+			convert_image(pixels, width, height, timg->image, texfmt);
 
-	/* Make texture data visible to hardware */
-	sceKernelDcacheWritebackRange(timg->image, size);
+		/* Make texture data visible to hardware */
+		sceKernelDcacheWritebackRange(timg->image, size);
+	}
 
 	timg->width = width;
 	timg->height = height;
 	timg->stride = width;
 	timg->texfmt = texfmt;
+	timg->size = size;
 
 	return timg;
 }
