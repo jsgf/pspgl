@@ -12,6 +12,7 @@
 #define CMD_INDEXPTR		2
 
 #define CMD_PRIM		4
+#define CMD_BEZIER		5
 
 #define CMD_BASE		16
 
@@ -35,6 +36,9 @@
 #define CMD_ENA_STENCIL_TEST	36
 #define CMD_ENA_ANTIALIAS	37
 #define CMD_ENA_LOGIC		40
+
+#define CMD_PATCH_SUBDIV	54
+#define CMD_PATCH_PRIM		55
 
 #define CMD_MAT_MODEL_TRIGGER	58
 #define CMD_MAT_MODEL_LOAD	59

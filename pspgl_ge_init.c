@@ -42,7 +42,7 @@ unsigned long ge_init_state [] =
 */
 	0x1c000001,	/* Enable Frustum Clip Planes */
 	0x20000001,	/* Enable Dithering */
-	0x36000101,	/* Patch Divide, 1x1 */
+	0x36000404,	/* Patch Divide, 4x4 */
 
 	0x483f8000,	/* Texture Scale S 1.0 */
 	0x493f8000,	/* Texture Scale T 1.0 */

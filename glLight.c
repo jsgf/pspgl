@@ -261,7 +261,7 @@ void glLightfv (GLenum light, GLenum pname, const GLfloat *params)
 		sendCommandf(CMD_LIGHT0_SPOT_EXP+light, params[0]);
 		break;
 	case GL_SPOT_CUTOFF:
-		if (params[0] != 180.f && !(params[0] >= 0.f && params[0] < 90.f))
+		if (params[0] != 180.f && !(params[0] >= 0.f && params[0] <= 90.f))
 			goto invalid_value;
 		c->lights.spotlight[light] = (params[0] != 180.);
 		sendCommandf(CMD_LIGHT0_CUTOFF+light, params[0] * M_PI / 180.f);

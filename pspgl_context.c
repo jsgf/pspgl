@@ -102,7 +102,7 @@ static void flush_pending_matrix_changes (struct pspgl_context *c)
 
 /* Pin colour map and texture images in memory while there's a pending
    drawing primitive which refers to them */
-static void do_texture_pinning(struct pspgl_context *c)
+void __pspgl_context_pin_textures(struct pspgl_context *c)
 {
 	struct pspgl_texobj *tobj;
 	int i;
@@ -124,10 +124,8 @@ static void do_texture_pinning(struct pspgl_context *c)
 			__pspgl_dlist_pin_buffer(&tobj->images[i]->image);
 }
 
-/* Do all the pre-render state flushing, and actually emit a primitive */
-void __pspgl_context_render_prim(struct pspgl_context *c, 
-				 unsigned prim, unsigned count, unsigned vtxfmt,
-				 const void *vertex, const void *index)
+void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt, 
+				  const void *vertex, const void *index)
 {
 	__pspgl_context_writereg(c, CMD_VERTEXTYPE, vtxfmt);
 
@@ -144,11 +142,21 @@ void __pspgl_context_render_prim(struct pspgl_context *c,
 	} else
 		assert(index == NULL);
 
+}
+
+
+/* Do all the pre-render state flushing, and actually emit a primitive */
+void __pspgl_context_render_prim(struct pspgl_context *c, 
+				 unsigned prim, unsigned count, unsigned vtxfmt,
+				 const void *vertex, const void *index)
+{
+	__pspgl_context_render_setup(c, vtxfmt, vertex, index);
+
 	__pspgl_context_writereg_uncached(c, CMD_PRIM, (prim << 16) | count);
 
 	/* Pin after issuing the CMD_PRIM command, since any command
 	   could cause the dlist to be submitted and subsequently
 	   unpin everything before the PRIM has actually been issued;
 	   it better to unpin too late than too early. */
-	do_texture_pinning(c);
+	__pspgl_context_pin_textures(c);
 }

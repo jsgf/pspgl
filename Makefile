@@ -32,6 +32,7 @@ libGL.a_OBJS = \
 	glAlphaFunc.o \
 	glArrayElement.o \
 	glBegin.o \
+	glDrawBezierArrays.o \
 	glBindBufferARB.o \
 	glBindTexture.o \
 	glBlendEquation.o \

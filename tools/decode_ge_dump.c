@@ -771,7 +771,8 @@ void process_chunk (uint32_t tag, uint32_t *buf, unsigned long len)
 			next = process_insn(insn);
 			printf("\n");
 #ifdef GE_TEXTURE_SHIFT
-			if ((insn & 0xff000000) == (4 << 24)) {
+			if ((insn & 0xff000000) == (4 << 24) ||
+			    (insn & 0xff000000) == (5 << 24)) {
 				unsigned count = insn & 0xffff;
 				int idx = (varray - adr) / 4;
 				const void *ptr = &buf[idx];

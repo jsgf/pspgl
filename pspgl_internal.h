@@ -316,8 +316,11 @@ extern void __pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd
 extern void __pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd, unsigned long argi, unsigned long mask);
 extern void __pspgl_context_writereg_uncached (struct pspgl_context *c, unsigned long cmd, unsigned long argi);
 
+extern void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt, 
+					 const void *vertex, const void *index);
 extern void __pspgl_context_render_prim(struct pspgl_context *c, unsigned prim, unsigned count, unsigned vtxfmt,
 					const void *vertex, const void *index);
+extern void __pspgl_context_pin_textures(struct pspgl_context *c);
 
 #define sendCommandi(cmd,argi)		__pspgl_context_writereg(pspgl_curctx, cmd, argi)
 #define sendCommandiUncached(cmd,argi)	__pspgl_context_writereg_uncached (pspgl_curctx, cmd, argi)
