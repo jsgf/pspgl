@@ -585,6 +585,21 @@ unsigned process_insn (uint32_t insn)
 		DUMP("Copy dest ptr bits 24-32: 0x%08x  stride %d",
 		     (arg & 0x00ff0000) << 8, arg & 0xffff);
 		break;
+	case 0xb2:
+		DUMP("Copy source 0x%08x", arg);
+		break;
+	case 0xb3:
+		DUMP("Copy source ptr bits 24-32: 0x%08x  stride %d",
+		     (arg & 0x00ff0000) << 8, arg & 0xffff);
+		break;
+	case 0xb4:
+		DUMP("Copy dest 0x%08x", arg);
+		break;
+	case 0xb5:
+		DUMP("Copy dest ptr bits 24-32: 0x%08x  stride %d",
+		     (arg & 0x00ff0000) << 8, arg & 0xffff);
+		break;
+
 	case 0xb8 ... 0xbf:
 		DUMP("(Mipmap Level %d) Texture Width 2^%d, Height 2^%d", opcode - 0xb8, arg & 0xff, arg >> 8);
 		break;
@@ -700,6 +715,19 @@ unsigned process_insn (uint32_t insn)
 	case 0xee:
 		DUMP("Copy size %d,%d", (arg & 0x3ff)+1, (arg >> 10)+1);
 		break;
+	case 0xea:
+		DUMP("Start copy, pixel size %d bits", (arg & 1) ? 32 : 16);
+		break;
+	case 0xeb:
+		DUMP("Copy source offset %d,%d", arg & 0x3ff, arg >> 10);
+		break;
+	case 0xec:
+		DUMP("Copy dest offset %d,%d", arg & 0x3ff, arg >> 10);
+		break;
+	case 0xee:
+		DUMP("Copy size %d,%d", (arg & 0x3ff)+1, (arg >> 10)+1);
+		break;
+
 	default:
 		;
 	}

@@ -52,6 +52,11 @@
 #define CMD_VIEWPORT_TY		70
 #define CMD_VIEWPORT_TZ		71
 
+#define CMD_TEXTURE_SU		72
+#define CMD_TEXTURE_SV		73
+#define CMD_TEXTURE_TU		74
+#define CMD_TEXTURE_TV		75
+
 #define CMD_OFFSETX		76
 #define CMD_OFFSETY		77
 
@@ -158,6 +163,11 @@
 #define CMD_SET_CLUT		176
 #define CMD_SET_CLUT_MSB	177
 
+#define CMD_COPY_SRC		178
+#define CMD_COPY_SRC_STRIDE	179
+#define CMD_COPY_DST		180
+#define CMD_COPY_DST_STRIDE	181
+
 #define CMD_TEX_SIZE0		184
 #define CMD_TEX_SIZE1		185
 #define CMD_TEX_SIZE2		186
@@ -204,6 +214,12 @@
 #define CMD_DEPTH_MASK		231
 #define CMD_RGB_MASK		232
 #define CMD_ALPHA_MASK		233
+
+#define CMD_COPY_START		234
+#define CMD_COPY_SRC_XY		235
+#define CMD_COPY_DST_XY		236
+#define CMD_COPY_SIZE		238
+
 /*
    The definitions below come from pspgu.h
  */

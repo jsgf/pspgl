@@ -48,6 +48,7 @@ libGL.a_OBJS = \
 	glColorPointer.o \
 	glColorTable.o \
 	glCompressedTexImage2D.o \
+	glCopyTexImage2D.o \
 	glCullFace.o \
 	glDeleteBuffersARB.o \
 	glDeleteLists.o \

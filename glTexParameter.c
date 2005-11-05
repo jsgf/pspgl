@@ -46,6 +46,9 @@ void glTexParameterfv (GLenum target, GLenum pname, const GLfloat *params)
 	if (target != GL_TEXTURE_2D)
 		goto invalid_enum;
 
+	if (!pspgl_curctx->texture.bound)
+		glBindTexture(target, 0);
+
 	switch (pname) {
 	case GL_TEXTURE_WRAP_S:
 	case GL_TEXTURE_WRAP_T:
