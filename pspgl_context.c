@@ -44,7 +44,7 @@ void __pspgl_context_flush_pending_state_changes (struct pspgl_context *c)
 				i, word, c->dlist_current);
 
 		for(j = i; word != 0; j++, word >>= 1) {
-			if (word & 1)
+			if ((word & 1) && (c->ge_reg[j] >> 24) == j)
 				__pspgl_dlist_enqueue_cmd(c->dlist_current,
 							  c->ge_reg[j]);
 		}
