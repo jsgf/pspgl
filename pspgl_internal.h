@@ -172,7 +172,6 @@ struct pspgl_surface {
 	int current_front;
 	int displayed;
 
-	unsigned red_mask, green_mask, blue_mask;
 	unsigned alpha_mask, stencil_mask;
 };
 

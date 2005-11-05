@@ -11,7 +11,7 @@ void glColorMask (GLboolean red, GLboolean green, GLboolean blue, GLboolean alph
 	if (blue)
 		mask &= 0x00ffff;
 
-	pspgl_curctx->write_mask.alpha = alpha ? 0x00: 0xff;
+	pspgl_curctx->write_mask.alpha = alpha ? pspgl_curctx->draw->alpha_mask : 0x00;
 
         sendCommandi(CMD_RGB_MASK, mask);
 
@@ -20,6 +20,6 @@ void glColorMask (GLboolean red, GLboolean green, GLboolean blue, GLboolean alph
 	 * if stencil test is disabled.
 	 */
 	if ((pspgl_curctx->ge_reg[CMD_ENA_STENCIL_TEST] & 1) == 0)
-	        sendCommandi(CMD_ALPHA_MASK, pspgl_curctx->write_mask.alpha);
+	        sendCommandi(CMD_ALPHA_MASK, ~pspgl_curctx->write_mask.alpha);
 }
 

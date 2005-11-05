@@ -113,5 +113,10 @@ void __pspgl_ge_init (struct pspgl_context *c)
 	   hardware state */
 	c->current.color = 0xffffffff;		/* default color is 1,1,1,1 */
 	c->material.ambient = 0xff333333;	/* material ambient color is .2, .2, .2, 1 */
+
+	/* make sure all the stencil/alpha mask state is set up right */
+	glStencilMask(~0);
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glDisable(GL_STENCIL_TEST);
 }
 

@@ -15,7 +15,7 @@ static void enable_state (GLenum cap, int enable)
 		/* switch material ambient around depending on lighting state */
 		if (enable)
 			c = pspgl_curctx->material.ambient;
-		else
+		else 
 			c = pspgl_curctx->current.color;
 		sendCommandi(CMD_MATERIAL_AMB_C, c);
 		sendCommandi(CMD_MATERIAL_AMB_A, c>>24);
@@ -42,6 +42,10 @@ static void enable_state (GLenum cap, int enable)
 	case GL_STENCIL_TEST:
 		opcode = CMD_ENA_STENCIL_TEST;
 		enable = enable && pspgl_curctx->draw->stencil_mask;
+		if (enable)
+			sendCommandi(CMD_ALPHA_MASK, ~pspgl_curctx->write_mask.stencil);
+		else
+			sendCommandi(CMD_ALPHA_MASK, ~pspgl_curctx->write_mask.alpha);
 		break;
 	case GL_DEPTH_TEST:
 		opcode = CMD_ENA_DEPTH_TEST;

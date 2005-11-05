@@ -13,8 +13,14 @@ void glClear (GLbitfield mask)
 {
 	struct pspgl_dlist *dlist = pspgl_curctx->dlist_current;
 	struct clear_vertex *vbuf;
+	struct pspgl_surface *s = pspgl_curctx->draw;
 	unsigned long clearmask = COLOR4(pspgl_curctx->clear.color);
-	unsigned long cmd = 1;
+	unsigned long clearmode = 0;
+
+	if (mask & ~(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)) {
+		GLERROR(GL_INVALID_VALUE);
+		return;
+	}
 
 	/* make room for 2 embedded vertices in cmd_buf, aligned to 16byte boundary */
 	vbuf = __pspgl_dlist_insert_space(dlist, 2 * sizeof(struct clear_vertex));
@@ -25,23 +31,20 @@ void glClear (GLbitfield mask)
 	}
 
 	if (mask & GL_COLOR_BUFFER_BIT) {
-		static const char bitmask [] = { 3, 1, 3, 3 };
-		cmd |= bitmask[pspgl_curctx->draw->pixfmt] << 8;
+		clearmode |= GU_COLOR_BUFFER_BIT;
+		if (s->alpha_mask)
+			clearmode |= GU_STENCIL_BUFFER_BIT; /* really alpha */
 	}
 
-	if (mask & GL_STENCIL_BUFFER_BIT) {
-		if (pspgl_curctx->draw->pixfmt == 0) {
-			GLERROR(GL_INVALID_ENUM);	/* no stencil bits in framebuffer */
-		} else {
-			static const char stencil_shift [] = { 31, 28, 24 };
-			clearmask &= 0x00ffffff;
-			clearmask |= (pspgl_curctx->clear.stencil) << stencil_shift[pspgl_curctx->draw->pixfmt-1];
-			cmd |= GU_STENCIL_BUFFER_BIT << 8;
-		}
+	if (s->stencil_mask && (mask & GL_STENCIL_BUFFER_BIT)) {
+		static const unsigned char stencil_shift [] = { 32-1, 32-4, 32-8 };
+		clearmask &= 0x00ffffff;
+		clearmask |= (pspgl_curctx->clear.stencil) << stencil_shift[s->pixfmt-1];
+		clearmode |= GU_STENCIL_BUFFER_BIT;
 	}
 
-	if (pspgl_curctx->draw->depth_buffer && (mask & GL_DEPTH_BUFFER_BIT))
-		cmd |= GU_DEPTH_BUFFER_BIT << 8;
+	if (s->depth_buffer && (mask & GL_DEPTH_BUFFER_BIT))
+		clearmode |= GU_DEPTH_BUFFER_BIT;
 
 	vbuf[0].color = clearmask;
 	vbuf[0].x = 0.0;
@@ -54,7 +57,7 @@ void glClear (GLbitfield mask)
 	vbuf[1].z = pspgl_curctx->clear.depth;
 
 	/* enable clear mode */
-	sendCommandi(CMD_CLEARMODE, cmd);
+	sendCommandi(CMD_CLEARMODE, (clearmode << 8) | 1);
 
 	/* draw array */
 	sendCommandi(CMD_VERTEXTYPE, GE_COLOR_8888 | GE_VERTEX_32BITF | GE_TRANSFORM_2D);              /* xform: 2D, vertex format: RGB8888 (uint32), xyz (float32) */
