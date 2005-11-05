@@ -264,7 +264,7 @@ void glLightfv (GLenum light, GLenum pname, const GLfloat *params)
 		if (params[0] != 180.f && !(params[0] >= 0.f && params[0] <= 90.f))
 			goto invalid_value;
 		c->lights.spotlight[light] = (params[0] != 180.);
-		sendCommandf(CMD_LIGHT0_CUTOFF+light, params[0] * M_PI / 180.f);
+		sendCommandf(CMD_LIGHT0_CUTOFF+light, cosf(params[0] * M_PI / 180.f));
 		break;
 
 	case GL_CONSTANT_ATTENUATION:
