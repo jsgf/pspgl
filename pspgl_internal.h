@@ -257,7 +257,8 @@ extern void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type, const v
 				      GLsizei count, int minidx, int maxidx);
 extern void __pspgl_varray_bind_buffer(struct pspgl_vertex_array *va,
 				       struct pspgl_bufferobj *buf);
-
+extern void __pspgl_find_minmax_indices(GLenum idx_type, const void *indices, unsigned count,
+					int *minidxp, int *maxidxp);
 
 /* glTexImage2D.c */
 struct pspgl_teximg;

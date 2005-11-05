@@ -7,8 +7,8 @@
 
 /* Find the min and max indices in an element array.  Expects indices
    to be a mapped pointer. */
-static void find_minmax_indices(GLenum idx_type, const void *indices, unsigned count,
-				int *minidxp, int *maxidxp)
+void __pspgl_find_minmax_indices(GLenum idx_type, const void *indices, unsigned count,
+				 int *minidxp, int *maxidxp)
 {
 	/* find the min and max idx */
 	int i;
@@ -125,7 +125,8 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 			idxmap = __pspgl_bufferobj_map(pspgl_curctx->vertex_array.indexbuffer,
 						       GL_READ_ONLY_ARB, (void *)indices);
 
-			find_minmax_indices(idx_type, idxmap, count, &minidx, &maxidx);
+			__pspgl_find_minmax_indices(idx_type, idxmap, count,
+						    &minidx, &maxidx);
 
 			__pspgl_bufferobj_unmap(pspgl_curctx->vertex_array.indexbuffer,
 						GL_READ_ONLY_ARB);
@@ -147,6 +148,7 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 					      &ibuf_offset, &hwformat);
 	if (ibuf == NULL) {
 		GLERROR(GL_OUT_OF_MEMORY);
+		__pspgl_buffer_free(vbuf);
 		return;
 	}
 

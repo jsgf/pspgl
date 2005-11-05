@@ -6511,10 +6511,12 @@ GLAPI void APIENTRY glGetStatisticsuivPSP (GLenum, GLuint *);
 #ifdef GL_GLEXT_PROTOTYPES
 GLAPI void APIENTRY glDrawBezierArraysPSP(GLenum mode, GLuint u, GLuint v, GLint first);
 GLAPI void APIENTRY glBezierSubdivisionPSP(GLuint u, GLuint v);
-#if 0				/* TODO */
 GLAPI void APIENTRY glDrawBezierElementsPSP(GLenum mode, GLuint u, GLuint v,
 					    GLenum idx_type, const GLvoid *indices);
-#endif
+GLAPI void APIENTRY glDrawBezierRangeElementsPSP(GLenum mode,
+						 GLuint start, GLuint end,
+						 GLuint u, GLuint v,
+						 GLenum idx_type, const GLvoid *indices);
 
 #endif	/* GL_GLEXT_PROTOTYPES */
 #endif
