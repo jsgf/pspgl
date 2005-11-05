@@ -7,7 +7,7 @@
 /* Just for documentation */
 #define assert(x)
 
-void pspgl_dlist_enqueue_cmd (struct pspgl_dlist *d, unsigned long cmd)
+void __pspgl_dlist_enqueue_cmd (struct pspgl_dlist *d, unsigned long cmd)
 {
 	if (d->len >= DLIST_SIZE - 4) {
 		d = dlist_flush(d);
@@ -22,7 +22,7 @@ void pspgl_dlist_enqueue_cmd (struct pspgl_dlist *d, unsigned long cmd)
 static
 void pspgl_dlist_finish (struct pspgl_dlist *d)
 {
-	pspgl_context_flush_pending_state_changes(pspgl_curctx);
+	__pspgl_context_flush_pending_state_changes(pspgl_curctx);
 
 	assert(d->len < DLIST_SIZE - 4);
 
@@ -33,7 +33,7 @@ void pspgl_dlist_finish (struct pspgl_dlist *d)
 }
 
 
-void pspgl_dlist_finalize(struct pspgl_dlist *d)
+void __pspgl_dlist_finalize(struct pspgl_dlist *d)
 {
 	pspgl_dlist_finish(d);
 	pspgl_dlist_dump(d->cmd_buf, d->len);
@@ -43,9 +43,9 @@ void pspgl_dlist_finalize(struct pspgl_dlist *d)
 
 
 static
-struct pspgl_dlist* pspgl_dlist_finalize_and_clone (struct pspgl_dlist *thiz)
+struct pspgl_dlist* __pspgl_dlist_finalize_and_clone (struct pspgl_dlist *thiz)
 {
-	struct pspgl_dlist *next = pspgl_dlist_create(thiz->compile_and_run, NULL);
+	struct pspgl_dlist *next = __pspgl_dlist_create(thiz->compile_and_run, NULL);
 
 	if (!next)
 		return NULL;
@@ -69,8 +69,8 @@ static inline unsigned long align64 (unsigned long adr) { return (((adr + 0x3f) 
  *  In order to achieve the 2nd requirement we allocate 64 extra bytes before
  *  and at the end of the command buffer.
  */
-struct pspgl_dlist* pspgl_dlist_create (int compile_and_run,
-					struct pspgl_dlist * (*done) (struct pspgl_dlist *thiz))
+struct pspgl_dlist* __pspgl_dlist_create (int compile_and_run,
+				     struct pspgl_dlist * (*done) (struct pspgl_dlist *thiz))
 {
 	struct pspgl_dlist *d = malloc(sizeof(struct pspgl_dlist));
 
@@ -82,13 +82,13 @@ struct pspgl_dlist* pspgl_dlist_create (int compile_and_run,
 	}
 
 	d->next = NULL;
-	d->done = done ? done : pspgl_dlist_finalize_and_clone;
+	d->done = done ? done : __pspgl_dlist_finalize_and_clone;
 	d->compile_and_run = compile_and_run;
 	d->qid = -1;
 
 	d->cmd_buf = (void *) align64((unsigned long) d->_cmdbuf);
 
-	pspgl_dlist_reset(d);
+	__pspgl_dlist_reset(d);
 
 	return d;
 }
@@ -97,13 +97,13 @@ struct pspgl_dlist* pspgl_dlist_create (int compile_and_run,
 /**
  *  flush and swap display list buffers in pspgl context. This is a callback only used for internal dlists.
  */
-struct pspgl_dlist* pspgl_dlist_swap (struct pspgl_dlist *thiz)
+struct pspgl_dlist* __pspgl_dlist_swap (struct pspgl_dlist *thiz)
 {
 	struct pspgl_dlist* next;
 
-	assert(thiz == pspgl->curctx->dlist[pspgl->curctx->dlist_idx])
+	assert(thiz == pspgl->curctx->dlist[pspgl->curctx->dlist_idx]);
 
-	pspgl_dlist_finalize(thiz);
+		__pspgl_dlist_finalize(thiz);
 
 	if (++pspgl_curctx->dlist_idx >= NUM_CMDLISTS)
 		pspgl_curctx->dlist_idx = 0;
@@ -115,7 +115,7 @@ struct pspgl_dlist* pspgl_dlist_swap (struct pspgl_dlist *thiz)
 		sceGeListSync(next->qid, PSP_GE_LIST_DONE);
 		next->qid = -1;
 	}
-	pspgl_dlist_reset(next);
+	__pspgl_dlist_reset(next);
 
 	pspgl_curctx->dlist_current = next;
 
@@ -123,7 +123,7 @@ struct pspgl_dlist* pspgl_dlist_swap (struct pspgl_dlist *thiz)
 }
 
 
-void pspgl_dlist_submit(struct pspgl_dlist *d)
+void __pspgl_dlist_submit(struct pspgl_dlist *d)
 {
 	for(; d != NULL; d = d->next) {
 		if (d->qid != -1)
@@ -133,7 +133,7 @@ void pspgl_dlist_submit(struct pspgl_dlist *d)
 }
 
 
-void pspgl_dlist_await_completion (void)
+void __pspgl_dlist_await_completion (void)
 {
 	int i;
 
@@ -143,7 +143,7 @@ void pspgl_dlist_await_completion (void)
 		if (d->qid != -1) {
 			sceGeListSync(d->qid, PSP_GE_LIST_DONE);
 			d->qid = -1;
-			pspgl_dlist_reset(d);
+			__pspgl_dlist_reset(d);
 		}
 	}
 
@@ -154,14 +154,14 @@ void pspgl_dlist_await_completion (void)
 }
 
 
-void pspgl_dlist_reset (struct pspgl_dlist *d)
+void __pspgl_dlist_reset (struct pspgl_dlist *d)
 {
 	assert(d->qid == -1);
 	d->len = 0;
 }
 
 
-void pspgl_dlist_cancel (void)
+void __pspgl_dlist_cancel (void)
 {
 	int i;
 
@@ -176,7 +176,7 @@ void pspgl_dlist_cancel (void)
 }
 
 
-void pspgl_dlist_free (struct pspgl_dlist *d)
+void __pspgl_dlist_free (struct pspgl_dlist *d)
 {
 	while (d) {
 		struct pspgl_dlist *next = d->next;
@@ -189,7 +189,7 @@ void pspgl_dlist_free (struct pspgl_dlist *d)
 
 static inline unsigned long align16 (unsigned long val) { return ((((unsigned long) val) + 0x0f) & ~0x0f); }
 
-void * pspgl_dlist_insert_space (struct pspgl_dlist *d, unsigned long size)
+void * __pspgl_dlist_insert_space (struct pspgl_dlist *d, unsigned long size)
 {
 	unsigned long len;
 	unsigned long adr;

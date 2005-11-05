@@ -13,10 +13,10 @@ struct pspgl_texobj {
 };
 
 
-extern const struct pspgl_texobj pspgl_texobj_default;
+extern const struct pspgl_texobj __pspgl_texobj_default;
 
-extern struct pspgl_texobj* pspgl_texobj_new (void);
-extern void pspgl_texobj_free (struct pspgl_texobj *t);
+extern struct pspgl_texobj* __pspgl_texobj_new (void);
+extern void __pspgl_texobj_free (struct pspgl_texobj *t);
 
 
 #endif

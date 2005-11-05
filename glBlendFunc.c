@@ -86,6 +86,6 @@ void glBlendFunc (GLenum sfactor, GLenum dfactor)
 		return;
 	}
 
-	pspgl_context_writereg_masked(pspgl_curctx, CMD_BLEND_FUNC, (dstfunc << 4) | srcfunc, 0x0ff);
+	__pspgl_context_writereg_masked(pspgl_curctx, CMD_BLEND_FUNC, (dstfunc << 4) | srcfunc, 0x0ff);
 }
 

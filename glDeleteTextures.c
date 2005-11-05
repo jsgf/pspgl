@@ -14,7 +14,7 @@ void glDeleteTextures (GLsizei n, const GLuint *textures)
 
 	for (i=0; i<n; i++) {
 		if (textures[i] != 0) {
-			struct pspgl_texobj *tobj = pspgl_hash_remove(hash, textures[i]);
+			struct pspgl_texobj *tobj = __pspgl_hash_remove(hash, textures[i]);
 			if (tobj) {
 				if (tobj == pspgl_curctx->texobj_current)
 					glBindTexture(tobj->target, 0);

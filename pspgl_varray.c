@@ -144,7 +144,7 @@ bailout:
 #define GE_QUADS		6
 
 
-long glprim2geprim (GLenum glprim)
+long __pspgl_glprim2geprim (GLenum glprim)
 {
 	static const char geprim_tab [] = {
 		GE_POINTS, GE_LINES, GE_LINE_STRIP, GE_LINE_STRIP,
@@ -159,18 +159,18 @@ long glprim2geprim (GLenum glprim)
 }
 
 
-void pspgl_varray_draw (GLenum mode, GLenum index_type, const GLvoid *indices, GLint first, GLsizei count)
+void __pspgl_varray_draw (GLenum mode, GLenum index_type, const GLvoid *indices, GLint first, GLsizei count)
 {
 	unsigned long adr;
 	unsigned long vertex_fmt = ge_vertex_fmt(pspgl_curctx, &adr);
-	long prim = glprim2geprim(mode);
+	long prim = __pspgl_glprim2geprim(mode);
 
 	if (prim < 0 || vertex_fmt == 0) {
 		GLERROR(GL_INVALID_ENUM);
 		return;
 	}
 
-	pspgl_context_flush_pending_matrix_changes(pspgl_curctx);
+	__pspgl_context_flush_pending_matrix_changes(pspgl_curctx);
 
 	if (indices) {
 		switch (index_type) {

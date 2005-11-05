@@ -12,7 +12,7 @@ GLuint glGenLists(GLsizei range)
 	if (range <= 0)
 		return 0;
 
-	start = id = pspgl_hash_uniquekey(hash);
+	start = id = __pspgl_hash_uniquekey(hash);
 
 again:
 	for(i = 0; i < range; i++) {
@@ -22,14 +22,14 @@ again:
 			break;
 		}	
 
-		if (pspgl_hash_lookup(hash, id+i) != NULL) {
+		if (__pspgl_hash_lookup(hash, id+i) != NULL) {
 			id = id+i+1;
 			goto again;
 		}
 	}
 
 	for(i = 0; i < range; i++)
-		pspgl_hash_insert(hash, id+i, "foo");
+		__pspgl_hash_insert(hash, id+i, "foo");
 
 	return id;	
 }

@@ -3,7 +3,7 @@
 
 struct pspgl_dlist;
 
-extern void __psp_log (const char *fmt, ...);
+extern void __pspgl_log (const char *fmt, ...);
 
 
 enum pspgl_dump_tag {
@@ -37,7 +37,7 @@ extern void __pspgl_vram_dump (void);
 #endif
 
 #if 0
-#define psp_log(x...) do { __psp_log("%s (%d): ", __FUNCTION__, __LINE__); __psp_log(x); } while (0)
+#define psp_log(x...) do { __pspgl_log("%s (%d): ", __FUNCTION__, __LINE__); __pspgl_log(x); } while (0)
 #else
 #define psp_log(x...) do { } while (0)
 #endif

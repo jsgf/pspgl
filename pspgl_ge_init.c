@@ -81,7 +81,7 @@ unsigned long ge_matrix_init_state [] = {
 };
 
 
-void pspgl_ge_init (struct pspgl_context *c)
+void __pspgl_ge_init (struct pspgl_context *c)
 {
 	int i;
 
@@ -92,7 +92,7 @@ void pspgl_ge_init (struct pspgl_context *c)
 
 	/* matrix registers are overloaded, not cached. Use direct write-through. */
 	for (i=0; i<sizeof(ge_matrix_init_state)/sizeof(ge_matrix_init_state[0]); i++)
-		pspgl_dlist_enqueue_cmd(c->dlist_current, ge_matrix_init_state[i]);
+		__pspgl_dlist_enqueue_cmd(c->dlist_current, ge_matrix_init_state[i]);
 
 	/* create & initialize new matrix stacks, default matrix mode is GL_MODELVIEW when done... */
 	for (i=GL_TEXTURE; i>=GL_MODELVIEW; i--) {
@@ -102,7 +102,7 @@ void pspgl_ge_init (struct pspgl_context *c)
 	}
 
 	/* set up default texobj0 */
-	memcpy(&c->texobj0, &pspgl_texobj_default, sizeof(c->texobj0));
+	memcpy(&c->texobj0, &__pspgl_texobj_default, sizeof(c->texobj0));
 	c->texobj_current = &c->texobj0;
 
 	/* load register set of new texture object, all related registers are marked as dirty in MakeCurrent() */

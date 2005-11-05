@@ -6,6 +6,7 @@
 #include <pspctrl.h>
 #include <psploadexec.h>
 
+#include "pspgl_misc.h"
 
 static unsigned int glut_display_mode = 0;
 static unsigned int glut_redisplay_posted = 1;
@@ -23,12 +24,11 @@ static void (*glut_joystick_func) (unsigned int buttonMask, int x, int y, int z)
 
 static void (*glut_idle_func) (void);
 
-
-extern void __psp_log (const char *fmt, ...);
+#undef psp_log
 
 /* disable verbose logging to "ms0:/log.txt" */
 #if 0
-	#define psp_log(x...) __psp_log(x)
+	#define psp_log(x...) __pspgl_log(x)
 #else
 	#define psp_log(x...) do {} while (0)
 #endif
@@ -41,7 +41,7 @@ extern void __psp_log (const char *fmt, ...);
 		x;								\
 		errcode = eglGetError();					\
 		if (errcode != EGL_SUCCESS) {					\
-			__psp_log("%s (%d): EGL error 0x%04x\n",		\
+			__pspgl_log("%s (%d): EGL error 0x%04x\n",			\
 				__FUNCTION__, __LINE__,				\
 				(unsigned int) errcode);			\
 		}								\

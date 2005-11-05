@@ -1,6 +1,6 @@
 #include "pspgl_internal.h"
 
-void pspgl_enable_state (GLenum cap, int enable)
+static void enable_state (GLenum cap, int enable)
 {
 	unsigned char opcode;
 
@@ -94,12 +94,12 @@ void pspgl_enable_state (GLenum cap, int enable)
 
 void glEnable (GLenum cap)
 {
-	pspgl_enable_state(cap, 1);
+	enable_state(cap, 1);
 }
 
 
 void glDisable (GLenum cap)
 {
-	pspgl_enable_state(cap, 0);
+	enable_state(cap, 0);
 }
 

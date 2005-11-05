@@ -11,7 +11,7 @@ struct hashentry {
 };
 
 
-void* pspgl_hash_lookup (const struct hashtable *h, unsigned long key)
+void* __pspgl_hash_lookup (const struct hashtable *h, unsigned long key)
 {
 	struct hashentry *ent;
 
@@ -27,7 +27,7 @@ void* pspgl_hash_lookup (const struct hashtable *h, unsigned long key)
 }
 
 
-void pspgl_hash_insert (struct hashtable *h, unsigned long key, void *value)
+void __pspgl_hash_insert (struct hashtable *h, unsigned long key, void *value)
 {
 	unsigned long b = HASH(key);
 	struct hashentry *ent;
@@ -52,7 +52,7 @@ void pspgl_hash_insert (struct hashtable *h, unsigned long key, void *value)
 }
 
 
-void* pspgl_hash_remove (struct hashtable *h, unsigned long key)
+void* __pspgl_hash_remove (struct hashtable *h, unsigned long key)
 {
 	struct hashentry **entp;
 
@@ -71,7 +71,7 @@ void* pspgl_hash_remove (struct hashtable *h, unsigned long key)
 }
 
 
-unsigned long pspgl_hash_uniquekey (const struct hashtable *h)
+unsigned long __pspgl_hash_uniquekey (const struct hashtable *h)
 {
 	unsigned long ret;
 
@@ -79,7 +79,7 @@ unsigned long pspgl_hash_uniquekey (const struct hashtable *h)
 		ret = h->maxkey + 1;
 	} else {
 		for(ret=1; ret<HASH_NO_KEY; ret++) {
-			if (pspgl_hash_lookup(h, ret) == NULL)
+			if (__pspgl_hash_lookup(h, ret) == NULL)
 				break;
 		}
 	}
@@ -88,7 +88,7 @@ unsigned long pspgl_hash_uniquekey (const struct hashtable *h)
 }
 
 
-void pspgl_hash_foreach_free (struct hashtable *h, void (*func) (void *data))
+void __pspgl_hash_foreach_free (struct hashtable *h, void (*func) (void *data))
 {
 	unsigned long i;
 

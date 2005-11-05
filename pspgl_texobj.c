@@ -4,7 +4,7 @@
 
 
 const
-struct pspgl_texobj pspgl_texobj_default = {
+struct pspgl_texobj __pspgl_texobj_default = {
 	.ge_texreg_160x201 = {
 		0xa0000000, /* ge_reg 0xa0/160 */
 		0xa1000000,
@@ -54,18 +54,18 @@ struct pspgl_texobj pspgl_texobj_default = {
 };
 
 
-struct pspgl_texobj* pspgl_texobj_new (void)
+struct pspgl_texobj* __pspgl_texobj_new (void)
 {
 	struct pspgl_texobj *t = malloc(sizeof(struct pspgl_texobj));
 
 	if (t)
-		memcpy(t, &pspgl_texobj_default, sizeof(struct pspgl_texobj));
+		memcpy(t, &__pspgl_texobj_default, sizeof(struct pspgl_texobj));
 
 	return t;
 }
 
 
-void pspgl_texobj_free (struct pspgl_texobj *t)
+void __pspgl_texobj_free (struct pspgl_texobj *t)
 {
 	free(t);
 }

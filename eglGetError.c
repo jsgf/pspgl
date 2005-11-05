@@ -3,7 +3,7 @@
 
 EGLint eglGetError (void)
 {
-	EGLint err = eglerror;
-	eglerror = EGL_SUCCESS;
+	EGLint err = __pspgl_eglerror;
+	__pspgl_eglerror = EGL_SUCCESS;
 	return err;
 }

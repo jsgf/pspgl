@@ -65,19 +65,19 @@ int has_depthbuffer = 1;
 	psp_log("pixelformat = 0x%04x\n", s->pixfmt);
 
 	if (has_frontbuffer) {
-		if (!(s->color_buffer[0] = pspgl_vidmem_alloc(bufferlen)))
+		if (!(s->color_buffer[0] = __pspgl_vidmem_alloc(bufferlen)))
 			goto bad_alloc;
 	}
 
 	if (has_backbuffer) {
-		if (!(s->color_buffer[1] = pspgl_vidmem_alloc(bufferlen)))
+		if (!(s->color_buffer[1] = __pspgl_vidmem_alloc(bufferlen)))
 			goto bad_alloc;
 	}
 
 	bufferlen = s->height * s->pixelperline * 2;
 
 	if (has_depthbuffer) {
-		if (!(s->depth_buffer = pspgl_vidmem_alloc(bufferlen)))
+		if (!(s->depth_buffer = __pspgl_vidmem_alloc(bufferlen)))
 			goto bad_alloc;
 	}
 

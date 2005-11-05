@@ -6,8 +6,8 @@ EGLBoolean eglTerminate (EGLDisplay dpy)
 {
 	psp_log("\n\n=============== pspGL, build " __DATE__ ", " __TIME__ " ===============\n");
 
-	if (pspgl_curctx)
-		pspgl_dlist_cancel();
+	if (__pspgl_curctx)
+		__pspgl_dlist_cancel();
 
 	return EGL_TRUE;
 }

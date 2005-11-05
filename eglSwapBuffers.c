@@ -10,5 +10,5 @@ EGLBoolean eglSwapBuffers (EGLDisplay dpy, EGLSurface draw)
 	else
 		s->current_front = 0;
 
-	return pspgl_vidmem_setup_write_and_display_buffer(s);
+	return __pspgl_vidmem_setup_write_and_display_buffer(s);
 }

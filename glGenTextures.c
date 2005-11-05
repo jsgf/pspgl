@@ -12,10 +12,10 @@ void glGenTextures (GLsizei n, GLuint *textures)
 	}
 
 	for(i=0; i<n; i++) {
-		unsigned long id = pspgl_hash_uniquekey(hash);
+		unsigned long id = __pspgl_hash_uniquekey(hash);
 		if (id != HASH_NO_KEY) {
 			textures[i] = id;
-			pspgl_hash_insert(hash, id, NULL);
+			__pspgl_hash_insert(hash, id, NULL);
 		}
 	}
 }

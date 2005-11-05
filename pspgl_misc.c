@@ -9,7 +9,7 @@
 
 
 
-void __psp_log (const char *fmt, ...)
+void __pspgl_log (const char *fmt, ...)
 {
 	char buf [1024];
 	va_list ap;

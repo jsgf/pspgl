@@ -105,14 +105,14 @@ libGL.a_OBJS = \
 	glVertexi.o \
 	glVertexPointer.o \
 	glViewport.o \
- 	pspgl_context.o \
- 	pspgl_dlist.o \
- 	pspgl_ge_init.o \
- 	pspgl_hash.o \
- 	pspgl_misc.o \
- 	pspgl_texobj.o \
- 	pspgl_varray.o \
- 	pspgl_vidmem.o
+	pspgl_context.o \
+	pspgl_dlist.o \
+	pspgl_ge_init.o \
+	pspgl_hash.o \
+	pspgl_misc.o \
+	pspgl_texobj.o \
+	pspgl_varray.o \
+	pspgl_vidmem.o
 
 libGLU.a_OBJS = \
 	gluLookAt.o \
@@ -130,6 +130,8 @@ all: $(DEPDIR) $(libGL.a_OBJS) $(libGLU.a_OBJS) $(libglut.a_OBJS) libGL.a libGLU
 	$(RM) $@
 	$(AR) cru $@ $($@_OBJS)
 	$(RANLIB) $@
+	@$(ARCH)nm -o -fp -g --defined-only $@ | \
+		awk '$$2~/^(gl|egl|glut|__pspgl)/ { next } { if (!bad) print "Bad symbols:"; print "\t", $$1, $$2; bad++ } END { if (bad) { print bad," bad symbol(s)"; exit(1) } else { print "Namespace OK" } }'
 
 $(DEPDIR):
 	mkdir $(DEPDIR)

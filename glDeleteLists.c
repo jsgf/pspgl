@@ -12,7 +12,7 @@ void glDeleteLists (GLuint list, GLsizei range)
 	}
 
 	for (; range>0; list++, range--) {
-		void *dlist = pspgl_hash_remove(hash, list);
+		void *dlist = __pspgl_hash_remove(hash, list);
 		if (dlist) {
 			if (dlist == pspgl_curctx->dlist_current)
 				/*set default dlist*/;

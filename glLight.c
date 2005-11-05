@@ -42,8 +42,8 @@ void glLightfv (GLenum light, GLenum pname, const GLfloat *params)
 		sendCommandf(CMD_LIGHT0_SPOT_EXP+light, params[0]);
 		break;
 	case GL_SPOT_CUTOFF:
-		pspgl_context_writereg_masked(c, CMD_LIGHT0_TYPE+light,
-					      ((params[0] == 0.0) ? 0 : (params[0] == 180.0) ? 1 : 2) << 8, 0x00ff00);
+		__pspgl_context_writereg_masked(c, CMD_LIGHT0_TYPE+light,
+						((params[0] == 0.0) ? 0 : (params[0] == 180.0) ? 1 : 2) << 8, 0x00ff00);
 		sendCommandf(CMD_LIGHT0_CUTOFF+light, params[0]);
 		break;
 	case GL_CONSTANT_ATTENUATION:

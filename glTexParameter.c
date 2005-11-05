@@ -1,17 +1,5 @@
 #include "pspgl_internal.h"
 
-
-#define GE_TEX_WRAP_REPEAT	0
-#define GE_TEX_WRAP_CLAMP	1
-
-#define GE_TEX_FILTER_NEAREST			0
-#define GE_TEX_FILTER_LINEAR			1
-#define GE_TEX_FILTER_NEAREST_MIPMAP_NEAREST	4
-#define GE_TEX_FILTER_LINEAR_MIPMAP_NEAREST	5
-#define GE_TEX_FILTER_NEAREST_MIPMAP_LINEAR	6
-#define GE_TEX_FILTER_LINEAR_MIPMAP_LINEAR	7
-
-
 static
 int filter_gl2ge (GLenum f)
 {
@@ -27,7 +15,7 @@ void update_clamp (struct pspgl_context *c, int shift, GLenum param)
 	switch (param) {
 	case GL_REPEAT:
 	case GL_CLAMP:
-		pspgl_context_writereg_masked(c, CMD_TEXWRAP, (param - GL_REPEAT) << shift, 0xff << shift);
+		__pspgl_context_writereg_masked(c, CMD_TEXWRAP, (param - GL_REPEAT) << shift, 0xff << shift);
 		break;
 	default:
 		GLERROR(GL_INVALID_ENUM);
@@ -45,7 +33,7 @@ void update_texfilter (struct pspgl_context *c, int shift, GLenum param)
 	case GL_LINEAR_MIPMAP_NEAREST:
 	case GL_NEAREST_MIPMAP_LINEAR:
 	case GL_LINEAR_MIPMAP_LINEAR:
-		pspgl_context_writereg_masked(c, CMD_TEXFILT, filter_gl2ge(param) << shift, 0xff << shift);
+		__pspgl_context_writereg_masked(c, CMD_TEXFILT, filter_gl2ge(param) << shift, 0xff << shift);
 		break;
 	default:
 		GLERROR(GL_INVALID_ENUM);

@@ -75,9 +75,8 @@ struct Vertex __attribute__((aligned(16))) vertices [12*3] =
 int done = 0;
 
 /* disable verbose logging to "ms0:/pspgl.ge" */
-#if 0
+#if 1
 	#include "pspgl_internal.h"	/* dirty hack, required for psp_log() */
-	#define psp_log(x...) __psp_log(x)
 #else
 	#define psp_log(x...) do {} while (0)
 	extern void __psp_log (const char *fmt, ...);
@@ -92,7 +91,7 @@ int done = 0;
 		x;								\
 		errcode = eglGetError();					\
 		if (errcode != EGL_SUCCESS) {					\
-			__psp_log("%s (%d): EGL error 0x%04x\n",		\
+			__pspgl_log("%s (%d): EGL error 0x%04x\n",			\
 				__FUNCTION__, __LINE__, (unsigned int) errcode);\
 		}								\
 	} while (0)
@@ -104,7 +103,7 @@ int done = 0;
 		x;								\
 		errcode = glGetError();						\
 		if (errcode != GL_NO_ERROR) {					\
-			__psp_log("%s (%d): GL error 0x%04x\n",			\
+			__pspgl_log("%s (%d): GL error 0x%04x\n",			\
 				__FUNCTION__, __LINE__, (unsigned int) errcode);\
 		}								\
 	} while (0)
@@ -134,6 +133,8 @@ int main(int argc, char* argv[])
 	EGLSurface surface;
 	GLfloat angle = 0.0f;
 	SceCtrlData pad;
+
+	psp_log("startup\n");
 
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);

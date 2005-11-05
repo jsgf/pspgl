@@ -17,7 +17,7 @@ void glClear (GLbitfield mask)
 	unsigned long cmd = 1;
 
 	/* make room for 2 embedded vertices in cmd_buf, aligned to 16byte boundary */
-	vbuf = pspgl_dlist_insert_space(dlist, 2 * sizeof(struct clear_vertex));
+	vbuf = __pspgl_dlist_insert_space(dlist, 2 * sizeof(struct clear_vertex));
 
 	if (!vbuf) {
 		GLERROR(GL_OUT_OF_MEMORY);

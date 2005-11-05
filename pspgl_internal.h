@@ -113,39 +113,39 @@ struct pspgl_surface {
 
 
 /* pspgl_ge_init.c */
-extern void pspgl_ge_init (struct pspgl_context *c);
+extern void __pspgl_ge_init (struct pspgl_context *c);
 
 
 /* pspgl_vidmem.c */
-extern EGLint eglerror;
-extern struct pspgl_context *pspgl_curctx;
+extern EGLint __pspgl_eglerror;
+extern struct pspgl_context *__pspgl_curctx;
+#define pspgl_curctx	__pspgl_curctx
 
-extern void* pspgl_vidmem_alloc (unsigned long size);
-extern void  pspgl_vidmem_free (void * ptr);
-extern EGLBoolean pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s);
+extern void* __pspgl_vidmem_alloc (unsigned long size);
+extern void  __pspgl_vidmem_free (void * ptr);
+extern EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s);
 
 
 /* pspgl_varray.c */
-extern long glprim2geprim (GLenum glprim);
-extern void pspgl_varray_draw (GLenum mode, GLenum index_type, const GLvoid *indices, GLint first, GLsizei count);
+extern long __pspgl_glprim2geprim (GLenum glprim);
+extern void __pspgl_varray_draw (GLenum mode, GLenum index_type, const GLvoid *indices, GLint first, GLsizei count);
 
 
 /* glEnable.c */
-extern void pspgl_enable_state (GLenum cap, int enable);
 
 
 #define GLERROR(errcode)					\
 do {								\
-	psp_log("*** GL error 0x%04x ***\n", errcode);		\
-	if (pspgl_curctx)					\
-		pspgl_curctx->glerror = errcode;		\
+	__pspgl_log("*** GL error 0x%04x ***\n", errcode);		\
+	if (__pspgl_curctx)						\
+		__pspgl_curctx->glerror = errcode;			\
 } while (0)
 
 
 #define EGLERROR(errcode)					\
 do {								\
-	psp_log("*** EGL error 0x%04x ***\n",	errcode);	\
-	eglerror = errcode;					\
+	__pspgl_log("*** EGL error 0x%04x ***\n",	errcode);	\
+	__pspgl_eglerror = errcode;					\
 } while (0)
 
 
@@ -174,15 +174,15 @@ unsigned long COLOR4 (const GLfloat c[4])
 }
 
 
-extern void pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd, unsigned long argi);
-extern void pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd, unsigned long argi, unsigned long mask);
-extern void pspgl_context_flush_pending_state_changes (struct pspgl_context *c);
-extern void pspgl_context_writereg_uncached (struct pspgl_context *c, unsigned long cmd, unsigned long argi);
+extern void __pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd, unsigned long argi);
+extern void __pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd, unsigned long argi, unsigned long mask);
+extern void __pspgl_context_flush_pending_state_changes (struct pspgl_context *c);
+extern void __pspgl_context_writereg_uncached (struct pspgl_context *c, unsigned long cmd, unsigned long argi);
 
-extern void pspgl_context_flush_pending_matrix_changes (struct pspgl_context *c);
+extern void __pspgl_context_flush_pending_matrix_changes (struct pspgl_context *c);
 
-#define sendCommandi(cmd,argi)		pspgl_context_writereg(pspgl_curctx, cmd, argi)
-#define sendCommandiUncached(cmd,argi)	pspgl_context_writereg_uncached (pspgl_curctx, cmd, argi)
+#define sendCommandi(cmd,argi)		__pspgl_context_writereg(pspgl_curctx, cmd, argi)
+#define sendCommandiUncached(cmd,argi)	__pspgl_context_writereg_uncached (pspgl_curctx, cmd, argi)
 
 #define sendCommandf(cmd,argf)						\
 do {									\

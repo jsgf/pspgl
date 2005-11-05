@@ -34,15 +34,15 @@ EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
 	c->read = read;
 
 	if (pspgl_curctx) {
-		pspgl_dlist_finalize(pspgl_curctx->dlist_current);
-		pspgl_dlist_await_completion();
+		__pspgl_dlist_finalize(pspgl_curctx->dlist_current);
+		__pspgl_dlist_await_completion();
 		pspgl_curctx->refcount--;
 	}
 
 	pspgl_curctx = c;
 
 	if (!c->initialized) {
-		pspgl_ge_init(c);
+		__pspgl_ge_init(c);
 		c->initialized = 1;
 	}
 
@@ -52,6 +52,6 @@ EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
 
 	c->matrix_touched |= 0x07;
 
-	return pspgl_vidmem_setup_write_and_display_buffer(c->draw);
+	return __pspgl_vidmem_setup_write_and_display_buffer(c->draw);
 }
 

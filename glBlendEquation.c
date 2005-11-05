@@ -35,6 +35,6 @@ void glBlendEquation (GLenum equation)
 		return;
 	}
 
-	pspgl_context_writereg_masked(pspgl_curctx, CMD_BLEND_FUNC, (e << 8), 0xf00);
+	__pspgl_context_writereg_masked(pspgl_curctx, CMD_BLEND_FUNC, (e << 8), 0xf00);
 }
 

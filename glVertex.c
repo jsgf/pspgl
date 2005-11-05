@@ -16,7 +16,7 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 	struct t2f_c4ub_n3f_v3f *vbuf;
 
 	if (c->current.vertex_count == 0)
-		c->current.vbuf_adr = pspgl_dlist_insert_space(c->dlist_current, 12 * sizeof(struct t2f_c4ub_n3f_v3f));
+		c->current.vbuf_adr = __pspgl_dlist_insert_space(c->dlist_current, 12 * sizeof(struct t2f_c4ub_n3f_v3f));
 
 	vbuf = (struct t2f_c4ub_n3f_v3f *) c->current.vbuf_adr;
 
@@ -51,7 +51,7 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 			struct t2f_c4ub_n3f_v3f *vbuf_start, *prev;
 
 			prev = c->current.vbuf_adr;
-			c->current.vbuf_adr = pspgl_dlist_insert_space(c->dlist_current, 12 * sizeof(struct t2f_c4ub_n3f_v3f));
+			c->current.vbuf_adr = __pspgl_dlist_insert_space(c->dlist_current, 12 * sizeof(struct t2f_c4ub_n3f_v3f));
 			vbuf_start = c->current.vbuf_adr;
 
 			if (prim == GL_TRIANGLE_FAN || prim == GL_POLYGON) {

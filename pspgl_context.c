@@ -4,7 +4,7 @@
 /**
  *  cached register write, save value and mark as touched...
  */
-void pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd, unsigned long argi) 
+void __pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd, unsigned long argi) 
 {
 	unsigned long new = ((cmd) << 24) | ((argi) & 0xffffff);
 
@@ -15,7 +15,7 @@ void pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd, unsigne
 }
 
 
-void pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd, unsigned long argi, unsigned long mask)
+void __pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd, unsigned long argi, unsigned long mask)
 {
 	unsigned long new = (c->ge_reg[cmd] & ~mask) | (argi & mask);
 
@@ -29,7 +29,7 @@ void pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd, 
 /**
  *  flush all pending, cached values, then clear register-touch mark words.
  */
-void pspgl_context_flush_pending_state_changes (struct pspgl_context *c)
+void __pspgl_context_flush_pending_state_changes (struct pspgl_context *c)
 {
 	unsigned long i;
 	struct pspgl_dlist *d = pspgl_curctx->dlist_current;
@@ -49,7 +49,7 @@ void pspgl_context_flush_pending_state_changes (struct pspgl_context *c)
 			/* count leading ones */
 			__asm__("clo %0, %1" : "=r" (count) : "r" (word));
 			for (; count>0; count--, word<<=1)
-				pspgl_dlist_enqueue_cmd(d, c->ge_reg[idx++]);
+				__pspgl_dlist_enqueue_cmd(d, c->ge_reg[idx++]);
 		}
 
 		c->ge_reg_touched[i] = 0;
@@ -60,11 +60,11 @@ void pspgl_context_flush_pending_state_changes (struct pspgl_context *c)
 /**
  *  trigger some real action. Implies a flush of pending state changes.
  */
-void pspgl_context_writereg_uncached (struct pspgl_context *c, unsigned long cmd, unsigned long argi) 
+void __pspgl_context_writereg_uncached (struct pspgl_context *c, unsigned long cmd, unsigned long argi) 
 {
 	unsigned long val = ((cmd) << 24) | ((argi) & 0xffffff);
-	pspgl_context_flush_pending_state_changes(pspgl_curctx);
-	pspgl_dlist_enqueue_cmd(c->dlist_current, val);
+	__pspgl_context_flush_pending_state_changes(pspgl_curctx);
+	__pspgl_dlist_enqueue_cmd(c->dlist_current, val);
 }
 
 
@@ -74,11 +74,11 @@ void pspgl_context_writereg_mtx (struct pspgl_context *c, int cmd, GLfloat argf)
 {
 	union { float f; unsigned int i; } arg = { .f = argf };
 	unsigned long val = (cmd << 24) | (arg.i >> 8);
-	pspgl_dlist_enqueue_cmd(c->dlist_current, val);
+	__pspgl_dlist_enqueue_cmd(c->dlist_current, val);
 }
 
 
-void pspgl_context_flush_pending_matrix_changes (struct pspgl_context *c)
+void __pspgl_context_flush_pending_matrix_changes (struct pspgl_context *c)
 {
 	static const unsigned char matrix_opcode [] = { CMD_MAT_MODEL_TRIGGER, CMD_MAT_PROJ_TRIGGER, CMD_MAT_TEXTURE_TRIGGER };
 	int matrix_id;
@@ -91,7 +91,7 @@ void pspgl_context_flush_pending_matrix_changes (struct pspgl_context *c)
 			int n = (opcode == CMD_MAT_PROJ_TRIGGER) ? 4 : 3;
 			int i, j;
 
-			pspgl_context_writereg_uncached(c, opcode, 0);
+			__pspgl_context_writereg_uncached(c, opcode, 0);
 			opcode++;
 
 			for (j=0; j<4; j++) {

@@ -11,11 +11,11 @@ EGLBoolean eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 		return EGL_FALSE;
 	}
 
-	if (c == pspgl_curctx)
-		pspgl_dlist_cancel();
+	if (c == __pspgl_curctx)
+		__pspgl_dlist_cancel();
 
-	pspgl_dlist_free(c->dlist[0]);
-	pspgl_dlist_free(c->dlist[1]);
+	__pspgl_dlist_free(c->dlist[0]);
+	__pspgl_dlist_free(c->dlist[1]);
 
 	c->refcount--;
 
@@ -30,8 +30,8 @@ EGLBoolean eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 		c->shared->refcount--;
 
 		if (c->shared->refcount == 0) {
-			pspgl_hash_foreach_free(&c->shared->texture_objects, (void (*) (void *)) pspgl_texobj_free);
-			pspgl_hash_foreach_free(&c->shared->display_lists, /* XXX should become dlist_free() */ free);
+			__pspgl_hash_foreach_free(&c->shared->texture_objects, (void (*) (void *)) __pspgl_texobj_free);
+			__pspgl_hash_foreach_free(&c->shared->display_lists, /* XXX should become dlist_free() */ free);
 			free(c->shared);
 		}
 

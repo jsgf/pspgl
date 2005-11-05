@@ -5,8 +5,8 @@
 #include "pspgl_internal.h"
 
 
-GLint eglerror = EGL_SUCCESS;
-struct pspgl_context *pspgl_curctx = NULL;
+GLint __pspgl_eglerror = EGL_SUCCESS;
+struct pspgl_context *__pspgl_curctx = NULL;
 
 
 struct vidmem_chunk {
@@ -39,7 +39,7 @@ void *vidmem_map_insert_new (unsigned long idx, unsigned long adr, unsigned long
 }
 
 
-void* pspgl_vidmem_alloc (unsigned long size)
+void* __pspgl_vidmem_alloc (unsigned long size)
 {
 	unsigned long start = (unsigned long) sceGeEdramGetAddr();
 	unsigned long adr = start;
@@ -61,7 +61,7 @@ void* pspgl_vidmem_alloc (unsigned long size)
 }
 
 
-void  pspgl_vidmem_free (void * ptr)
+void  __pspgl_vidmem_free (void * ptr)
 {
 	int i;
 
@@ -82,7 +82,7 @@ void  pspgl_vidmem_free (void * ptr)
 }
 
 
-EGLBoolean pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s)
+EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s)
 {
 	unsigned long current_back = (s->color_buffer[1] == NULL) ? 0 : (s->current_front ^ 1);
 	unsigned long adr;
