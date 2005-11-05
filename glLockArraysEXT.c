@@ -109,7 +109,7 @@ GLboolean __pspgl_cache_arrays(void)
 		return GL_FALSE; /* nothing locked */
 	}
 
-	if (size == 0 || size >= MAX_CACHED_ARRAY) {
+	if (size == 0 || size > MAX_CACHED_ARRAY) {
 		psp_log("failed: size=%d\n", size);
 		return GL_FALSE; /* too small or too big */
 	}

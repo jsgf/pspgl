@@ -21,9 +21,9 @@ unsigned long ge_init_state [] =
 	0x71000000, 0x72000000, 0x73000000, 0x74000000, 0x75000000, 0x76000000, 0x77000000, 0x78000000,
 	0x79000000, 0x7a000000, 0x7b000000, 0x7c000000, 0x7d000000, 0x7e000000, 0x7f000000, 0x80000000,
 	0x81000000, 0x82000000, 0x83000000, 0x84000000, 0x85000000, 0x86000000, 0x87000000, 0x88000000,
-	0x89000000, 0x8a000000, 0x8b000000, 0x8c000000, 0x8d000000, 0x8e000000, 0x8f000000, 0x90000000,
+	0x89000000, 0x8a000000, 0x8b000000, 0x8c000000, 0x8d000000, 0x8e000000, /* 0x8f000000, 0x90000000,
 	0x91000000, 0x92000000, 0x93000000, 0x94000000, 0x95000000, 0x96000000, 0x97000000, 0x98000000,
-	0x99000000, 0x9a000000, /*0x9b000000,*/ 0x9c000000, 0x9d000000, 0x9e000000, 0x9f000000, 0xa0000000,
+	0x99000000, 0x9a000000, */ /*0x9b000000,*/ 0x9c000000, 0x9d000000, 0x9e000000, 0x9f000000, 0xa0000000,
 	0xa1000000, 0xa2000000, 0xa3000000, 0xa4000000, 0xa5000000, 0xa6000000, 0xa7000000,
 
 	/* ignore texobj regs, initialized by texobj_default */				 /* 0xa8040004,
@@ -46,13 +46,33 @@ unsigned long ge_init_state [] =
 
 	0x483f8000,	/* Texture Scale S 1.0 */
 	0x493f8000,	/* Texture Scale T 1.0 */
-	0x54000000,	/* emissive color 0.0, 0.0, 0.0, 1.0 */
-	0x55333333,	/* ambient  color 0.2, 0.2, 0.2, 1.0 */
-	0x56cccccc,	/* diffuse  color 0.8, 0.8, 0.8, 1.0 */
-	0x57000000,	/* specular color 0.0, 0.0, 0.0, 1.0 */
+
+	0x54000000,	/* emissive color 0, 0, 0, 1 */
+	0x55ffffff,	/* ambient color sets default colour, which is 1,1,1,1 with lighting off */
+	0x56cccccc,	/* diffuse color 0.8, 0.8, 0.8, 1.0 */
+	0x57000000,	/* specular color 0, 0, 0, 1 */
 	0x580000ff,	/* ambient alpha 1 */
+
 	0x5b3f8000,	/* Specular Power = 1.0 */
-	0x5f000007,	/* ambient/diffuse/specular component */
+
+	0x5f000000,	/* light 0, directional, ambient/diffuse component */
+	0x60000000,	/* light 1, directional, ambient/diffuse component */
+	0x61000000,	/* light 2, directional, ambient/diffuse component */
+	0x62000000,	/* light 3, directional, ambient/diffuse component */
+
+	0x8f000000,	/* light 0 ambient 0,0,0,1 */
+	0x90ffffff,	/* light 0 diffuse 1,1,1,1 */
+	0x91ffffff,	/* light 0 specular 1,1,1,1 */
+	0x92000000,	/* light 1 ambient 0,0,0,1 */
+	0x93000000,	/* light 1 diffuse 0,0,0,0 */
+	0x94000000,	/* light 1 specular 0,0,0,0 */
+ 	0x95000000,	/* light 2 ambient 0,0,0,1 */
+	0x96000000,	/* light 2 diffuse 0,0,0,0 */
+	0x97000000,	/* light 2 specular 0,0,0,0 */
+ 	0x98000000,	/* light 3 ambient 0,0,0,1 */
+	0x99000000,	/* light 3 diffuse 0,0,0,0 */
+	0x9a000000,	/* light 3 specular 0,0,0,0 */
+
 	0x9b000000,	/* Front Face Orientation=CCW ^ backface cull=1 -> cull GE_CCW */
 	0xc7000106,	/* Texfilter mag (LINEAR), min (NEAREST_MIPMAP_LINEAR) */
         0xe2001d0c,	/* Dither Matrix, Row 0 */
@@ -60,12 +80,6 @@ unsigned long ge_init_state [] =
 	0xe4000c1d,	/* Dither Matrix, Row 2 */
 	0xe500e2f3,	/* Dither Matrix, Row 3 */
 	0xde000007,	/* Depth Test Function GL_LESS -> GE_GEQUAL */
-
-	0x54000000,	/* emissive color 0, 0, 0, 1 */
-	0x55ffffff,	/* ambient color sets default colour, which is 1,1,1,1 with lighting off */
-	0x56cccccc,	/* diffuse color .8, .8, .8, 1 */
-	0x57000000,	/* specular color 0, 0, 0, 1 */
-	0x580000ff,	/* ambient alpha 1 */
 };
 
 

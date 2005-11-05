@@ -3,8 +3,6 @@
 
 void glMaterialfv (GLenum face, GLenum pname, const GLfloat *params)
 {
-	unsigned components;
-
 	switch (pname) {
 	case GL_AMBIENT:
 		pspgl_curctx->material.ambient = COLOR4(params);
@@ -36,6 +34,10 @@ void glMaterialfv (GLenum face, GLenum pname, const GLfloat *params)
 		return;
 	}
 
+#if 0
+	unsigned components;
+
+	/* glColorMaterial? */
 	components = 0;
 	if (pspgl_curctx->material.ambient)
 		components |= GE_AMBIENT;
@@ -44,11 +46,17 @@ void glMaterialfv (GLenum face, GLenum pname, const GLfloat *params)
 	if ((getReg(CMD_MATERIAL_DIF_C) & 0xffffff) != 0)
 		components |= GE_DIFFUSE;
 	sendCommandi(CMD_MATERIAL, components);
+#endif
 }
 
 
 void glMaterialf (GLenum face, GLenum pname, GLfloat param)
 {
 	glMaterialfv(face, pname, &param);
+}
+
+void glMateriali (GLenum face, GLenum pname, GLint param)
+{
+	glMaterialf(face, pname, param);
 }
 
