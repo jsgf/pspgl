@@ -261,17 +261,11 @@ void __pspgl_texobj_free(struct pspgl_texobj *tobj)
 	free(tobj);
 }
 
-static void heap_free(struct pspgl_buffer *buf)
-{
-	free(buf->base);
-}
-
 struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, 
 					unsigned width, unsigned height, unsigned size,
 					const struct pspgl_texfmt *texfmt)
 {
 	struct pspgl_teximg *timg;
-	void *img;
 
 	timg = malloc(sizeof(*timg));
 	if (timg == NULL)
@@ -282,15 +276,8 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels,
 	if (size == 0)
 		size = width * height * texfmt->hwsize;
 
-	/* XXX try to allocate edram? */
-	img = memalign(CACHELINE_SIZE, size);
-
-	if (img == NULL) {
-		free(timg);
+	if (!__pspgl_buffer_init(&timg->image, size, GL_STATIC_DRAW_ARB))
 		return NULL;
-	}
-
-	__pspgl_buffer_init(&timg->image, img, size, heap_free);
 
 	if (pixels) {
 		void *p = __pspgl_buffer_map(&timg->image, GL_WRITE_ONLY_ARB);

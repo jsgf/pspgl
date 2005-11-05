@@ -5,18 +5,11 @@
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
 
-static void data_free_heap(struct pspgl_buffer *data)
-{
-	free(data->base);
-}
-
 void glBufferDataARB(GLenum target, GLsizeiptr size,
 		     const GLvoid *init_data, GLenum usage)
 {
 	struct pspgl_bufferobj *buf, **bufp;
 	struct pspgl_buffer *databuf;
-	GLsizeiptr allocsize;
-	void *data;
 
 	bufp = __pspgl_bufferobj_for_target(target);
 
@@ -35,34 +28,9 @@ void glBufferDataARB(GLenum target, GLsizeiptr size,
 		return;
 	}
 
-
-	/* XXX TODO
-	   
-	   Use "usage" to determine where the buffer is
-	   allocated. COPY means GL->GL data, READ means
-	   GL->application, DRAW means app->GL.
-	   Hm, target can also play a role here...
-
-	   Initial thoughts:
-	   *_COPY		VRAM (by necessity?)
-	   STATIC_*		VRAM (hardware uses data more)
-	   STREAM+DYNAMIC	system memory?
-	 */
-
-	allocsize = ROUNDUP(size, CACHELINE_SIZE);
-
-	/* cache-line aligned for easy uncached access later */
-	data = memalign(CACHELINE_SIZE, allocsize);
-
-	if (data == NULL) {
-		GLERROR(GL_OUT_OF_MEMORY);
-		return;
-	}
-
-	databuf = __pspgl_buffer_new(data, allocsize, data_free_heap);
+	databuf = __pspgl_buffer_new(size, usage);
 
 	if (databuf == NULL) {
-		free(data);
 		GLERROR(GL_OUT_OF_MEMORY);
 		return;
 	}

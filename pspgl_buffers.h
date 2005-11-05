@@ -14,8 +14,6 @@ struct pspgl_buffer {
 
 	void *base;
 	GLsizeiptr size;
-
-	void (*free)(struct pspgl_buffer *);
 };
 
 struct pspgl_bufferobj {
@@ -45,17 +43,17 @@ void *__pspgl_bufferobj_map(const struct pspgl_bufferobj *buf, GLenum access, vo
 /* Unmap a buffer mapped above.  Should always be paired. */
 void __pspgl_bufferobj_unmap(const struct pspgl_bufferobj *buf, GLenum access);
 
-/* Return a buffer ** for a particular target.  Returns NULL if target
+/* Return a bufferobj ** for a particular target.  Returns NULL if target
    is unknown/invalid, and sets GLERROR appropriately. */
 struct pspgl_bufferobj **__pspgl_bufferobj_for_target(GLenum target);
 
+/* Allocate and initialize a buffer, allocating data according the "usage" */
+struct pspgl_buffer *__pspgl_buffer_new(GLsizeiptr size, GLenum usage);
 
+/* Initialize a buffer, allocating data according the "usage"; returns false on failure */
+GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf, GLsizeiptr size, GLenum usage);
 
-struct pspgl_buffer *__pspgl_buffer_new(void *base, GLsizeiptr size,
-						void (*free)(struct pspgl_buffer *));
-void __pspgl_buffer_init(struct pspgl_buffer *buf, 
-			     void *base, GLsizeiptr size, 
-			     void (*free)(struct pspgl_buffer *));
+/* Decrement a buffer's count and free if it hits 0 */
 void __pspgl_buffer_free(struct pspgl_buffer *data);
 
 /* Map a buffer for access type "access".  May be called repeatedly. */

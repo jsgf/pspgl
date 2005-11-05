@@ -1,5 +1,8 @@
 #include <stdlib.h>
+#include <malloc.h>
+
 #include <psputils.h>
+#include <pspge.h>
 
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
@@ -60,10 +63,50 @@ void __pspgl_bufferobj_unmap(const struct pspgl_bufferobj *buf, GLenum access)
 		__pspgl_buffer_unmap(buf->data, access);
 }
 
-void __pspgl_buffer_init(struct pspgl_buffer *buf, 
-			     void *base, GLsizeiptr size, 
-			     void (*free)(struct pspgl_buffer *))
+static int is_edram_addr(void *p)
 {
+	static void *edram_start, *edram_end;
+
+	if (edram_end == NULL) {
+		edram_start = sceGeEdramGetAddr();
+		edram_end = sceGeEdramGetAddr() + sceGeEdramGetSize();
+	}
+
+	return (p >= edram_start) && (p < edram_end);
+}
+
+GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
+			      GLsizeiptr size, GLenum usage)
+{
+	void *p = NULL;
+
+	/* XXX allocate different types of memory based on usage */
+	size = ROUNDUP(size, CACHELINE_SIZE);
+
+	switch(usage) {
+	case GL_STATIC_DRAW_ARB:	/* nice to have in edram */
+	case GL_STATIC_READ_ARB:
+	case GL_DYNAMIC_READ_ARB:
+
+	case GL_STATIC_COPY_ARB:	/* must be in edram */
+	case GL_DYNAMIC_COPY_ARB:
+	case GL_STREAM_COPY_ARB:
+		p = __pspgl_vidmem_alloc(size);
+		break;
+
+	case GL_DYNAMIC_DRAW_ARB:	/* prefer in system memory */
+	case GL_STREAM_READ_ARB:
+	case GL_STREAM_DRAW_ARB:
+		/* fallthrough to allocation */
+		break;
+	}
+
+	if (p == NULL)
+		p = memalign(CACHELINE_SIZE, size);
+
+  	/* put cache into appropriate unmapped state */
+ 	sceKernelDcacheWritebackInvalidateRange(p, size);
+
 	buf->refcount = 1;
 	buf->mapped = 0;
 	buf->pinned = 0;
@@ -71,21 +114,23 @@ void __pspgl_buffer_init(struct pspgl_buffer *buf,
 	buf->pin_prevp = NULL;
 	buf->pin_next = NULL;
 
-	buf->base = base;
+	buf->base = p;
 	buf->size = size;
 
-	buf->free = free;
+	return GL_TRUE;
 }
 
-struct pspgl_buffer *__pspgl_buffer_new(void *base, GLsizeiptr size,
-						void (*free)(struct pspgl_buffer *))
+struct pspgl_buffer *__pspgl_buffer_new(GLsizeiptr size, GLenum usage)
 {
 	struct pspgl_buffer *ret;
 
 	ret = malloc(sizeof(*ret));
 
 	if (ret != NULL)
-		__pspgl_buffer_init(ret, base, size, free);
+		if (!__pspgl_buffer_init(ret, size, usage)) {
+			free(ret);
+			ret = NULL;
+		}
 
 	return ret;
 }
@@ -97,9 +142,12 @@ void __pspgl_buffer_free(struct pspgl_buffer *data)
 	if (--data->refcount)
 		return;
 
-	if (data->free)
-		(*data->free)(data);
-
+	if (data->base) {
+		if (is_edram_addr(data->base))
+			__pspgl_vidmem_free(data->base);
+		else
+			free(data->base);
+	}
 	free(data);
 }
 

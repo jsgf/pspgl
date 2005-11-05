@@ -9,47 +9,6 @@
 /* Maximum size of cached vertices */
 #define MAX_CACHED_ARRAY	(128*1024)
 
-static void vidmem_free(struct pspgl_buffer *data)
-{
-	__pspgl_vidmem_free(data->base);
-}
-
-static void heap_free(struct pspgl_buffer *data)
-{
-	free(data->base);
-}
-
-static struct pspgl_buffer *alloc_array_buffer(unsigned bytes)
-{
-	void *p;
-	void (*freep)(struct pspgl_buffer *);
-	struct pspgl_buffer *data;
-
-	bytes = ROUNDUP(bytes, CACHELINE_SIZE);
-
-	/* Try placing cached array in EDRAM; seems to be good for
-	   about 20% performance improvement. */
-	p = __pspgl_vidmem_alloc(bytes);
-	freep = vidmem_free;
-
-	if (p == NULL) {
-		p = memalign(16, bytes);
-		freep = heap_free;
-	}
-
-	if (p == NULL)
-		return NULL;
-
-	data = __pspgl_buffer_new(p, bytes, freep);
-
-	if (data == NULL) {
-		struct pspgl_buffer d = { .base = p };
-		(*freep)(&d);
-	}
-
-	return data;
-}
-
 /* Cache current arrays into a buffer in hardware form, if possible.
    Could fail for any number of reasons; returns true if it
    succeeds. */
@@ -114,7 +73,7 @@ GLboolean __pspgl_cache_arrays(void)
 		return GL_FALSE; /* too small or too big */
 	}
 
-	cached = alloc_array_buffer(size);
+	cached = __pspgl_buffer_new(size, GL_STATIC_DRAW_ARB);
 	if (cached == NULL) {
 		psp_log("failed: out of memory\n");
 		return GL_FALSE; /* out of memory */
