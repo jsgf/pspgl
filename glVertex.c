@@ -9,6 +9,7 @@ struct t2f_c4ub_n3f_v3f {
 	GLfloat vertex [3];
 };
 
+#define BUFSZ	12		/* must be a multiple of 2,3 and 4 */
 
 void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 {
@@ -16,7 +17,7 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 	struct t2f_c4ub_n3f_v3f *vbuf;
 
 	if (c->current.vertex_count == 0)
-		c->current.vbuf_adr = __pspgl_dlist_insert_space(c->dlist_current, 12 * sizeof(struct t2f_c4ub_n3f_v3f));
+		c->current.vbuf_adr = __pspgl_dlist_insert_space(c->dlist_current, BUFSZ * sizeof(struct t2f_c4ub_n3f_v3f));
 
 	vbuf = (struct t2f_c4ub_n3f_v3f *) c->current.vbuf_adr;
 
@@ -37,7 +38,7 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 	vbuf->vertex[1] = y;
 	vbuf->vertex[2] = z;
 
-	if (++c->current.vertex_count == 12) {
+	if (++c->current.vertex_count == BUFSZ) {
 		static const char overhang [] = { 0, 0, 1, 1, 0, 2, 2, 3, 3, 2 };
 		GLenum prim = c->current.primitive;
 
@@ -51,7 +52,7 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 			struct t2f_c4ub_n3f_v3f *vbuf_start, *prev;
 
 			prev = c->current.vbuf_adr;
-			c->current.vbuf_adr = __pspgl_dlist_insert_space(c->dlist_current, 12 * sizeof(struct t2f_c4ub_n3f_v3f));
+			c->current.vbuf_adr = __pspgl_dlist_insert_space(c->dlist_current, BUFSZ * sizeof(struct t2f_c4ub_n3f_v3f));
 			vbuf_start = c->current.vbuf_adr;
 
 			if (prim == GL_TRIANGLE_FAN || prim == GL_POLYGON) {
@@ -60,7 +61,8 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 				vbuf_start++;
 			}
 
-			memcpy(vbuf_start, vbuf - overhang[prim] + 1, overhang[prim] * sizeof(vbuf[0]));
+			memcpy(vbuf_start, vbuf - overhang[prim] + 1, 
+			       overhang[prim] * sizeof(vbuf[0]));
 		}
  
 		/* reset primitive type, was cleared by glEnd() */
