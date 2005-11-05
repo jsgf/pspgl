@@ -37,6 +37,9 @@ void __pspgl_dlist_finalize(struct pspgl_dlist *d)
 	assert(d->qid == -1);
 	if (DLIST_CACHED)
 		sceKernelDcacheWritebackInvalidateRange(d->cmd_buf, sizeof(d->cmd_buf));
+
+	if (pspgl_curctx->stats.enabled)
+		pspgl_curctx->stats.buffer_issues++;
 	d->qid = sceGeListEnQueue(d->cmd_buf, &d->cmd_buf[d->len-1], 0, NULL);
 }
 
@@ -130,7 +133,16 @@ void __pspgl_dlist_set_cleanup(void (*cleanup)(void *), void *arg)
 static void sync_list(struct pspgl_dlist *list)
 {
 	struct pspgl_cleanup *cleanup, *next;
+	unsigned long long start=0;
+
+	if (pspgl_curctx->stats.enabled)
+		start = now();
+
 	sceGeListSync(list->qid, PSP_GE_LIST_DONE);
+
+	if (pspgl_curctx->stats.enabled)
+		pspgl_curctx->stats.queuewait += __pspgl_ticks_to_us(now() - start);
+
 	list->qid = -1;
 
 	for(cleanup = list->cleanups; cleanup != NULL; cleanup = next) {
@@ -176,6 +188,9 @@ void __pspgl_dlist_submit(struct pspgl_dlist *d)
 			sync_list(d);
 		if (DLIST_CACHED)
 			sceKernelDcacheWritebackInvalidateRange(d->cmd_buf, sizeof(d->cmd_buf));
+
+		if (pspgl_curctx->stats.enabled)
+			pspgl_curctx->stats.buffer_issues++;
 		d->qid = sceGeListEnQueue(d->cmd_buf, &d->cmd_buf[d->len], 0, NULL);
 	}
 }

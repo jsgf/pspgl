@@ -11,7 +11,7 @@
 #include "pspgl_misc.h"
 
 
-#define NUM_CMDLISTS	16
+#define NUM_CMDLISTS	8
 
 struct pspgl_vertex_array {
 	GLenum enabled;
@@ -159,6 +159,14 @@ struct pspgl_context {
  	struct {
 		struct pspgl_texobj	*bound;	/* currently bound texture */
  	} texture;
+
+	struct {
+		GLboolean	enabled;
+
+		/* all times in microseconds */
+		unsigned	queuewait;	/* time spent waiting for queues */
+		unsigned	buffer_issues;	/* number of command buffers issued */
+	} stats;
 };
 
 
@@ -173,6 +181,9 @@ struct pspgl_surface {
 	int displayed;
 
 	unsigned alpha_mask, stencil_mask;
+
+	/* timing stats */
+	unsigned long long	flip_start, flip_end, prev_end;
 };
 
 
@@ -193,6 +204,22 @@ extern EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_su
 extern void __pspgl_dlist_cleanup_varray(void *);
 extern GLboolean __pspgl_cache_arrays(void);
 extern void __pspgl_uncache_arrays(void);
+
+/* pspgl_stats.c */
+
+#include <time.h>
+#include <psptypes.h>
+#include <psprtc.h>
+
+static inline unsigned long long now()
+{
+	unsigned long long ret;
+
+	sceRtcGetCurrentTick(&ret);
+	return ret;
+}
+
+unsigned __pspgl_ticks_to_us(unsigned long long ticks);
 
 
 /* pspgl_varray.c */

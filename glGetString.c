@@ -20,6 +20,7 @@ char *gl_strings [] = {
 	"GL_EXT_texture_compression_s3tc "
 	"GL_EXT_vertex_array " 
 	"GL_EXT_compiled_vertex_array "
+	"GL_PSP_statistics "
 };
 
 

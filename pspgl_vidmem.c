@@ -87,6 +87,8 @@ EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *
 	unsigned long current_back = (s->color_buffer[1] == NULL) ? 0 : (s->current_front ^ 1);
 	unsigned long adr;
 
+	s->flip_start = now();
+
 	psp_log("current_front %d\n", s->current_front);
 
 	if (!s) {
@@ -130,6 +132,9 @@ EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *
 
 		psp_log("display @ adr 0x%08x\n", (unsigned long) s->color_buffer[s->current_front]);
 	}
+
+	s->prev_end = s->flip_end;
+	s->flip_end = now();
 
 	return EGL_TRUE;
 }

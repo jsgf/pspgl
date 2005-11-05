@@ -114,6 +114,7 @@ libGL.a_OBJS = \
 	pspgl_ge_init.o \
 	pspgl_hash.o \
 	pspgl_misc.o \
+	pspgl_stats.o \
 	pspgl_texobj.o \
 	pspgl_varray.o \
 	pspgl_varray_draw.o \

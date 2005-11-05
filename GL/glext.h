@@ -6488,6 +6488,24 @@ typedef void (APIENTRYP PFNGLSTRINGMARKERGREMEDYPROC) (GLsizei len, const GLvoid
 #endif
 
 
+#ifndef GL_PSP_statistics
+#define GL_PSP_statistics 1
+#ifdef GL_GLEXT_PROTOTYPES
+GLAPI void APIENTRY glEnableStatsPSP (GLenum);
+GLAPI void APIENTRY glDisableStatsPSP (GLenum);
+GLAPI void APIENTRY glResetStatsPSP (GLenum);
+GLAPI void APIENTRY glGetStatisticsuivPSP (GLenum, GLuint *);
+
+#define GL_STATS_TIMING_PSP		0x11000
+#define GL_STATS_FRAMETIME_PSP		0x11001
+#define GL_STATS_APPTIME_PSP		0x11002
+#define GL_STATS_SWAPTIME_PSP		0x11003
+#define GL_STATS_CMDISSUES_PSP		0x11004
+#define GL_STATS_QUEUEWAITTIME_PSP	0x11005
+
+#endif /* GL_GLEXT_PROTOTYPES */
+#endif
+
 #ifdef __cplusplus
 }
 #endif
