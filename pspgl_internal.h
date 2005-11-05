@@ -28,6 +28,16 @@ struct pspgl_shared_context {
 	struct hashtable display_lists;
 };
 
+struct pspgl_matrix {
+	GLfloat mat[16];
+};
+
+struct pspgl_matrix_stack {
+	struct pspgl_matrix *stack;
+	unsigned limit;
+	unsigned depth;
+	unsigned dirty;		/* hardware needs updating */
+};
 
 struct pspgl_context {
 	uint32_t ge_reg [256];
@@ -67,10 +77,14 @@ struct pspgl_context {
 
 	GLfloat depth_offset;
 
-	unsigned long matrix_touched;  /* bitfield */
-	GLenum matrix_mode;
-	GLint matrix_stack_depth[3];
-	GLfloat (* (matrix_stack [3])) [16];
+
+	struct pspgl_matrix_stack projection_stack;
+	struct pspgl_matrix_stack modelview_stack;
+	struct pspgl_matrix_stack texture_stack;
+
+	struct pspgl_matrix_stack *current_matrix_stack;
+	struct pspgl_matrix *current_matrix;
+
 
 	struct pspgl_shared_context *shared;
 
@@ -179,6 +193,7 @@ unsigned long COLOR4 (const GLfloat c[4])
 		 ((int) (255.0 * CLAMPF(c[0]))));
 }
 
+extern const GLfloat __pspgl_identity[];
 
 extern void __pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd, unsigned long argi);
 extern void __pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd, unsigned long argi, unsigned long mask);

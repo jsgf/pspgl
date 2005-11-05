@@ -20,13 +20,6 @@ EGLBoolean eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 	c->refcount--;
 
 	if (c->refcount == 0) {
-		int i;
-
-		for (i=0; i<3; i++) {
-			if (c->matrix_stack[i])
-				free(c->matrix_stack[i]);
-		}
-
 		c->shared->refcount--;
 
 		if (c->shared->refcount == 0) {
@@ -34,6 +27,10 @@ EGLBoolean eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 			__pspgl_hash_foreach_free(&c->shared->display_lists, /* XXX should become dlist_free() */ free);
 			free(c->shared);
 		}
+
+		free(c->projection_stack.stack);
+		free(c->modelview_stack.stack);
+		free(c->texture_stack.stack);
 
 		free(c);
 	}

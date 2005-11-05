@@ -3,10 +3,18 @@
 
 void glMatrixMode (GLenum mode)
 {
-	if (mode < GL_MODELVIEW || mode > GL_TEXTURE) {
+	struct pspgl_matrix_stack *s;
+
+	switch(mode) {
+	case GL_MODELVIEW:	s = &pspgl_curctx->modelview_stack; break;
+	case GL_TEXTURE:	s = &pspgl_curctx->texture_stack; break;
+	case GL_PROJECTION:	s = &pspgl_curctx->projection_stack; break;
+	default:
 		GLERROR(GL_INVALID_ENUM);
-	} else {
-		pspgl_curctx->matrix_mode = mode - GL_MODELVIEW;
+		return;
 	}
+
+	pspgl_curctx->current_matrix_stack = s;
+	pspgl_curctx->current_matrix = &s->stack[s->depth];
 }
 

@@ -49,8 +49,10 @@ EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
 	/* mark all registers and matrices as dirty, we need to rewrite them at init and after context restore... */
 	for (i=0; i<sizeof(c->ge_reg_touched)/sizeof(c->ge_reg_touched[0]); i++)
 		c->ge_reg_touched[i] |= ge_reg_touch_mask[i];
-
-	c->matrix_touched |= 0x07;
+	
+	c->projection_stack.dirty = 1;
+	c->modelview_stack.dirty = 1;
+	c->texture_stack.dirty = 1;
 
 	return __pspgl_vidmem_setup_write_and_display_buffer(c->draw);
 }

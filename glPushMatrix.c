@@ -6,23 +6,18 @@
 void glPushMatrix (void)
 {
 	struct pspgl_context *c = pspgl_curctx;
-	int matrix_id = c->matrix_mode;
-	int depth = c->matrix_stack_depth[matrix_id];
-	void *tmp;
+	struct pspgl_matrix_stack *curstk = c->current_matrix_stack;
 
-	tmp = realloc(c->matrix_stack[matrix_id], (depth + 1) * sizeof(c->matrix_stack[0][0]));
-
-	if (!tmp) {
-		GLERROR(GL_OUT_OF_MEMORY);
+	if (++curstk->depth == curstk->limit) {
+		curstk->depth--;
+		GLERROR(GL_STACK_OVERFLOW);
 		return;
 	}
 
-	c->matrix_stack[matrix_id] = tmp;
-	c->matrix_stack_depth[matrix_id]++;
+	c->current_matrix = &curstk->stack[curstk->depth];
 
-	if (depth > 0)
-		memcpy(c->matrix_stack[matrix_id][depth], c->matrix_stack[matrix_id][depth-1], sizeof(c->matrix_stack[0][0]));
+	memcpy(c->current_matrix, c->current_matrix-1, sizeof(struct pspgl_matrix));
 
-	pspgl_curctx->matrix_touched |= (1 << matrix_id);
+	curstk->dirty = 1;
 }
 

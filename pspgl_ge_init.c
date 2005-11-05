@@ -94,13 +94,6 @@ void __pspgl_ge_init (struct pspgl_context *c)
 	for (i=0; i<sizeof(ge_matrix_init_state)/sizeof(ge_matrix_init_state[0]); i++)
 		__pspgl_dlist_enqueue_cmd(c->dlist_current, ge_matrix_init_state[i]);
 
-	/* create & initialize new matrix stacks, default matrix mode is GL_MODELVIEW when done... */
-	for (i=GL_TEXTURE; i>=GL_MODELVIEW; i--) {
-		glMatrixMode(i);
-		glPushMatrix();
-		glLoadIdentity();
-	}
-
 	glScissor(0, 0, c->draw->width, c->draw->height);
 	glViewport(0, 0, c->draw->width, c->draw->height);
 	glDepthRange(0.0, 1.0);

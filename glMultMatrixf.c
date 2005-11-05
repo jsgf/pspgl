@@ -3,9 +3,7 @@
 
 void glMultMatrixf (const GLfloat *m)
 {
-	int matrix_id = pspgl_curctx->matrix_mode;
-	int depth = pspgl_curctx->matrix_stack_depth[matrix_id];
-	GLfloat *matrix =  pspgl_curctx->matrix_stack[matrix_id][depth-1];
+	GLfloat *matrix = pspgl_curctx->current_matrix->mat;
 	int i;
 
 	/**
@@ -24,6 +22,6 @@ void glMultMatrixf (const GLfloat *m)
 		P(i,3) = ai0 * B(0,3) + ai1 * B(1,3) + ai2 * B(2,3) + ai3 * B(3,3);
 	}
 
-	pspgl_curctx->matrix_touched |= (1 << matrix_id);
+	pspgl_curctx->current_matrix_stack->dirty = 1;
 }
 
