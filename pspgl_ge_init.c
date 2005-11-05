@@ -53,7 +53,7 @@ unsigned long ge_init_state [] =
 	0x580000ff,	/* ambient alpha 1 */
 	0x5b3f8000,	/* Specular Power = 1.0 */
 	0x5f000007,	/* ambient/diffuse/specular component */
-	0x9b000001,	/* Front Face Orientation GL_CCW */
+	0x9b000000,	/* Front Face Orientation=CCW ^ backface cull=1 -> cull GE_CCW */
 	0xc7000106,	/* Texfilter mag (LINEAR), min (NEAREST_MIPMAP_LINEAR) */
         0xe2001d0c,	/* Dither Matrix, Row 0 */
 	0xe300f3e2,	/* Dither Matrix, Row 1 */

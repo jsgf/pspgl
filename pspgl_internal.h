@@ -126,6 +126,9 @@ struct pspgl_context {
 
 	GLfloat depth_offset;
 
+	/* cull_face = (front_cw ^ cull_front) ? ccw : cw */
+	unsigned char front_cw;
+	unsigned char cull_front;
 
 	struct pspgl_matrix_stack projection_stack;
 	struct pspgl_matrix_stack modelview_stack;
