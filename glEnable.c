@@ -89,8 +89,15 @@ static void enable_state (GLenum cap, int enable)
 		}
 		break;
 
-	case GL_COLOR_MATERIAL:
+	case GL_TEXTURE_GEN_S:
+	case GL_TEXTURE_GEN_T:
+		/* TODO */
+		break;
 	case GL_NORMALIZE:
+		/* ? */
+		break;
+
+	case GL_COLOR_MATERIAL:
 	case GL_RESCALE_NORMAL:
 	case GL_POLYGON_OFFSET_FILL:
 	case GL_VERTEX_ARRAY:

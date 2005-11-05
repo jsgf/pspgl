@@ -73,7 +73,7 @@ if [ "$IMAGE" = ""  -o "$help" = "yes" ] ; then
 fi
 
 
-IMGTYPE=`file "$IMAGE" | grep "ELF" | grep "32-bit LSB" | grep "MIPS-II" | grep "executable"`
+IMGTYPE=`file "$IMAGE" | grep "ELF 32-bit LSB.*MIPS-II"`
 
 if [ "$IMGTYPE" = "" ] ; then
 	echo "--------------------------------------------------------------------------------" 
@@ -124,13 +124,19 @@ if [ "$PSP_REVISION" = "1.00" -o "$PSP_REVISION" == "all" ] ; then
 fi
 
 if [ "$PSP_REVISION" = "1.50" -o "$PSP_REVISION" == "all" ] ; then
-	LONG="$IMAGE"_________________________________1
-	BASE=`echo "$LONG" | sed -e "s/\(.\{6\}\).*/\1/"`
-	SHORT="$BASE"~1%
+	IMGDIR=`echo $IMAGE|sed -e 's,\..*$,,' -e 's,^.*/,,'`
+	if true; then
+	    LONG="$IMGDIR"_________________________________1
+	    BASE=`echo "$LONG" | sed -e "s/\(.\{6\}\).*/\1/"`
+	    SHORT="$BASE"~1%
+	else
+	    LONG="$IMGDIR"
+	    SHORT="$IMGDIR%"
+	fi
 	DESTDIR="$PSP_MOUNTDIR/PSP/GAME"
 	LONG=$DESTDIR/$LONG
 	SHORT=$DESTDIR/$SHORT
-	echo "install $IMAGE for rev1.50 on '$DESTDIR/$IMAGE/'..."
+	echo "install $IMAGE for rev1.50 on '$DESTDIR/$IMGDIR/'..."
 	rm -rf "$LONG"
 	rm -rf "$SHORT"
 	mkdir -p "$LONG"

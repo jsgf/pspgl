@@ -73,7 +73,6 @@ libGL.a_OBJS = \
 	glFrustumf.o \
 	glFrustum.o \
 	glGenBuffersARB.o \
-	glGenLists.o \
 	glGenTextures.o \
 	glGetBufferSubDataARB.o \
 	glGetFloatv.o \
@@ -81,7 +80,6 @@ libGL.a_OBJS = \
 	glGetError.o \
 	glGetString.o \
 	glInterleavedArrays.o \
-	glIsList.o \
 	glIsTexture.o \
 	glLight.o \
 	glLightModel.o \
@@ -95,9 +93,11 @@ libGL.a_OBJS = \
 	glMatrixMode.o \
 	glMultMatrixf.o \
 	glNormal.o \
+	glNormald.o \
 	glNormalPointer.o \
 	glOrtho.o \
 	glOrthof.o \
+	glPixelStore.o \
 	glPopMatrix.o \
 	glPushMatrix.o \
 	glPolygonMode.o \
@@ -105,6 +105,7 @@ libGL.a_OBJS = \
 	glPrioritizeTextures.o \
 	glRotatef.o \
 	glScalef.o \
+	glScaled.o \
 	glScissor.o \
 	glShadeModel.o \
 	glStencilFunc.o \
@@ -113,12 +114,14 @@ libGL.a_OBJS = \
 	glTexCoord.o \
 	glTexCoordPointer.o \
 	glTexEnv.o \
+	glTexGen.o \
 	glTexImage2D.o \
 	glTexSubImage2D.o \
 	glTexParameter.o \
 	glTranslatef.o \
 	glUnmapBufferARB.o \
 	glVertex.o \
+	glVertexd.o \
 	glVertexi.o \
 	glVertexPointer.o \
 	glViewport.o \
@@ -137,7 +140,11 @@ libGL.a_OBJS = \
 	pspgl_varray_draw_range_elts.o \
 	pspgl_vidmem.o
 
+#	glGenLists.o
+#	glIsList.o
+
 libGLU.a_OBJS = \
+	gluBuildMipmaps.o \
 	gluLookAt.o \
 	gluLookAtf.o \
 	gluPerspective.o \

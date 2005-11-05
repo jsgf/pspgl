@@ -134,6 +134,14 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 		   GLsizei width, GLsizei height, GLint border, 
 		   GLenum format, GLenum type, const GLvoid *texels)
 {
+	static const GLenum format_equiv[] = {
+		0,
+		GL_LUMINANCE,
+		GL_LUMINANCE_ALPHA,
+		GL_RGB,
+		GL_RGBA,
+	};
+
 	struct pspgl_texobj *tobj;
 	struct pspgl_teximg *timg;
 	const struct pspgl_texfmt *texfmt;
@@ -149,6 +157,10 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 
 	if (border != 0)
 		goto invalid_value;
+
+	/* old-style formats are just number of components */
+	if (internalformat <= 4 && internalformat > 0)
+		internalformat = format_equiv[internalformat];
 
 	if (format != internalformat)
 		goto invalid_operation;

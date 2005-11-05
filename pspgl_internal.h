@@ -282,7 +282,7 @@ static inline unsigned ispow2(unsigned n)
 
 #define GLERROR(errcode)					\
 do {								\
-	__pspgl_log("*** GL error 0x%04x ***\n", errcode);		\
+	__pspgl_log("*** GL error 0x%04x in %s ***\n", errcode, __FUNCTION__);	\
 	if (__pspgl_curctx)						\
 		__pspgl_curctx->glerror = errcode;			\
 } while (0)

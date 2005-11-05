@@ -4,5 +4,5 @@
 
 EGLDisplay eglGetDisplay (NativeDisplayType display)
 {
-	return 0;
+	return (EGLDisplay)"foo"; /* non-EGL_NO_DISPLAY thing */
 }
