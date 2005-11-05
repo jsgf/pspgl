@@ -59,10 +59,8 @@ void glClear (GLbitfield mask)
 	sendCommandi(CMD_CLEARMODE, (clearmode << 8) | 1);
 
 	/* draw array */
-	sendCommandi(CMD_VERTEXTYPE, GE_COLOR_8888 | GE_VERTEX_16BIT | GE_TRANSFORM_2D);
-	sendCommandiUncached(CMD_BASE, (((unsigned long) vbuf) >> 8) & 0xf0000); /* vertex array BASE */
-	sendCommandiUncached(CMD_VERTEXPTR, ((unsigned long) vbuf) & 0xffffff);        /* vertex array, Adress */
-	sendCommandiUncached(CMD_PRIM, (GE_SPRITES << 16) | 2);          /* sprite (type 6), 2 vertices */
+	__pspgl_context_render_prim(pspgl_curctx, GE_SPRITES, 2, 
+				    GE_COLOR_8888 | GE_VERTEX_16BIT | GE_TRANSFORM_2D, vbuf, NULL);
 
 	/* leave clear mode */
 	sendCommandi(CMD_CLEARMODE, 0);

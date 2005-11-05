@@ -314,10 +314,10 @@ extern const GLfloat __pspgl_identity[];
 
 extern void __pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd, unsigned long argi);
 extern void __pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd, unsigned long argi, unsigned long mask);
-extern void __pspgl_context_flush_pending_state_changes (struct pspgl_context *c);
 extern void __pspgl_context_writereg_uncached (struct pspgl_context *c, unsigned long cmd, unsigned long argi);
 
-extern void __pspgl_context_flush_pending_matrix_changes (struct pspgl_context *c);
+extern void __pspgl_context_render_prim(struct pspgl_context *c, unsigned prim, unsigned count, unsigned vtxfmt,
+					const void *vertex, const void *index);
 
 #define sendCommandi(cmd,argi)		__pspgl_context_writereg(pspgl_curctx, cmd, argi)
 #define sendCommandiUncached(cmd,argi)	__pspgl_context_writereg_uncached (pspgl_curctx, cmd, argi)

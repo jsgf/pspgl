@@ -92,8 +92,6 @@ static void draw_range_elts_fallback(GLenum mode, GLenum idx_type, const void *i
 	unsigned maxbatch;
 	GLsizei remains;
 
-	sendCommandi(CMD_VERTEXTYPE, vfmt->hwformat);
-
 	maxbatch = MAX_VTX_BATCH / vfmt->vertex_size;
 
 	psp_log("prim=%d maxbatch=%d\n", prim, maxbatch);
@@ -137,10 +135,7 @@ static void draw_range_elts_fallback(GLenum mode, GLenum idx_type, const void *i
 			/* This is the last batch.  XXX deal with line loop? */
 		}
 
-		sendCommandi(CMD_VERTEXTYPE, vfmt->hwformat);
-		sendCommandiUncached(CMD_BASE, ((unsigned)buf >> 8) & 0x0f0000);
-		sendCommandiUncached(CMD_VERTEXPTR, ((unsigned)buf) & 0xffffff);
-		sendCommandiUncached(CMD_PRIM, (prim << 16) | done);
+		__pspgl_context_render_prim(pspgl_curctx, prim, done, vfmt->hwformat, buf, NULL);
 	}
 
 	/* Go recursive to draw the final edge of a line loop */
@@ -331,18 +326,11 @@ static void draw_range_elts_locked(GLenum mode, GLenum idx_type, const void *ind
 		__pspgl_bufferobj_unmap(pspgl_curctx->vertex_array.indexbuffer, GL_READ_ONLY);
 	}
 
-	sendCommandi(CMD_VERTEXTYPE, hwformat);
-
 	vtxbuf = l->cached_array->base + l->cached_array_offset;
 
-	sendCommandiUncached(CMD_BASE, ((unsigned)vtxbuf >> 8) & 0xf0000);
-	sendCommandiUncached(CMD_VERTEXPTR, ((unsigned)vtxbuf) & 0xffffff);
-	sendCommandiUncached(CMD_BASE, ((unsigned)idxbuf >> 8) & 0xf0000);
-	sendCommandiUncached(CMD_INDEXPTR, ((unsigned)idxbuf) & 0xffffff);
-
-	sendCommandiUncached(CMD_PRIM, (prim << 16) | count);
-
+	__pspgl_context_render_prim(pspgl_curctx, prim, count, hwformat, vtxbuf, idxbuf);
 	__pspgl_buffer_dlist_use(l->cached_array);
+
 	if (directidx)
 		__pspgl_buffer_dlist_use(pspgl_curctx->vertex_array.indexbuffer->data);
 }
@@ -438,10 +426,6 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 
 	if (count == 0)
 		return;
-
-	/* Kick these out early, since we assume that we're going to
-	   something, and every drawing path needs this done */
-	__pspgl_context_flush_pending_matrix_changes(pspgl_curctx);
 
 	if (__pspgl_cache_arrays()) {
 		/* We have potentially usable locked+cached arrays */
@@ -549,14 +533,7 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 	   be submitting them directly */
 	__pspgl_bufferobj_unmap(pspgl_curctx->vertex_array.indexbuffer, GL_READ_ONLY);
 
-	sendCommandi(CMD_VERTEXTYPE, hwformat);
-
-	sendCommandiUncached(CMD_BASE, ((unsigned)vtxbuf >> 8) & 0xf0000);
-	sendCommandiUncached(CMD_VERTEXPTR, ((unsigned)vtxbuf) & 0xffffff);
-	sendCommandiUncached(CMD_BASE, ((unsigned)idxbuf >> 8) & 0xf0000);
-	sendCommandiUncached(CMD_INDEXPTR, ((unsigned)idxbuf) & 0xffffff);
-
-	sendCommandiUncached(CMD_PRIM, (prim << 16) | count);
+	__pspgl_context_render_prim(pspgl_curctx, prim, count, hwformat, vtxbuf, idxbuf);
 
 	if (idxsize == 0)
 		__pspgl_buffer_dlist_use(pspgl_curctx->vertex_array.indexbuffer->data);

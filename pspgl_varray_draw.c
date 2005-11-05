@@ -5,24 +5,18 @@ static void varray_draw_locked(GLenum mode, GLint first, GLsizei count)
 {
 	struct locked_arrays *l = &pspgl_curctx->vertex_array.locked;
 	long prim = __pspgl_glprim2geprim(mode);
-	unsigned long buf;
+	const void *buf;
 
 	first -= l->cached_first;
 
 	psp_log("mode=%d drawing %d-%d vertces from locked buffer\n",
 		mode, first, first+count);
 
-	buf = (unsigned long)l->cached_array->base + l->cached_array_offset;
+	buf = l->cached_array->base + l->cached_array_offset;
 	buf += first * l->vfmt.vertex_size;
 
-	sendCommandi(CMD_VERTEXTYPE, l->vfmt.hwformat);
-
-	sendCommandiUncached(CMD_BASE, ((unsigned)buf >> 8) & 0xf0000);
-	sendCommandiUncached(CMD_VERTEXPTR, ((unsigned)buf) & 0xffffff);
-	sendCommandiUncached(CMD_PRIM, (prim << 16) | count);
-
+	__pspgl_context_render_prim(pspgl_curctx, prim, count, l->vfmt.hwformat, buf, NULL);
 	__pspgl_buffer_dlist_use(l->cached_array);
-
 	/* If we're drawing a line-loop, draw the final edge
 	   XXX this pulls in all the indexed array code
 	 */
@@ -64,8 +58,6 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 	if (count == 0)
 		return;
 
-	__pspgl_context_flush_pending_matrix_changes(pspgl_curctx);
-
 	/* Check to see if we can use the locked array fast path */
 	if (__pspgl_cache_arrays()) {
 		/* FAST: draw from locked array */
@@ -79,8 +71,6 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 
 	if (vfmt.hwformat == 0)
 		return;
-
-	sendCommandi(CMD_VERTEXTYPE, vfmt.hwformat);
 
 	maxbatch = MAX_VTX_BATCH / vfmt.vertex_size;
 
@@ -111,9 +101,7 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 			first -= pi.overlap;
 		}
 
-		sendCommandiUncached(CMD_BASE, ((unsigned)buf >> 8) & 0xf0000);
-		sendCommandiUncached(CMD_VERTEXPTR, ((unsigned)buf) & 0xffffff);
-		sendCommandiUncached(CMD_PRIM, (prim << 16) | done);
+		__pspgl_context_render_prim(pspgl_curctx, prim, done, vfmt.hwformat, buf, NULL);
 	}
 
 	/* If we're drawing a line-loop, draw the final edge
