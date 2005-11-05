@@ -190,3 +190,9 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 	__pspgl_buffer_free(vbuf);
 	__pspgl_buffer_free(ibuf);
 }
+
+void glDrawRangeElements( GLenum mode, GLuint start, GLuint end,
+			  GLsizei count, GLenum type, const GLvoid *indices )
+{
+	__pspgl_varray_draw_range_elts(mode, type, indices, count, start, end);
+}
