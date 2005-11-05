@@ -32,9 +32,12 @@ libGL.a_OBJS = \
 	glAlphaFunc.o \
 	glArrayElement.o \
 	glBegin.o \
+	glBindBufferARB.o \
 	glBindTexture.o \
 	glBlendEquation.o \
 	glBlendFunc.o \
+	glBufferDataARB.o \
+	glBufferSubDataARB.o \
 	glClear.o \
 	glClearColor.o \
 	glClearDepth.o \
@@ -46,6 +49,7 @@ libGL.a_OBJS = \
 	glColorTable.o \
 	glCompressedTexImage2D.o \
 	glCullFace.o \
+	glDeleteBuffersARB.o \
 	glDeleteLists.o \
 	glDeleteTextures.o \
 	glDepthFunc.o \
@@ -63,8 +67,10 @@ libGL.a_OBJS = \
 	glFrontFace.o \
 	glFrustumf.o \
 	glFrustum.o \
+	glGenBuffersARB.o \
 	glGenLists.o \
 	glGenTextures.o \
+	glGetBufferSubDataARB.o \
 	glGetFloatv.o \
 	glGetIntegerv.o \
 	glGetError.o \
@@ -79,6 +85,7 @@ libGL.a_OBJS = \
 	glLoadMatrixf.o \
 	glLockArraysEXT.o \
 	glLogicOp.o \
+	glMapBufferARB.o \
 	glMaterial.o \
 	glMatrixMode.o \
 	glMultMatrixf.o \
@@ -105,10 +112,12 @@ libGL.a_OBJS = \
 	glTexSubImage2D.o \
 	glTexParameter.o \
 	glTranslatef.o \
+	glUnmapBufferARB.o \
 	glVertex.o \
 	glVertexi.o \
 	glVertexPointer.o \
 	glViewport.o \
+	pspgl_buffers.o \
 	pspgl_context.o \
 	pspgl_dlist.o \
 	pspgl_ge_init.o \

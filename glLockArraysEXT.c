@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <pspge.h>
+#include <psputils.h>
 
 #include "pspgl_internal.h"
 

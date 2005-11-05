@@ -1,6 +1,8 @@
 #ifndef __pspgl_internal_h__
 #define __pspgl_internal_h__
 
+#define GL_GLEXT_PROTOTYPES
+
 #include <GL/gl.h>
 #include <GLES/egl.h>
 
@@ -28,6 +30,7 @@ struct pspgl_shared_context {
 	int refcount;
 	struct hashtable texture_objects;
 	struct hashtable display_lists;
+	struct hashtable buffers;
 };
 
 struct pspgl_matrix {
