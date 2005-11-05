@@ -104,9 +104,9 @@ void glCopyTexImage2D(GLenum target,
 	y = read->height - y;
 
 	copy_pixels(read->color_buffer[!read->current_front], -read->pixelperline, x, y,
-		    timg->image.base, timg->width, 0, 0,
+		    timg->image->base + timg->offset, timg->width, 0, 0,
 		    width, height, read->pixfmt);
-	__pspgl_dlist_pin_buffer(&timg->image);
+	__pspgl_dlist_pin_buffer(timg->image);
 
 	sendCommandi(CMD_TEXCACHE_SYNC, getReg(CMD_TEXCACHE_SYNC)+1);
 	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);

@@ -261,46 +261,102 @@ void __pspgl_texobj_free(struct pspgl_texobj *tobj)
 	free(tobj);
 }
 
-struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, 
+struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_bufferobj *buffer,
 					unsigned width, unsigned height, unsigned size,
 					const struct pspgl_texfmt *texfmt)
 {
 	struct pspgl_teximg *timg;
+	unsigned srcsize;
 
 	timg = malloc(sizeof(*timg));
 	if (timg == NULL)
- 		return NULL;
+		goto out_of_memory;
 
 	memset(timg, 0, sizeof(*timg));
 
-	if (size == 0)
+	srcsize = size;
+	if (size == 0) {
 		size = width * height * texfmt->hwsize;
-
-	if (!__pspgl_buffer_init(&timg->image, size, GL_STATIC_DRAW_ARB))
-		return NULL;
-
-	if (pixels) {
-		void *p = __pspgl_buffer_map(&timg->image, GL_WRITE_ONLY_ARB);
-
-		if (texfmt->hwformat >= GE_DXT1)
-			convert_compressed_image(pixels, width, height, size, 
-						 p, texfmt);
-		else
-			convert_image(pixels, width, height, p, texfmt);
-
-		__pspgl_buffer_unmap(&timg->image, GL_WRITE_ONLY_ARB);
+		srcsize = width * height * texfmt->pixsize;
 	}
+
+	timg->image = NULL;
+	timg->offset = 0;
+	timg->srcbuffer = NULL;
 
 	timg->width = width;
 	timg->height = height;
 	timg->texfmt = texfmt;
 
+	if (buffer != NULL) {
+		if (buffer->mapped ||
+		    ((pixels - NULL) + srcsize) > buffer->data->size)
+			goto invalid_operation;
+
+		timg->srcbuffer = buffer->data;
+		timg->srcoffset = pixels - NULL;
+		timg->srcbuffer->refcount++;
+		timg->srcgeneration = timg->srcbuffer->generation;
+
+		if (texfmt->flags & TF_NATIVE) {
+			/* They provided the texture in a buffer in
+			   native format; use it directly */
+			timg->image = timg->srcbuffer;
+			timg->image->refcount++;
+			timg->offset = timg->srcoffset;
+		} 
+	}
+
+	if (timg->image == NULL) {
+		const void *src;
+
+		timg->image = __pspgl_buffer_new(size, GL_STATIC_DRAW_ARB);
+
+		if (timg->image == NULL)
+			goto out_of_memory;
+
+		src = __pspgl_bufferobj_map(buffer, GL_READ_ONLY_ARB, (void *)pixels);
+
+		if (src != NULL) {
+			void *p;
+
+			p = __pspgl_buffer_map(timg->image, GL_WRITE_ONLY_ARB);
+
+			if (texfmt->hwformat >= GE_DXT1)
+				convert_compressed_image(src, width, height, size, 
+							 p, texfmt);
+			else
+				convert_image(src, width, height, p, texfmt);
+
+			__pspgl_buffer_unmap(timg->image, GL_WRITE_ONLY_ARB);
+		}
+
+		__pspgl_bufferobj_unmap(buffer, GL_READ_ONLY_ARB);
+	}
+
 	return timg;
+
+  out_of_memory:
+	GLERROR(GL_OUT_OF_MEMORY);
+	goto out_err;
+
+  invalid_operation:
+	GLERROR(GL_INVALID_OPERATION);
+
+  out_err:
+	if (timg)
+		__pspgl_teximg_free(timg);
+
+	return NULL;
 }
 
 void __pspgl_teximg_free(struct pspgl_teximg *timg)
 {
-	__pspgl_buffer_free(&timg->image);
+	if (timg->image)
+		__pspgl_buffer_free(timg->image);
+	if (timg->srcbuffer)
+		__pspgl_buffer_free(timg->srcbuffer);
+	free(timg);
 }
 
 static GLboolean texfmt_is_indexed(const struct pspgl_texfmt *fmt)

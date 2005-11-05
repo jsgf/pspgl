@@ -173,6 +173,14 @@ struct pspgl_bufferobj **__pspgl_bufferobj_for_target(GLenum target)
 		ret = &pspgl_curctx->vertex_array.indexbuffer;
 		break;
 
+	case GL_PIXEL_PACK_BUFFER_ARB:
+		ret = &pspgl_curctx->texture.packbuffer;
+		break;
+
+	case GL_PIXEL_UNPACK_BUFFER_ARB:
+		ret = &pspgl_curctx->texture.unpackbuffer;
+		break;
+
 	default:
 		GLERROR(GL_INVALID_ENUM);
 		break;

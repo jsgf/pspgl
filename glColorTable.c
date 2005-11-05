@@ -25,7 +25,7 @@ void glColorTable(GLenum target, GLenum internalformat,
 	if (fmt == 0)
 		goto invalid_enum;
 
-	cmap = __pspgl_teximg_new(data, width, 1, 0, fmt);
+	cmap = __pspgl_teximg_new(data, pspgl_curctx->texture.unpackbuffer, width, 1, 0, fmt);
 	if (cmap == 0)
 		goto out_of_memory;
 
@@ -35,12 +35,12 @@ void glColorTable(GLenum target, GLenum internalformat,
 	tobj = pspgl_curctx->texture.bound;
 
 	if (tobj->cmap) {
-		/* release tobj reference to old_cmap */
+		/* release old cmap */
 		__pspgl_teximg_free(tobj->cmap);
 	}
 	tobj->cmap = cmap;
 
-	p = (unsigned long)cmap->image.base;
+	p = (unsigned long)cmap->image->base + cmap->offset;
 
 	sendCommandi(CMD_SET_CLUT, p);
 	sendCommandi(CMD_SET_CLUT_MSB, (p >> 8) & 0xf0000);

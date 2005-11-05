@@ -50,10 +50,10 @@ static void copy_dxt35(const struct pspgl_texfmt *fmt, void *to, const void *fro
 
 static const struct pspgl_texfmt comptexformats[] = {
 	/* Compressed textures */
-	{ GL_COMPRESSED_RGB_S3TC_DXT1_EXT,	GL_UNSIGNED_BYTE,	1, GE_DXT1,	1,	copy_dxt1,	GE_TEXENV_RGB  },
-	{ GL_COMPRESSED_RGBA_S3TC_DXT1_EXT,	GL_UNSIGNED_BYTE,	1, GE_DXT1,	1,	copy_dxt1,	GE_TEXENV_RGBA },
-	{ GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,	GL_UNSIGNED_BYTE,	1, GE_DXT3,	1,	copy_dxt35,	GE_TEXENV_RGBA },
-	{ GL_COMPRESSED_RGBA_S3TC_DXT5_EXT,	GL_UNSIGNED_BYTE,	1, GE_DXT5,	1,	copy_dxt35,	GE_TEXENV_RGBA },
+	{ GL_COMPRESSED_RGB_S3TC_DXT1_EXT,	GL_UNSIGNED_BYTE,	1, GE_DXT1,	1,	copy_dxt1,	0  },
+	{ GL_COMPRESSED_RGBA_S3TC_DXT1_EXT,	GL_UNSIGNED_BYTE,	1, GE_DXT1,	1,	copy_dxt1,	TF_ALPHA },
+	{ GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,	GL_UNSIGNED_BYTE,	1, GE_DXT3,	1,	copy_dxt35,	TF_ALPHA },
+	{ GL_COMPRESSED_RGBA_S3TC_DXT5_EXT,	GL_UNSIGNED_BYTE,	1, GE_DXT5,	1,	copy_dxt35,	TF_ALPHA },
 
 	{ 0, 0 }
 };
@@ -87,15 +87,11 @@ void glCompressedTexImage2D(GLenum target, GLint level,
 	if (tobj == NULL)
 		goto out_of_memory;
 
-	if (data) {
-		timg = __pspgl_teximg_new(data, width, height, imageSize, texfmt);
-		if (timg == NULL)
-			goto out_of_memory;
+	timg = __pspgl_teximg_new(data, pspgl_curctx->texture.unpackbuffer, width, height, imageSize, texfmt);
+	if (timg == NULL)
+		goto out_of_memory;
 
-		__pspgl_set_texture_image(tobj, level, timg);
-		__pspgl_teximg_free(timg); /* tobj has reference now */
-	} else
-		__pspgl_set_texture_image(tobj, level, NULL);
+	__pspgl_set_texture_image(tobj, level, timg);
 
 	__pspgl_update_texenv(tobj);
 	return;

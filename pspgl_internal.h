@@ -174,6 +174,9 @@ struct pspgl_context {
 	} fog;
  	struct {
 		struct pspgl_texobj	*bound;	/* currently bound texture */
+
+		struct pspgl_bufferobj	*unpackbuffer;
+		struct pspgl_bufferobj	*packbuffer;
  	} texture;
 
 	struct {

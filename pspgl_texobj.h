@@ -40,7 +40,12 @@ struct pspgl_texobj {
 };
 
 struct pspgl_teximg {
-	struct pspgl_buffer	image;
+	struct pspgl_buffer	*image;		/* image pixels */
+	unsigned		offset;		/* byte offset of pixels in image buffer */
+
+	struct pspgl_buffer	*srcbuffer;	/* if the src format is native, then this ==image */
+	unsigned		srcoffset;
+	short			 srcgeneration;	/* generation when the src image was converted */
 
 	unsigned	width, height;
 
@@ -52,7 +57,7 @@ extern const struct pspgl_texfmt __pspgl_texformats[];
 extern struct pspgl_texobj* __pspgl_texobj_new (GLuint id, GLenum target);
 extern void __pspgl_texobj_free (struct pspgl_texobj *t);
 
-extern struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, 
+extern struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_bufferobj *buffer,
 					       unsigned width, unsigned height, unsigned size,
 					       const struct pspgl_texfmt *texfmt);
 extern void __pspgl_teximg_free(struct pspgl_teximg *timg);

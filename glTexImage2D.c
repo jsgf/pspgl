@@ -25,11 +25,9 @@ static inline unsigned ispow2(unsigned n)
 static void set_mipmap_regs(unsigned level, struct pspgl_teximg *img)
 {
 	if (img) {
-		unsigned ptr = (unsigned)img->image.base;
+		unsigned ptr = (unsigned)img->image->base + img->offset;
 		unsigned w_lg2 = lg2(img->width);
 		unsigned h_lg2 = lg2(img->height);
-
-		/* XXX pin image while texture registers refer to it */
 
 		psp_log("set level %d image=%p %dx%d\n",
 			level, img->image, img->width, img->height);
@@ -50,25 +48,22 @@ void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level, struct
 {
 	struct pspgl_teximg *old_timg = tobj->images[level];
 
+	if (timg == old_timg)
+		return;
+
 	tobj->images[level] = NULL;
 
 	if (timg) {
-		timg->image.refcount++; /* add tobj's reference to the image */
-
 		/* if we're changing texture formats, then invalidate all the other images */
 		if (tobj->texfmt != timg->texfmt) {
 			int i;
 			for(i = 0; i < MIPMAP_LEVELS; i++) {
-				struct pspgl_teximg *old_fmt_timg;
-
 				if (i == level)
 					continue;
 
-				old_fmt_timg = tobj->images[i];
-
-				if (old_fmt_timg && 
-				    old_fmt_timg->texfmt != timg->texfmt) {
-					__pspgl_teximg_free(old_fmt_timg);
+				if (tobj->images[i] && 
+				    tobj->images[i]->texfmt != timg->texfmt) {
+					__pspgl_teximg_free(tobj->images[i]);
 					tobj->images[i] = NULL;
 					set_mipmap_regs(i, NULL);
 				}
@@ -82,9 +77,8 @@ void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level, struct
 	set_mipmap_regs(level, timg);
 
 	if (old_timg != NULL) {
-		psp_log("replaced texture image %p(%d) at level %d with %p\n", 
-			old_timg, old_timg->image.refcount,
-			level, timg);
+		psp_log("replaced texture image %p at level %d with %p\n", 
+			old_timg, level, timg);
 
 		/* release the tobj's reference to the old texture image */
 		__pspgl_teximg_free(old_timg);
@@ -175,12 +169,11 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 	if (tobj == NULL)
 		goto out_of_memory;
 
-	timg = __pspgl_teximg_new(texels, width, height, 0, texfmt);
+	timg = __pspgl_teximg_new(texels, pspgl_curctx->texture.unpackbuffer, width, height, 0, texfmt);
 	if (timg == NULL)
 		goto out_of_memory;
 
 	__pspgl_set_texture_image(tobj, level, timg);
-	__pspgl_teximg_free(timg); /* tobj has reference now */
 
 	__pspgl_update_texenv(tobj);
 	return;
