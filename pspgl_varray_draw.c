@@ -1,12 +1,51 @@
 #include "pspgl_internal.h"
 
+static void varray_draw_locked(GLenum mode, GLint first, GLsizei count)
+{
+	struct locked_arrays *l = &pspgl_curctx->vertex_array.locked;
+	long prim = __pspgl_glprim2geprim(mode);
+	unsigned long buf;
+
+	first -= l->first;
+
+	l->cached_array->refcount++;
+
+	psp_log("mode=%d drawing %d-%d vertces from locked buffer\n",
+		mode, first, first+count);
+
+	buf = (unsigned long)l->cached_array->array;
+	buf += first * l->vfmt.vertex_size;
+
+	sendCommandi(CMD_VERTEXTYPE, l->vfmt.hwformat);
+
+	sendCommandiUncached(CMD_BASE, ((unsigned)buf >> 8) & 0xf0000);
+	sendCommandiUncached(CMD_VERTEXPTR, ((unsigned)buf) & 0xffffff);
+	sendCommandiUncached(CMD_PRIM, (prim << 16) | count);
+
+	__pspgl_dlist_set_cleanup(__pspgl_dlist_cleanup_varray, l->cached_array);
+
+	/* If we're drawing a line-loop, draw the final edge
+	   XXX this pulls in all the indexed array code
+	 */
+	if (mode == GL_LINE_LOOP) {
+		GLushort idx[2] = { first+count-1, first };
+
+		psp_log("drawing closing line on loop: idx=%d %d\n", idx[0], idx[1]);
+
+		__pspgl_varray_draw_range_elts(GL_LINES, GL_UNSIGNED_SHORT, idx, 2,
+					       idx[1], idx[0]);
+	}
+}
+
 void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 {
+	struct locked_arrays *l = &pspgl_curctx->vertex_array.locked;
 	long prim = __pspgl_glprim2geprim(mode);
 	struct vertex_format vfmt;
-	GLint vtx0 = first;	/* used for batching if there's a fan */
+	const GLint vtx0 = first;	/* used for batching if there's a fan */
 	struct prim_info pi;
 	unsigned maxbatch;
+	GLsizei remains;
 
 	__pspgl_ge_vertex_fmt(pspgl_curctx, &vfmt);
 
@@ -17,17 +56,34 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 
 	pi = __pspgl_prim_info[prim];
 
-	if (count == 0 || vfmt.hwformat == 0)
+	if (count == 0)
 		return;
 
 	__pspgl_context_flush_pending_matrix_changes(pspgl_curctx);
+
+	/* check to see if we can use the locked array fast path */
+	if (first >= l->first &&
+	    (first + count) <= (l->first + l->count) &&
+	    __pspgl_cache_arrays()) {
+		/* FAST: draw from locked array */
+		varray_draw_locked(mode, first, count);
+		return;
+	}
+
+	__pspgl_ge_vertex_fmt(pspgl_curctx, &vfmt);
+
+	pi = __pspgl_prim_info[prim];
+
+	if (vfmt.hwformat == 0)
+		return;
 
 	sendCommandi(CMD_VERTEXTYPE, vfmt.hwformat);
 
 	maxbatch = MAX_VTX_BATCH / vfmt.vertex_size;
 
-	while(count >= pi.minvtx) {
-		unsigned batch = (count > maxbatch) ? maxbatch : count;
+	remains = count;
+	while(remains >= pi.minvtx) {
+		unsigned batch = (remains > maxbatch) ? maxbatch : remains;
 		unsigned batchsize;
 		unsigned char *buf;
 		unsigned done;
@@ -38,20 +94,18 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 
 		if (prim == GE_TRIANGLE_FAN && first != vtx0) {
 			done = __pspgl_gen_varray(&vfmt, vtx0, 1, buf, batchsize);
-			done += __pspgl_gen_varray(&vfmt, first+1, count-1,
-					      buf + vfmt.vertex_size,
-					      batchsize - vfmt.vertex_size);
+			done += __pspgl_gen_varray(&vfmt, first+1, remains-1,
+						   buf + vfmt.vertex_size,
+						   batchsize - vfmt.vertex_size);
 		} else
-			done = __pspgl_gen_varray(&vfmt, first, count, buf, batchsize);
+			done = __pspgl_gen_varray(&vfmt, first, remains, buf, batchsize);
 
-		count -= done;
+		remains -= done;
 		first += done;
 
-		if ((count+pi.overlap) > pi.minvtx) {
-			count += pi.overlap;
+		if ((remains+pi.overlap) > pi.minvtx) {
+			remains += pi.overlap;
 			first -= pi.overlap;
-		} else {
-			/* This is the last batch.  XXX deal with line loop? */
 		}
 
 		sendCommandiUncached(CMD_BASE, ((unsigned)buf >> 8) & 0xf0000);
@@ -59,6 +113,16 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 		sendCommandiUncached(CMD_PRIM, (prim << 16) | done);
 	}
 
-	/* XXX TODO: we handle line loops as line strips. Here we need to render the final, closing line, too. */
+	/* If we're drawing a line-loop, draw the final edge
+	   XXX this pulls in all the indexed array code
+	*/
+	if (mode == GL_LINE_LOOP) {
+		GLushort idx[2] = { vtx0+count-1, vtx0 };
+
+		psp_log("drawing closing line on loop: idx=%d %d\n", idx[0], idx[1]);
+
+		__pspgl_varray_draw_range_elts(GL_LINES, GL_UNSIGNED_SHORT, idx, 2,
+					       idx[1], idx[0]);
+	}
 }
 

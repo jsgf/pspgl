@@ -40,6 +40,32 @@ struct pspgl_matrix_stack {
 	unsigned dirty;		/* hardware needs updating */
 };
 
+#define VARRAY_MAX	4	/* number of arrays */
+#define MAX_ATTRIB	VARRAY_MAX
+
+#define VA_VERTEX_BIT	(1<<0)
+#define VA_NORMAL_BIT	(1<<1)
+#define VA_COLOR_BIT	(1<<2)
+#define VA_TEXCOORD_BIT	(1<<3)
+
+struct vertex_format
+{
+	unsigned hwformat;
+	unsigned vertex_size;
+
+	unsigned arrays;		/* bitmask of arrays used by this format */
+
+	int nattrib;
+	struct attrib {
+		unsigned offset;	/* offset into output vertex */
+		unsigned size;		/* size of element in output vertex */
+
+		struct pspgl_vertex_array *array; /* source array */
+
+		void (*convert)(void *to, const void *from, const struct attrib *attr);
+	} attribs[MAX_ATTRIB];
+};
+
 struct pspgl_context {
 	uint32_t ge_reg [256];
 	uint32_t ge_reg_touched [256/32];
@@ -54,11 +80,22 @@ struct pspgl_context {
 	} current;
 
 	struct varray {
-#define VARRAY_MAX	4	/* number of arrays */
 		struct pspgl_vertex_array vertex;
 		struct pspgl_vertex_array normal;
 		struct pspgl_vertex_array color;
 		struct pspgl_vertex_array texcoord;
+
+		struct locked_arrays {
+			GLint first;
+			GLsizei count;
+
+			struct vertex_format vfmt;
+
+			struct array_buffer {
+				void *array;
+				int refcount;
+			} *cached_array;
+		} locked;
 	} vertex_array;
 
 	struct {
@@ -149,26 +186,13 @@ extern void* __pspgl_vidmem_alloc (unsigned long size);
 extern void  __pspgl_vidmem_free (void * ptr);
 extern EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s);
 
+/* glLockArraysEXT.c */
+extern void __pspgl_dlist_cleanup_varray(void *);
+extern GLboolean __pspgl_cache_arrays(void);
+extern void __pspgl_uncache_arrays(void);
+
 
 /* pspgl_varray.c */
-#define MAX_ATTRIB	VARRAY_MAX
-
-struct vertex_format
-{
-	unsigned hwformat;
-	unsigned vertex_size;
-
-	int nattrib;
-	struct attrib {
-		unsigned offset;	/* offset into output vertex */
-		unsigned size;		/* size of element in output vertex */
-
-		struct pspgl_vertex_array *array; /* source array */
-
-		void (*convert)(void *to, const void *from, const struct attrib *attr);
-	} attribs[MAX_ATTRIB];
-};
-
 struct prim_info {
 	unsigned overlap;	/* when starting a new batch, how many prev verts do we need */
 	unsigned minvtx;	/* what's the min needed to draw a single prim? */
@@ -183,6 +207,7 @@ extern const struct prim_info __pspgl_prim_info[];
 
 extern unsigned __pspgl_gl_sizeof(GLenum type);
 extern long __pspgl_glprim2geprim (GLenum glprim);
+extern unsigned __pspgl_enabled_array_bits(void);
 extern void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt);
 extern int __pspgl_gen_varray(const struct vertex_format *vfmt, int first, int count, 
 			 void *to, int space);

@@ -77,6 +77,7 @@ libGL.a_OBJS = \
 	glLineWidth.o \
 	glLoadIdentity.o \
 	glLoadMatrixf.o \
+	glLockArraysEXT.o \
 	glLogicOp.o \
 	glMaterial.o \
 	glMatrixMode.o \

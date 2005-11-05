@@ -2,7 +2,6 @@
 
 #include "pspgl_internal.h"
 
-
 unsigned __pspgl_gl_sizeof(GLenum type)
 {
 	switch(type) {
@@ -115,6 +114,23 @@ static void cvt_byte2_byte3(void *to, const void *from, const struct attrib *att
 }
 
 
+unsigned __pspgl_enabled_array_bits(void)
+{
+	struct varray *v = &pspgl_curctx->vertex_array;
+	unsigned ret = 0;
+
+	if (v->vertex.enabled)
+		ret |= VA_VERTEX_BIT;
+	if (v->normal.enabled)
+		ret |= VA_NORMAL_BIT;
+	if (v->color.enabled)
+		ret |= VA_COLOR_BIT;
+	if (v->texcoord.enabled)
+		ret |= VA_TEXCOORD_BIT;
+
+	return ret;
+}
+
 /* 
    Examine the currently enabled vertex attribute arrays to compute a
    hardware vertex format, along with enough information to convert
@@ -220,6 +236,8 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 	vfmt->nattrib = attr - vfmt->attribs;
 	vfmt->hwformat = hwformat;
 	vfmt->vertex_size = offset;
+
+	vfmt->arrays = __pspgl_enabled_array_bits();
 
 	psp_log("format: %x %d attr, %d byte vertex\n",
 		vfmt->hwformat, vfmt->nattrib, vfmt->vertex_size);
