@@ -2,14 +2,6 @@
 #include "pspgl_internal.h"
 #include "pspgl_texobj.h"
 
-static void dlist_cleanup_teximg(void *v)
-{
-	struct pspgl_teximg *timg = v;
-
-	psp_log("dlist cleanup of timg %p(%d)->image=%p\n", timg, timg->refcount, timg->image);
-	__pspgl_teximg_free(timg);
-}
-
 void glBindTexture(GLenum target, GLuint id)
 {
 	struct pspgl_texobj *tobj, *bound;
@@ -49,16 +41,6 @@ void glBindTexture(GLenum target, GLuint id)
 		for(i = TEXSTATE_START; i <= TEXSTATE_END; i++)
 			bound->ge_texreg[i - TEXSTATE_START] = getReg(i);
 
-		/* We're about to remove the hardware's references to
-		   this texture's images and color map, so make sure
-		   the references are cleaned up when the hardware's
-		   actually finished with them. */
-		for(i = 0; i < MIPMAP_LEVELS; i++)
-			if (bound->images[i])
-				__pspgl_dlist_set_cleanup(dlist_cleanup_teximg, bound->images[i]);
-		if (bound->cmap)
-			__pspgl_dlist_set_cleanup(dlist_cleanup_teximg, bound->cmap);
-
 		__pspgl_texobj_free(bound);
 	}
 
@@ -71,14 +53,6 @@ void glBindTexture(GLenum target, GLuint id)
 	psp_log("updating register state\n");
 	for(i = TEXSTATE_START; i <= TEXSTATE_END; i++)
 		sendCommandi(i, tobj->ge_texreg[i - TEXSTATE_START]);
-
-	/* Update the refcounts now that hardware is referring to the
-	   new images. */
-	for(i = 0; i < MIPMAP_LEVELS; i++)
-		if (tobj->images[i])
-			tobj->images[i]->image.refcount++;
-	if (tobj->cmap)
-		tobj->cmap->image.refcount++;
 
 	__pspgl_update_texenv(tobj);
 	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);

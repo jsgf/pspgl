@@ -66,7 +66,10 @@ void __pspgl_buffer_init(struct pspgl_buffer *buf,
 {
 	buf->refcount = 1;
 	buf->mapped = 0;
-	buf->dlist_usage = 0;
+	buf->pinned = 0;
+
+	buf->pin_prevp = NULL;
+	buf->pin_next = NULL;
 
 	buf->base = base;
 	buf->size = size;
@@ -172,26 +175,6 @@ void __pspgl_buffer_unmap(struct pspgl_buffer *data, GLenum access)
 	}
 }
 
-static void dlist_cleanup_buffer(void *v)
-{
-	struct pspgl_buffer *data = v;
-
-	assert(data->dlist_usage > 0);
-	--data->dlist_usage;
-
-	__pspgl_buffer_free(data);
-}
-
-/* Mark buffer as being in use by the hardware.  Increments the
-   refcount and the dlist usage count. */
-void __pspgl_buffer_dlist_use(struct pspgl_buffer *data)
-{
-	data->dlist_usage++;
-	data->refcount++;
-
-	__pspgl_dlist_set_cleanup(dlist_cleanup_buffer, data);
-}
-
 /* Wait until the last hardware use of a databuffer has happened. If
    the caller wants to use the buffer after this call, it must
    increment the refcount to prevent it from being (potentially)
@@ -202,10 +185,10 @@ void __pspgl_buffer_dlist_sync(struct pspgl_buffer *data)
 
 	/* XXX This is overkill; we can wait for each dlist until the
 	   dlist_use count drops to 0  */
-	if (data->dlist_usage > 0)
+	if (data->pinned > 0)
 		glFinish();
 
-	assert(data->dlist_usage == 0);
+	assert(data->pinned == 0);
 
 	__pspgl_buffer_free(data); /* drop refcount */
 }

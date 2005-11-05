@@ -68,17 +68,9 @@ void glTexSubImage2D( GLenum target, GLint level,
 
 	assert(timg->image.refcount > 0);
 
-	if (timg->image.refcount > 1) {
+	if (timg->image.pinned != 0) {
 		/* If the timg is currently busy, we can't change it
-		   in place, so make a copy before we modify it.
-
-		   XXX This will always happen, because merely binding
-		   to a texture will cause its images to be loaded
-		   into hardware giving a refcount of at least 2.  We
-		   should defer the hardware setup/refcount until a
-		   primitive is actually drawn using the texture
-		   image.
-		*/
+		   in place, so make a copy before we modify it. */
 		struct pspgl_teximg *timg2;
 
 		timg2 = __pspgl_teximg_new(NULL, timg->width, timg->height, 0, timg->texfmt);

@@ -1,12 +1,6 @@
 #include "pspgl_internal.h"
 #include "pspgl_texobj.h"
 
-static void dlist_cleanup_cmap(void *v)
-{
-	psp_log("dlist cleanup of cmap %p\n", v);
-	__pspgl_teximg_free(v);
-}
-
 void glColorTable(GLenum target, GLenum internalformat, 
 		  GLsizei width, GLenum format, GLenum type, const GLvoid *data)
 {
@@ -43,16 +37,10 @@ void glColorTable(GLenum target, GLenum internalformat,
 	if (tobj->cmap) {
 		/* release tobj reference to old_cmap */
 		__pspgl_teximg_free(tobj->cmap);
-
-		/* set cleanup for hardware reference to old_cmap */
-		__pspgl_dlist_set_cleanup(dlist_cleanup_cmap, tobj->cmap);
 	}
 	tobj->cmap = cmap;
 
 	p = (unsigned long)cmap->image.base;
-
-	/* add reference for hardware (refcount is now 2) */
-	cmap->image.refcount++;
 
 	sendCommandi(CMD_SET_CLUT, p);
 	sendCommandi(CMD_SET_CLUT_MSB, (p >> 8) & 0xf0000);

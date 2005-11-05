@@ -22,15 +22,7 @@ static inline unsigned ispow2(unsigned n)
 	return (n & (n-1)) == 0;
 }
 
-static void dlist_cleanup_teximg(void *v)
-{
-	struct pspgl_teximg *timg = v;
-
-	psp_log("dlist cleanup of timg %p(%d)->image=%p\n", timg, timg->refcount, timg->image);
-	__pspgl_teximg_free(timg);
-}
-
-static void set_mipmap_regs(unsigned level, struct pspgl_teximg *img, struct pspgl_teximg *old_timg)
+static void set_mipmap_regs(unsigned level, struct pspgl_teximg *img)
 {
 	if (img) {
 		unsigned ptr = (unsigned)img->image.base;
@@ -46,9 +38,6 @@ static void set_mipmap_regs(unsigned level, struct pspgl_teximg *img, struct psp
 		sendCommandi(CMD_TEX_MIPMAP0 + level, ptr);
 		sendCommandi(CMD_TEX_STRIDE0 + level, ((ptr >> 8) & 0xf0000) | img->width);
 		sendCommandi(CMD_TEX_SIZE0 + level, (h_lg2 << 8) | w_lg2);
-
-		/* Add hardware's reference to the new timg. */
-		img->image.refcount++;
 	} else {
 		psp_log("set level %d image=NULL", level);
 
@@ -56,12 +45,6 @@ static void set_mipmap_regs(unsigned level, struct pspgl_teximg *img, struct psp
 		sendCommandi(CMD_TEX_STRIDE0 + level, 0);
 		sendCommandi(CMD_TEX_SIZE0 + level, 0);
 	}
-
-	/* Now that the hardware is set up to point to the new timg,
-	   we can arrange to have the old timg reference be cleaned
-	   up */
-	if (old_timg)
-		__pspgl_dlist_set_cleanup(dlist_cleanup_teximg, old_timg);		
 }
 
 void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level, struct pspgl_teximg *timg)
@@ -88,7 +71,7 @@ void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level, struct
 				    old_fmt_timg->texfmt != timg->texfmt) {
 					__pspgl_teximg_free(old_fmt_timg);
 					tobj->images[i] = NULL;
-					set_mipmap_regs(i, NULL, old_fmt_timg);
+					set_mipmap_regs(i, NULL);
 				}
 			}
 		}
@@ -97,7 +80,7 @@ void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level, struct
 		sendCommandi(CMD_TEXFMT, tobj->texfmt->hwformat);
 	}
 	tobj->images[level] = timg;
-	set_mipmap_regs(level, timg, old_timg);
+	set_mipmap_regs(level, timg);
 
 	if (old_timg != NULL) {
 		psp_log("replaced texture image %p(%d) at level %d with %p\n", 

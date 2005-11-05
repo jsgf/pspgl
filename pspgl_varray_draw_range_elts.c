@@ -329,10 +329,10 @@ static void draw_range_elts_locked(GLenum mode, GLenum idx_type, const void *ind
 	vtxbuf = l->cached_array->base + l->cached_array_offset;
 
 	__pspgl_context_render_prim(pspgl_curctx, prim, count, hwformat, vtxbuf, idxbuf);
-	__pspgl_buffer_dlist_use(l->cached_array);
+	__pspgl_dlist_pin_buffer(l->cached_array);
 
 	if (directidx)
-		__pspgl_buffer_dlist_use(pspgl_curctx->vertex_array.indexbuffer->data);
+		__pspgl_dlist_pin_buffer(pspgl_curctx->vertex_array.indexbuffer->data);
 }
 
 /* Find the min and max indices in an element array.  Expects indices
@@ -536,7 +536,7 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 	__pspgl_context_render_prim(pspgl_curctx, prim, count, hwformat, vtxbuf, idxbuf);
 
 	if (idxsize == 0)
-		__pspgl_buffer_dlist_use(pspgl_curctx->vertex_array.indexbuffer->data);
+		__pspgl_dlist_pin_buffer(pspgl_curctx->vertex_array.indexbuffer->data);
 
 	return;
 

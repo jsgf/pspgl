@@ -3,7 +3,9 @@
 #include <malloc.h>
 #include <pspge.h>
 #include <psputils.h>
+
 #include "pspgl_internal.h"
+#include "pspgl_buffers.h"
 
 void __pspgl_dlist_enqueue_cmd (struct pspgl_dlist *d, unsigned long cmd)
 {
@@ -86,7 +88,6 @@ struct pspgl_dlist* __pspgl_dlist_create (int compile_and_run,
 	d->done = done ? done : __pspgl_dlist_finalize_and_clone;
 	d->compile_and_run = compile_and_run;
 	d->qid = -1;
-	d->cleanups = NULL;
 
 #if !DLIST_CACHED
 	d->cmd_buf = __pspgl_uncached(d->_cmdbuf, sizeof(d->_cmdbuf));
@@ -97,36 +98,40 @@ struct pspgl_dlist* __pspgl_dlist_create (int compile_and_run,
 	return d;
 }
 
-struct pspgl_cleanup {
-	void (*cleanup)(void *);
-	void *cleanup_arg;
-
-	struct pspgl_cleanup *next;
-};
-
-void __pspgl_dlist_set_cleanup(void (*cleanup)(void *), void *arg)
+/* Pin a buffer to a particular dlist.  If it is already attached
+   to a dlist, move it to this dlist, so it remains pinned a little
+   longer. */
+void __pspgl_dlist_pin_buffer(struct pspgl_buffer *data)
 {
-	struct pspgl_dlist *list = pspgl_curctx->dlist[pspgl_curctx->dlist_idx];
-	struct pspgl_cleanup *c;
+	struct pspgl_dlist *d = pspgl_curctx->dlist_current;
 
-	c = malloc(sizeof(*c));
-
-	if (c == NULL) {
-		/* XXX What to do?  Call cleanup now? */
-		psp_log("can't allocate cleanup for %p/%p\n", cleanup, arg);
-		return;
+	if (data->pin_prevp != NULL) {
+		/* pinned by someone; snip from whatever list its
+		   currently on */
+		if (data->pin_next)
+			data->pin_next->pin_prevp = data->pin_prevp;
+		*(data->pin_prevp) = data->pin_next;
+	} else {
+		/* newly pinned */
+		data->pinned++;
+		data->refcount++;
 	}
 
-	c->cleanup = cleanup;
-	c->cleanup_arg = arg;
-	c->next = list->cleanups;
-	list->cleanups = c;
+	assert(data->pinned > 0);
+	assert(data->refcount > data->pinned);
+
+	/* insert into current dlist pin list */
+	data->pin_prevp = &d->pins;
+	data->pin_next = d->pins;
+	if (data->pin_next)
+		data->pin_next->pin_prevp = &data->pin_next;
+	d->pins = data;
 }
 
 static void sync_list(struct pspgl_dlist *list)
 {
-	struct pspgl_cleanup *cleanup, *next;
 	unsigned long long start=0;
+	struct pspgl_buffer *data, *next;
 
 	if (pspgl_curctx->stats.enabled)
 		start = now();
@@ -138,13 +143,18 @@ static void sync_list(struct pspgl_dlist *list)
 
 	list->qid = -1;
 
-	for(cleanup = list->cleanups; cleanup != NULL; cleanup = next) {
-		next = cleanup->next;
+	for(data = list->pins; data != NULL; data = next) {
+		next = data->pin_next;
+		data->pin_prevp = NULL;
+		data->pin_next = NULL;
 
-		(*cleanup->cleanup)(cleanup->cleanup_arg);
-		free(cleanup);
+		assert(data->pinned > 0);
+		assert(data->refcount >= data->pinned);
+		data->pinned--;
+
+		__pspgl_buffer_free(data);
 	}
-	list->cleanups = NULL;
+	list->pins = NULL;
 }
 
 /**
@@ -213,6 +223,7 @@ void __pspgl_dlist_reset (struct pspgl_dlist *d)
 {
 	assert(d->qid == -1);
 	d->len = 0;
+	d->pins = NULL;
 }
 
 

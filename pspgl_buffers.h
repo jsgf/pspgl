@@ -6,7 +6,11 @@
 struct pspgl_buffer {
 	short refcount;
 	short mapped;		/* internal map counter */
-	short dlist_usage;	/* number of times a dlist refers to this data */
+	short pinned;		/* number of times this buffer is pinned */
+
+	/* Pointers for the pin list */
+	struct pspgl_buffer **pin_prevp;
+	struct pspgl_buffer  *pin_next;
 
 	void *base;
 	GLsizeiptr size;
@@ -61,7 +65,6 @@ void *__pspgl_buffer_map(struct pspgl_buffer *data, GLenum access);
    buffer_map(). */
 void  __pspgl_buffer_unmap(struct pspgl_buffer *data, GLenum access);
 
-void __pspgl_buffer_dlist_use(struct pspgl_buffer *data);
 void __pspgl_buffer_dlist_sync(struct pspgl_buffer *data);
 
 #endif	/* PSPGL_BUFFERS_H */

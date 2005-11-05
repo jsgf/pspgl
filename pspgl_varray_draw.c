@@ -16,7 +16,8 @@ static void varray_draw_locked(GLenum mode, GLint first, GLsizei count)
 	buf += first * l->vfmt.vertex_size;
 
 	__pspgl_context_render_prim(pspgl_curctx, prim, count, l->vfmt.hwformat, buf, NULL);
-	__pspgl_buffer_dlist_use(l->cached_array);
+	__pspgl_dlist_pin_buffer(l->cached_array);
+
 	/* If we're drawing a line-loop, draw the final edge
 	   XXX this pulls in all the indexed array code
 	 */
