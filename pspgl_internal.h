@@ -101,8 +101,8 @@ struct pspgl_context {
 
 	struct {
 		GLclampf color [4];
-		GLclampf depth;
 		GLint stencil;
+		unsigned short depth;
 	} clear;
 
 	struct {

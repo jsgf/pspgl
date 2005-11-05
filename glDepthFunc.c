@@ -1,7 +1,19 @@
 #include "pspgl_internal.h"
 
-
-static const char depthfunc_mapping [] = { 0, 4, 2, 5, 6, 3, 7, 1 };
+/* 
+   Because the PSP's Z coord system is backwards from OpenGL's, we
+   need to reverse order of depth comparisons.
+ */
+static const unsigned char depthfunc_mapping [] = {
+	GE_NEVER,		/* GL_NEVER */
+	GE_GEQUAL,		/* GL_LESS */
+	GE_EQUAL,		/* GL_EQUAL */
+	GE_GREATER,		/* GL_LEQUAL */
+	GE_LEQUAL,		/* GL_GREATER */
+	GE_NOTEQUAL,		/* GL_NOTEQUAL */
+	GE_LESS,		/* GL_GEQUAL */
+	GE_ALWAYS,		/* GL_ALWAYS */
+};
 
 void glDepthFunc (GLenum func)
 {

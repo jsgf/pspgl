@@ -59,7 +59,7 @@ unsigned long ge_init_state [] =
 	0xe300f3e2,	/* Dither Matrix, Row 1 */
 	0xe4000c1d,	/* Dither Matrix, Row 2 */
 	0xe500e2f3,	/* Dither Matrix, Row 3 */
-	0xde000004,	/* Depth Test Function GL_LESS */
+	0xde000007,	/* Depth Test Function GL_LESS -> GE_GEQUAL */
 
 	0x54000000,	/* emissive color 0, 0, 0, 1 */
 	0x55ffffff,	/* ambient color sets default colour, which is 1,1,1,1 with lighting off */
@@ -103,7 +103,7 @@ void __pspgl_ge_init (struct pspgl_context *c)
 	glScissor(0, 0, c->draw->width, c->draw->height);
 	glViewport(0, 0, c->draw->width, c->draw->height);
 	glDepthRange(0.0, 1.0);
-	c->clear.depth = 1.0;
+	c->clear.depth = 0;	/* = 1.0f in OpenGL coord system */
 	c->depth_offset = 0.0;
 	c->swap_interval = 1;
 

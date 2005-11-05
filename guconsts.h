@@ -326,14 +326,14 @@
 #define GU_CCW			(1)
 
 /* Test Function */
-#define GU_NEVER		(0)
-#define GU_ALWAYS		(1)
-#define GU_EQUAL		(2)
-#define GU_NOTEQUAL		(3)
-#define GU_LESS			(4)
-#define GU_LEQUAL		(5)
-#define GU_GREATER		(6)
-#define GU_GEQUAL		(7)
+#define GE_NEVER		(0)
+#define GE_ALWAYS		(1)
+#define GE_EQUAL		(2)
+#define GE_NOTEQUAL		(3)
+#define GE_LESS			(4)
+#define GE_LEQUAL		(5)
+#define GE_GREATER		(6)
+#define GE_GEQUAL		(7)
 
 /* Clear Buffer Mask */
 #define GU_COLOR_BUFFER_BIT	(1)
