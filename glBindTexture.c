@@ -54,14 +54,6 @@ void glBindTexture(GLenum target, GLuint id)
 	for(i = TEXSTATE_START; i <= TEXSTATE_END; i++)
 		sendCommandi(i, tobj->ge_texreg[i - TEXSTATE_START]);
 
-	if (tobj->vflip) {
-		sendCommandf(CMD_TEXTURE_SV, -1.);
-		sendCommandf(CMD_TEXTURE_TV, 1.);
-	} else {
-		sendCommandf(CMD_TEXTURE_SV, 1.);
-		sendCommandf(CMD_TEXTURE_TV, 0.);
-	}
-
 	__pspgl_update_texenv(tobj);
 	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);
 }

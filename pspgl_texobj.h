@@ -28,8 +28,6 @@ struct pspgl_texobj {
 	GLenum		target;		/* either 0 or GL_TEXTURE_2D */
 	GLclampf	priority;
 
-	int		vflip;
-
 #define TEXOBJ_NTEXREG	(TEXSTATE_END - TEXSTATE_START + 1)
 	uint32_t	ge_texreg[TEXOBJ_NTEXREG];
 	const struct pspgl_texfmt *texfmt;
