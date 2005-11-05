@@ -59,9 +59,6 @@ struct pspgl_dlist* __pspgl_dlist_finalize_and_clone (struct pspgl_dlist *thiz)
 }
 
 
-static inline unsigned long align64 (unsigned long adr) { return (((adr + 0x3f) & ~0x3f) | 0x40000000); }
-
-
 /**
  *  When allocating the command buffer we need to consider 2 requirements:
  *
@@ -76,10 +73,7 @@ struct pspgl_dlist* __pspgl_dlist_create (int compile_and_run,
 {
 	struct pspgl_dlist *d;
 
-	if (DLIST_CACHED)
-		d = memalign(64, sizeof(struct pspgl_dlist));
-	else
-		d = malloc(sizeof(struct pspgl_dlist));
+	d = memalign(CACHELINE_SIZE, sizeof(struct pspgl_dlist));
 
 	psp_log("\n");
 
@@ -95,8 +89,7 @@ struct pspgl_dlist* __pspgl_dlist_create (int compile_and_run,
 	d->cleanups = NULL;
 
 #if !DLIST_CACHED
-	sceKernelDcacheWritebackInvalidateRange(d->_cmdbuf, sizeof(d->_cmdbuf));
-	d->cmd_buf = (void *) align64((unsigned long) d->_cmdbuf);
+	d->cmd_buf = __pspgl_uncached(d->_cmdbuf, sizeof(d->_cmdbuf));
 #endif
 
 	__pspgl_dlist_reset(d);

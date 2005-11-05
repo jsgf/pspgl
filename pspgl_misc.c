@@ -8,6 +8,16 @@
 #include "pspgl_internal.h"
 
 
+void *__pspgl_uncached(void *p, size_t size)
+{
+	assert(((unsigned long)p & (CACHELINE_SIZE-1)) == 0);
+	assert((size & (CACHELINE_SIZE-1)) == 0);
+
+	sceKernelDcacheWritebackInvalidateRange(p, size);
+
+	return (void *)((unsigned long)p | 0x40000000);
+}
+
 
 void __pspgl_log (const char *fmt, ...)
 {

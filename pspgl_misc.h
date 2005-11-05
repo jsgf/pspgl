@@ -2,6 +2,11 @@
 #define __pspgl_misc_h__
 
 
+/* Return a pointer to uncached address space.  The pointer and size
+   must both be a multiple CACHELINE_SIZE.  */
+#define CACHELINE_SIZE	64
+void *__pspgl_uncached(void *p, size_t size);
+
 /* Round up to a particular power of 2.  "a" evaluated multiple
    times. */
 #define ROUNDUP(x, a)  (((x)+((a)-1)) & ~((a)-1))

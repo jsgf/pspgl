@@ -21,7 +21,7 @@ struct pspgl_dlist {
 #else
 	unsigned long *cmd_buf;
 	/* need to align to cache lines (64bytes) to avoid cached/uncached conflicts */
-	unsigned long _cmdbuf[DLIST_SIZE + 2 * 64 / sizeof(unsigned long)];
+	unsigned long __attribute__((aligned(CACHELINE_SIZE))) _cmdbuf[DLIST_SIZE];
 #endif
 };
 
