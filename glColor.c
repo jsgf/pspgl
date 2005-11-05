@@ -3,8 +3,12 @@
 static void update_color(unsigned long c)
 {
 	pspgl_curctx->current.color = c;
-	sendCommandi(CMD_MATERIAL_AMB_C, c);
-	sendCommandi(CMD_MATERIAL_AMB_A, c>>24);
+
+	/* only apply when lighting is disabled */
+	if ((getReg(CMD_ENA_LIGHTING) & 0xff) == 0) {
+		sendCommandi(CMD_MATERIAL_AMB_C, c);
+		sendCommandi(CMD_MATERIAL_AMB_A, c>>24);
+	}
 }
 
 void glColor4fv (const GLfloat *color)

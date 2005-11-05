@@ -75,6 +75,15 @@ struct pspgl_context {
 		unsigned char stencil;
 	} write_mask;
 
+	struct {
+		GLboolean positional[4];	/* set by glLight(N, GL_POSITION, ) */
+		GLboolean spotlight[4];	/* set by glLight(N, GL_SPOT_CUTOFF, ) */
+	} lights;
+
+	struct {
+		unsigned long ambient;
+	} material;
+
 	GLfloat depth_offset;
 
 

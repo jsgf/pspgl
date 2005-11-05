@@ -60,6 +60,12 @@ unsigned long ge_init_state [] =
 	0xe4000c1d,	/* Dither Matrix, Row 2 */
 	0xe500e2f3,	/* Dither Matrix, Row 3 */
 	0xde000004,	/* Depth Test Function GL_LESS */
+
+	0x54000000,	/* emissive color 0, 0, 0, 1 */
+	0x55ffffff,	/* ambient color sets default colour, which is 1,1,1,1 with lighting off */
+	0x56cccccc,	/* diffuse color .8, .8, .8, 1 */
+	0x57000000,	/* specular color 0, 0, 0, 1 */
+	0x580000ff,	/* ambient alpha 1 */
 };
 
 
@@ -100,5 +106,12 @@ void __pspgl_ge_init (struct pspgl_context *c)
 	c->clear.depth = 1.0;
 	c->depth_offset = 0.0;
 	c->swap_interval = 1;
+
+	/* Material ambient and current color share the same hardware
+	   register, so we need to keep separate copies of the state;
+	   the other material colors are set up with all the other
+	   hardware state */
+	c->current.color = 0xffffffff;		/* default color is 1,1,1,1 */
+	c->material.ambient = 0xff333333;	/* material ambient color is .2, .2, .2, 1 */
 }
 

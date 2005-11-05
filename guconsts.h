@@ -358,17 +358,17 @@
 #define GU_DECR			(5)
 
 /* Light Components */
-#define GU_AMBIENT		(1)
-#define GU_DIFFUSE		(2)
-#define GU_SPECULAR		(4)
-#define GU_AMBIENT_AND_DIFFUSE	(GU_AMBIENT|GU_DIFFUSE)
-#define GU_DIFFUSE_AND_SPECULAR	(GU_DIFFUSE|GU_SPECULAR)
-#define GU_UNKNOWN_LIGHT_COMPONENT (8)
+#define GE_AMBIENT		(1)
+#define GE_DIFFUSE		(2)
+#define GE_SPECULAR		(4)
+#define GE_AMBIENT_AND_DIFFUSE	(GU_AMBIENT|GU_DIFFUSE)
+#define GE_DIFFUSE_AND_SPECULAR	(GU_DIFFUSE|GU_SPECULAR)
+#define GE_UNKNOWN_LIGHT_COMPONENT (8)
 
 /* Light Type */
-#define GU_DIRECTIONAL		(0)
-#define GU_POINTLIGHT		(1)
-#define GU_SPOTLIGHT		(2)
+#define GE_DIRECTIONAL		(0)
+#define GE_POINTLIGHT		(1)
+#define GE_SPOTLIGHT		(2)
 
 /* Texture environment */
 #define GE_TEXENV_MODULATE				0

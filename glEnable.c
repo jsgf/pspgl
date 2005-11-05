@@ -8,9 +8,19 @@ static void enable_state (GLenum cap, int enable)
 	case GL_FOG:
 		opcode = CMD_ENA_FOG;
 		break;
-	case GL_LIGHTING:
+	case GL_LIGHTING: {
+		unsigned long c;
 		opcode = CMD_ENA_LIGHTING;
+		
+		/* switch material ambient around depending on lighting state */
+		if (enable)
+			c = pspgl_curctx->material.ambient;
+		else
+			c = pspgl_curctx->current.color;
+		sendCommandi(CMD_MATERIAL_AMB_C, c);
+		sendCommandi(CMD_MATERIAL_AMB_A, c>>24);
 		break;
+		}
 	case GL_TEXTURE_2D:
 		opcode = CMD_ENA_TEXTURE;
 		break;
