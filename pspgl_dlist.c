@@ -4,9 +4,6 @@
 #include <pspge.h>
 #include "pspgl_internal.h"
 
-/* Just for documentation */
-#define assert(x)
-
 void __pspgl_dlist_enqueue_cmd (struct pspgl_dlist *d, unsigned long cmd)
 {
 	if (d->len >= DLIST_SIZE - 4) {
@@ -101,9 +98,9 @@ struct pspgl_dlist* __pspgl_dlist_swap (struct pspgl_dlist *thiz)
 {
 	struct pspgl_dlist* next;
 
-	assert(thiz == pspgl->curctx->dlist[pspgl->curctx->dlist_idx]);
+	assert(thiz == pspgl_curctx->dlist[pspgl_curctx->dlist_idx]);
 
-		__pspgl_dlist_finalize(thiz);
+	__pspgl_dlist_finalize(thiz);
 
 	if (++pspgl_curctx->dlist_idx >= NUM_CMDLISTS)
 		pspgl_curctx->dlist_idx = 0;

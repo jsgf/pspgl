@@ -111,3 +111,9 @@ void __pspgl_vram_dump (void)
 	sceIoClose(fd);
 }
 
+void __pspgl_assert_fail(const char *expr, const void *retaddr, 
+			 const char *func, const char *file, int line)
+{
+	__pspgl_log("ASSERTION FAILURE: %s:%d (%s, called from %p): %s\n",
+		    file, line, func, retaddr, expr);
+} 

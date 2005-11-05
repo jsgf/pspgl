@@ -42,5 +42,19 @@ extern void __pspgl_vram_dump (void);
 #define psp_log(x...) do { } while (0)
 #endif
 
+extern void __pspgl_assert_fail(const char *expr, const void *retaddr, 
+				const char *func, const char *file, int line);
+
+#if 1
+#define assert(x)							\
+	do {								\
+		if (__builtin_expect(!(x), 0))				\
+			__pspgl_assert_fail(#x, __builtin_return_address(0), \
+				__FUNCTION__, __FILE__, __LINE__);	\
+	} while(0)
+#else
+#define assert(x)
+#endif
+
 #endif
 
