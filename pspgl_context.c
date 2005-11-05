@@ -114,6 +114,7 @@ static void flush_pending_matrix_changes (struct pspgl_context *c)
 void __pspgl_context_pin_textures(struct pspgl_context *c)
 {
 	struct pspgl_texobj *tobj;
+	struct pspgl_teximg *cmap;
 	int i;
 
 	tobj = c->texture.bound;	
@@ -123,19 +124,53 @@ void __pspgl_context_pin_textures(struct pspgl_context *c)
 	    (c->ge_reg[CMD_ENA_TEXTURE] & 1) == 0)
 		return;
 
-	if (tobj->cmap)
-		__pspgl_dlist_pin_buffer(tobj->cmap->image);
+	/* find the effective cmap, if any */
+	cmap = NULL;
+	if (tobj->texfmt)
+		cmap = tobj->texfmt->cmap;
+	if (cmap == NULL)
+		cmap = tobj->cmap;
+	if (cmap)
+		__pspgl_dlist_pin_buffer(cmap->image);
 
 	/* Walk the images pointed to by the texture object and make
 	   sure they're pinned. */
 	for (i = 0; i < MIPMAP_LEVELS; i++)
-		if (tobj->images[i])
+		if (tobj->images[i] && tobj->images[i]->image)
 			__pspgl_dlist_pin_buffer(tobj->images[i]->image);
 }
 
 void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt, 
 				  const void *vertex, const void *index)
 {
+	struct pspgl_texobj *tobj;
+
+	tobj = c->texture.bound;	
+
+	/* set up cmap state; if the texture format has an inherent
+	   cmap, use that, otherwise set up the texture object's cmap
+	   (if any) */
+	if ((tobj != NULL) &&
+	    (c->ge_reg[CMD_ENA_TEXTURE] & 1)) {
+		struct pspgl_teximg *cmap = NULL;
+
+		if (tobj->texfmt)
+			cmap = tobj->texfmt->cmap;
+		if (cmap == NULL)
+			cmap = tobj->cmap;
+		if (cmap) {
+			unsigned long p = (unsigned long)cmap->image->base + cmap->offset;
+
+			sendCommandi(CMD_SET_CLUT, p);
+			sendCommandi(CMD_SET_CLUT_MSB, (p >> 8) & 0xf0000);
+			/* Not sure what the 0xff << 8 is about, but
+			   samples/gu/blend.c uses it, and it seems to be
+			   necessary to get a non-black output... */
+			sendCommandi(CMD_CLUT_MODE, cmap->texfmt->hwformat | (0xff << 8));
+			sendCommandi(CMD_CLUT_BLKS, cmap->width / 8);
+		}
+	}
+
 	__pspgl_context_writereg(c, CMD_VERTEXTYPE, vtxfmt);
 
 	if ((vtxfmt & GE_TRANSFORM_SHIFT(1)) == GE_TRANSFORM_3D)
@@ -150,7 +185,6 @@ void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt,
 		__pspgl_context_writereg_uncached(c, CMD_INDEXPTR,  ((unsigned)index) & 0x00ffffff);
 	} else
 		assert(index == NULL);
-
 }
 
 

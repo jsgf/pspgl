@@ -158,9 +158,20 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 	if (border != 0)
 		goto invalid_value;
 
-	/* old-style formats are just number of components */
-	if (internalformat <= 4 && internalformat > 0)
+	/* we need to special-case a few things */
+	switch(internalformat) {
+	case 1 ... 4:
+		/* old-style formats are just number of components */
 		internalformat = format_equiv[internalformat];
+		break;
+
+	case GL_INTENSITY:
+		/* intensity is always specified as luminance */
+		if (format != GL_LUMINANCE)
+			goto invalid_operation;
+		format = internalformat;
+		break;
+	}
 
 	if (format != internalformat)
 		goto invalid_operation;

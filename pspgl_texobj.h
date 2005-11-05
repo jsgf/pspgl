@@ -22,6 +22,8 @@ struct pspgl_texfmt {
 	unsigned flags;
 #define TF_ALPHA	(1<<0)
 #define TF_NATIVE	(1<<1)
+
+	struct pspgl_teximg *cmap;
 };
 
 

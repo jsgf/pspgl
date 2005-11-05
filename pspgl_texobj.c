@@ -97,40 +97,20 @@ static void copy_888_alpha(const struct pspgl_texfmt *fmt, void *to, const void 
 
 static void copy_expand_LA(const struct pspgl_texfmt *fmt, void *to, const void *from, unsigned width)
 {
-	unsigned int *dest = to;
-	const unsigned char *src = from;
+       unsigned int *dest = to;
+       const unsigned char *src = from;
 
-	while(width--) {
-		unsigned char l = src[0];
-		unsigned char a = src[1];
+       while(width--) {
+               unsigned char l = src[0];
+               unsigned char a = src[1];
 
-		*dest = (a << 24) | (l << 16) | (l << 8) | l;
+               *dest = (a << 24) | (l << 16) | (l << 8) | l;
 
-		dest++;
-		src += 2;
-	}
+               dest++;
+               src += 2;
+       }
 }
 
-static void copy_expand_A(const struct pspgl_texfmt *fmt, void *to, const void *from, unsigned width)
-{
-	unsigned int *dest = to;
-	const unsigned char *src = from;
-
-	while(width--)
-		*dest++ = (*src++) << 24;
-}
-
-static void copy_expand_L(const struct pspgl_texfmt *fmt, void *to, const void *from, unsigned width)
-{
-	unsigned int *dest = to;
-	const unsigned char *src = from;
-
-	while(width--) {
-		unsigned char l = *src++;
-
-		*dest++ = 0xff000000 | (l << 16) | (l << 8) | l;
-	}
-}
 
 static void copy_index4(const struct pspgl_texfmt *fmt, void *to, const void *from, unsigned width)
 {
@@ -138,10 +118,61 @@ static void copy_index4(const struct pspgl_texfmt *fmt, void *to, const void *fr
 	memcpy(to, from, width / 2);
 }
 
+static struct pspgl_teximg alpha_cmap = {
+	.image = NULL,
+	.offset = 0,
+
+	.srcbuffer = NULL,
+	.srcoffset = 0,
+	.srcgeneration = 0,
+
+	.width = 256,
+	.height = 1,
+
+	.texfmt = NULL,
+};
+
+static struct pspgl_teximg luminance_cmap = {
+	.image = NULL,
+	.offset = 0,
+
+	.srcbuffer = NULL,
+	.srcoffset = 0,
+	.srcgeneration = 0,
+
+	.width = 256,
+	.height = 1,
+
+	.texfmt = NULL,
+};
+
+static struct pspgl_teximg intensity_cmap = {
+	.image = NULL,
+	.offset = 0,
+
+	.srcbuffer = NULL,
+	.srcoffset = 0,
+	.srcgeneration = 0,
+
+	.width = 256,
+	.height = 1,
+
+	.texfmt = NULL,
+};
 
 const struct pspgl_texfmt __pspgl_texformats[] = {
 	/* format       type                        source sz   hwformat      hw size   converter               flags */
+	{ GL_RGBA,	GL_UNSIGNED_BYTE,		4,	GE_RGBA_8888, 4,	copy,			TF_ALPHA | TF_NATIVE },
 	{ GL_RGB,	GL_UNSIGNED_BYTE,		3,	GE_RGBA_8888, 4,	copy_888_alpha,		0  },
+
+	{ GL_RGBA,	GL_UNSIGNED_SHORT_5_5_5_1,	2,	GE_RGBA_5551, 2,	copy_5551,		TF_ALPHA },
+	{ GL_RGBA,	GL_UNSIGNED_SHORT_4_4_4_4,	2,	GE_RGBA_4444, 2,	copy_4444,		TF_ALPHA },
+
+	{ GL_RGBA,	GL_UNSIGNED_SHORT_1_5_5_5_REV,	2,	GE_RGBA_5551, 2,	copy,			TF_ALPHA | TF_NATIVE },
+	{ GL_RGBA,	GL_UNSIGNED_SHORT_4_4_4_4_REV,	2,	GE_RGBA_4444, 2,	copy,			TF_ALPHA | TF_NATIVE },
+
+	{ GL_ABGR_EXT,	GL_UNSIGNED_SHORT_4_4_4_4,	2,	GE_RGBA_4444, 2,	copy,			TF_ALPHA | TF_NATIVE },
+
 	{ GL_RGB,	GL_UNSIGNED_SHORT_5_5_5_1,	2,	GE_RGBA_5551, 2,	copy_5551,		0  },
 	{ GL_RGB,	GL_UNSIGNED_SHORT_5_6_5,	2,	GE_RGB_565,   2,	copy_565,		0  },
 	{ GL_RGB,	GL_UNSIGNED_SHORT_4_4_4_4,	2,	GE_RGBA_4444, 2,	copy_4444,		0  },
@@ -152,24 +183,17 @@ const struct pspgl_texfmt __pspgl_texformats[] = {
 
 	{ GL_BGR,	GL_UNSIGNED_SHORT_5_6_5,	2,	GE_RGB_565,   2,	copy,			TF_NATIVE  },
 
-	{ GL_RGBA,	GL_UNSIGNED_BYTE,		4,	GE_RGBA_8888, 4,	copy,			TF_ALPHA | TF_NATIVE },
-	{ GL_RGBA,	GL_UNSIGNED_SHORT_5_5_5_1,	2,	GE_RGBA_5551, 2,	copy_5551,		TF_ALPHA },
-	{ GL_RGBA,	GL_UNSIGNED_SHORT_4_4_4_4,	2,	GE_RGBA_4444, 2,	copy_4444,		TF_ALPHA },
-
-	{ GL_RGBA,	GL_UNSIGNED_SHORT_1_5_5_5_REV,	2,	GE_RGBA_5551, 2,	copy,			TF_ALPHA | TF_NATIVE },
-	{ GL_RGBA,	GL_UNSIGNED_SHORT_4_4_4_4_REV,	2,	GE_RGBA_4444, 2,	copy,			TF_ALPHA | TF_NATIVE },
-
-	{ GL_ABGR_EXT,	GL_UNSIGNED_SHORT_4_4_4_4,	2,	GE_RGBA_4444, 2,	copy,			TF_ALPHA | TF_NATIVE },
-
 	{ GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,		2,	GE_RGBA_8888, 4,	copy_expand_LA,		TF_ALPHA },
 
-	/* XXX These two could use an indexed mode to save space */
-	{ GL_LUMINANCE,	GL_UNSIGNED_BYTE,		1,	GE_RGBA_8888, 4,	copy_expand_L,		0  },
-	{ GL_ALPHA,	GL_UNSIGNED_BYTE,		1,	GE_RGBA_8888, 4,	copy_expand_A,		TF_ALPHA },
-#if 0
+	{ GL_LUMINANCE,	GL_UNSIGNED_BYTE,		1,	GE_INDEX_8BIT, 1,	copy,			TF_NATIVE,
+	  &luminance_cmap  },
+
+	{ GL_ALPHA,	GL_UNSIGNED_BYTE,		1,	GE_INDEX_8BIT, 1,	copy,			TF_NATIVE | TF_ALPHA,
+	  &alpha_cmap },
+
 	/* an intensity (L==A) format with efficent (1 byte/texel) storage is very useful for fonts */
-	{ GL_INTENSITY,	GL_UNSIGNED_BYTE,		1,	GE_INDEX_8BIT, 1,	xxx,			TF_ALPHA },
-#endif
+	{ GL_INTENSITY,	GL_UNSIGNED_BYTE,		1,	GE_INDEX_8BIT, 1,	copy,			TF_NATIVE | TF_ALPHA,
+	  &intensity_cmap },
 
  	/* Indexed textures */
  	{ GL_COLOR_INDEX4_EXT,	GL_UNSIGNED_BYTE,	0,	GE_INDEX_4BIT, 0,	copy_index4,		TF_NATIVE },
@@ -179,14 +203,72 @@ const struct pspgl_texfmt __pspgl_texformats[] = {
 	{0,0}
 };
 
-const struct pspgl_texfmt *__pspgl_hardware_format(const struct pspgl_texfmt *table, GLenum format, GLenum type)
+static void make_cmap_alpha(unsigned *ptr)
 {
 	int i;
 
+	for(i = 0; i < 256; i++)
+		*ptr++ = i << 24;
+}
+
+static void make_cmap_intensity(unsigned *ptr)
+{
+	int i;
+
+	for(i = 0; i < 256; i++) {
+		unsigned pix = (i << 8) | i;
+		pix = (pix << 16) | pix;
+		*ptr++ = pix;
+	}
+}
+
+static void make_cmap_luminance(unsigned *ptr)
+{
+	int i;
+
+	for(i = 0; i < 256; i++) {
+		unsigned pix = (i << 8) | i;
+		pix = 0xff000000 | (i << 16) | pix;
+		*ptr++ = pix;
+	}
+}
+
+static void init_internal_cmap(struct pspgl_teximg *cmap, const struct pspgl_texfmt *fmt, void (*make_cmap)(unsigned *))
+{
+	struct pspgl_buffer *b;
+	void *map;
+
+	b = __pspgl_buffer_new(256 * 4, GL_STATIC_DRAW_ARB);
+
+	if (b == NULL)
+		return;		/* ? */
+
+	map = __pspgl_buffer_map(b, GL_WRITE_ONLY);
+	(*make_cmap)(map);
+	__pspgl_buffer_unmap(b, GL_WRITE_ONLY);
+
+	cmap->image = b;
+	cmap->texfmt = fmt;
+}
+
+const struct pspgl_texfmt *__pspgl_hardware_format(const struct pspgl_texfmt *table, GLenum format, GLenum type)
+{
+	int i;
+	const struct pspgl_texfmt *ret;
 	for(i = 0; table[i].format != 0; i++)
 		if (table[i].format == format &&
-		    table[i].type == type)
-			return &table[i];
+		    table[i].type == type) {
+			ret = &table[i];
+
+			if (format == GL_LUMINANCE && luminance_cmap.image == NULL)
+				init_internal_cmap(&luminance_cmap, &__pspgl_texformats[1], make_cmap_luminance);
+			else if (format == GL_ALPHA && alpha_cmap.image == NULL)
+				init_internal_cmap(&alpha_cmap, &__pspgl_texformats[0], make_cmap_alpha);
+			else if (format == GL_INTENSITY && intensity_cmap.image == NULL)
+				init_internal_cmap(&intensity_cmap, &__pspgl_texformats[0], make_cmap_intensity);
+
+			return ret;
+		}
 
 	return NULL;
 }
@@ -359,12 +441,6 @@ void __pspgl_teximg_free(struct pspgl_teximg *timg)
 	free(timg);
 }
 
-static GLboolean texfmt_is_indexed(const struct pspgl_texfmt *fmt)
-{
-	return fmt->hwformat >= GE_INDEX_4BIT && fmt->hwformat <= GE_INDEX_32BIT;
-}
-
-
 void __pspgl_update_texenv(struct pspgl_texobj *tobj)
 {
 	const struct pspgl_texfmt *fmt;
@@ -372,8 +448,12 @@ void __pspgl_update_texenv(struct pspgl_texobj *tobj)
 	if (tobj == NULL)
 		return;
 
+	/* If this is a user-supplied indexed format texture and
+	   there's a cmap, use the cmap's format */
 	fmt = tobj->texfmt;
-	if (fmt && texfmt_is_indexed(fmt) && tobj->cmap != NULL)
+	if (fmt &&
+	    (fmt->format >= GL_COLOR_INDEX4_EXT && fmt->format <= GL_COLOR_INDEX16_EXT) &&
+	    tobj->cmap != NULL)
 		fmt = tobj->cmap->texfmt;
 
 	if (fmt)

@@ -7,7 +7,6 @@ void glColorTable(GLenum target, GLenum internalformat,
 	struct pspgl_teximg *cmap;
 	struct pspgl_texobj *tobj;
 	const struct pspgl_texfmt *fmt;
-	unsigned long p;
 
 	if (target != GL_TEXTURE_2D)
 		goto invalid_enum;
@@ -39,16 +38,6 @@ void glColorTable(GLenum target, GLenum internalformat,
 		__pspgl_teximg_free(tobj->cmap);
 	}
 	tobj->cmap = cmap;
-
-	p = (unsigned long)cmap->image->base + cmap->offset;
-
-	sendCommandi(CMD_SET_CLUT, p);
-	sendCommandi(CMD_SET_CLUT_MSB, (p >> 8) & 0xf0000);
-	/* Not sure what the 0xff << 8 is about, but
-	   samples/gu/blend.c uses it, and it seems to be
-	   necessary to get a non-black output... */
-	sendCommandi(CMD_CLUT_MODE, cmap->texfmt->hwformat | (0xff << 8));
-	sendCommandi(CMD_CLUT_BLKS, cmap->width / 8);
 
 	__pspgl_update_texenv(tobj);
 
