@@ -6,6 +6,7 @@
 
 #define DLIST_SIZE 1024		/* command words (32bit) */
 
+#define DLIST_CACHED	0	/* put command list in cached memory */
 
 struct pspgl_dlist {
 	struct pspgl_dlist *next;
@@ -13,9 +14,14 @@ struct pspgl_dlist {
 	unsigned long len;
 	int compile_and_run;
 	int qid;
+
+#if DLIST_CACHED
+ 	unsigned long __attribute__((aligned(16))) cmd_buf[DLIST_SIZE];
+#else
 	unsigned long *cmd_buf;
 	/* need to align to cache lines (64bytes) to avoid cached/uncached conflicts */
 	unsigned long _cmdbuf[DLIST_SIZE + 2 * 64 / sizeof(unsigned long)];
+#endif
 };
 
 

@@ -4,6 +4,8 @@
 #include <pspge.h>
 #include "pspgl_internal.h"
 
+void sceKernelDcacheWritebackInvalidateRange(void *start, unsigned int size);
+
 void __pspgl_dlist_enqueue_cmd (struct pspgl_dlist *d, unsigned long cmd)
 {
 	if (d->len >= DLIST_SIZE - 4) {
@@ -19,8 +21,6 @@ void __pspgl_dlist_enqueue_cmd (struct pspgl_dlist *d, unsigned long cmd)
 static
 void pspgl_dlist_finish (struct pspgl_dlist *d)
 {
-	__pspgl_context_flush_pending_state_changes(pspgl_curctx);
-
 	assert(d->len < DLIST_SIZE - 4);
 
 	d->cmd_buf[d->len++] = 0x0f000000;	/* FINISH */
@@ -35,6 +35,8 @@ void __pspgl_dlist_finalize(struct pspgl_dlist *d)
 	pspgl_dlist_finish(d);
 	pspgl_dlist_dump(d->cmd_buf, d->len);
 	assert(d->qid == -1);
+	if (DLIST_CACHED)
+		sceKernelDcacheWritebackInvalidateRange(d->cmd_buf, sizeof(d->cmd_buf));
 	d->qid = sceGeListEnQueue(d->cmd_buf, &d->cmd_buf[d->len-1], 0, NULL);
 }
 
@@ -69,7 +71,12 @@ static inline unsigned long align64 (unsigned long adr) { return (((adr + 0x3f) 
 struct pspgl_dlist* __pspgl_dlist_create (int compile_and_run,
 				     struct pspgl_dlist * (*done) (struct pspgl_dlist *thiz))
 {
-	struct pspgl_dlist *d = malloc(sizeof(struct pspgl_dlist));
+	struct pspgl_dlist *d;
+
+	if (DLIST_CACHED)
+		d = memalign(64, sizeof(struct pspgl_dlist));
+	else
+		d = malloc(sizeof(struct pspgl_dlist));
 
 	psp_log("\n");
 
@@ -83,7 +90,10 @@ struct pspgl_dlist* __pspgl_dlist_create (int compile_and_run,
 	d->compile_and_run = compile_and_run;
 	d->qid = -1;
 
+#if !DLIST_CACHED
+	sceKernelDcacheWritebackInvalidateRange(d->_cmdbuf, sizeof(d->_cmdbuf));
 	d->cmd_buf = (void *) align64((unsigned long) d->_cmdbuf);
+#endif
 
 	__pspgl_dlist_reset(d);
 
@@ -125,6 +135,8 @@ void __pspgl_dlist_submit(struct pspgl_dlist *d)
 	for(; d != NULL; d = d->next) {
 		if (d->qid != -1)
 			sceGeListSync(d->qid, PSP_GE_LIST_DONE);
+		if (DLIST_CACHED)
+			sceKernelDcacheWritebackInvalidateRange(d->cmd_buf, sizeof(d->cmd_buf));
 		d->qid = sceGeListEnQueue(d->cmd_buf, &d->cmd_buf[d->len], 0, NULL);
 	}
 }
