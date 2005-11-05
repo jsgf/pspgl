@@ -57,10 +57,10 @@ void glClear (GLbitfield mask)
 	sendCommandi(CMD_CLEARMODE, cmd);
 
 	/* draw array */
-	sendCommandi(CMD_VERTEXTYPE, GU_COLOR_8888 | GU_VERTEX_32BITF | GU_TRANSFORM_2D);              /* xform: 2D, vertex format: RGB8888 (uint32), xyz (float32) */
+	sendCommandi(CMD_VERTEXTYPE, GE_COLOR_8888 | GE_VERTEX_32BITF | GE_TRANSFORM_2D);              /* xform: 2D, vertex format: RGB8888 (uint32), xyz (float32) */
 	sendCommandiUncached(CMD_BASE, (((unsigned long) vbuf) >> 8) & 0xf0000); /* vertex array BASE */
 	sendCommandiUncached(CMD_VERTEXPTR, ((unsigned long) vbuf) & 0xffffff);        /* vertex array, Adress */
-	sendCommandiUncached(CMD_PRIM, (GU_SPRITES << 16) | 2);          /* sprite (type 6), 2 vertices */
+	sendCommandiUncached(CMD_PRIM, (GE_SPRITES << 16) | 2);          /* sprite (type 6), 2 vertices */
 
 	/* leave clear mode */
 	sendCommandi(CMD_CLEARMODE, 0);

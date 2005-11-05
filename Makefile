@@ -115,6 +115,9 @@ libGL.a_OBJS = \
 	pspgl_misc.o \
 	pspgl_texobj.o \
 	pspgl_varray.o \
+	pspgl_varray_draw.o \
+	pspgl_varray_draw_elts.o \
+	pspgl_varray_draw_range_elts.o \
 	pspgl_vidmem.o
 
 libGLU.a_OBJS = \

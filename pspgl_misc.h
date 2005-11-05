@@ -2,6 +2,10 @@
 #define __pspgl_misc_h__
 
 
+/* Round up to a particular power of 2.  "a" evaluated multiple
+   times. */
+#define ROUNDUP(x, a)  (((x)+((a)-1)) & ~((a)-1))
+
 extern void __pspgl_log (const char *fmt, ...);
 
 typedef unsigned uint32_t;

@@ -1,18 +1,28 @@
+#include <string.h>
+
 #include "pspgl_internal.h"
 
 
-#define GE_COLOR_RES1  1
-#define GE_COLOR_RES2  2
-#define GE_COLOR_RES3  3
-#define GE_COLOR_5650  4
-#define GE_COLOR_5551  5
-#define GE_COLOR_4444  6
-#define GE_COLOR_8888  7
+unsigned __pspgl_gl_sizeof(GLenum type)
+{
+	switch(type) {
+	case GL_BYTE:
+	case GL_UNSIGNED_BYTE:
+		return sizeof(GLubyte);
 
-#define GE_INT_8BIT    1
-#define GE_INT_16BIT   2
-#define GE_FLOAT_32BIT 3
+	case GL_SHORT:
+	case GL_UNSIGNED_SHORT:
+		return sizeof(GLushort);
 
+	case GL_UNSIGNED_INT:
+		return sizeof(GLuint);
+
+	case GL_FLOAT:
+		return sizeof(GLfloat);
+	}
+
+	return 0;
+}
 
 static
 int glfmt2gefmt (GLenum type)
@@ -36,120 +46,236 @@ int glfmt2gefmt (GLenum type)
 	return ge_type;
 }
 
-
-static
-unsigned long ge_vertex_fmt (struct pspgl_context *ctx, unsigned long *adr)
+static unsigned ge_sizeof(unsigned type)
 {
-	unsigned long stride;
-	unsigned long next;
-	unsigned long ge_type;
-	unsigned long fmt = 0;
-
-	next = *adr = 0;
-
-	if (ctx->vertex_array.texcoord.enabled) {
-		if (ctx->vertex_array.texcoord.size != 2)
-			goto bailout;
-
-		if ((ge_type = glfmt2gefmt(ctx->vertex_array.texcoord.type)) <= 0)
-			goto bailout;
-
-		next = *adr = (unsigned long) ctx->vertex_array.texcoord.ptr;
-		next += 2 * (1 << (ge_type - 1));
-		fmt |= ge_type;
+	switch(type) {
+	case GE_INT_8BIT:	return 1;
+	case GE_INT_16BIT:	return 2;
+	case GE_FLOAT_32BIT:	return 4;
+	default:		return 0;
 	}
+}
 
-	if (ctx->vertex_array.color.enabled) {
-		if (ctx->vertex_array.color.size != 4)
-			goto bailout;
+static void cvt_color_float3_ub(void *to, const void *from, const struct attrib *attr)
+{
+	const GLfloat *src = from;
+	unsigned long *dest = to;
+	unsigned long ret = COLOR3(src) | 0xff000000;
 
-		if (next && next != (unsigned long) ctx->vertex_array.color.ptr)
-			goto bailout;
+	//psp_log("(%g,%g,%g) -> %08x\n", src[0], src[1], src[2], ret);
+	*dest = ret;
+}
 
-		if (ctx->vertex_array.color.size != 4)
-			goto bailout;
+static void cvt_color_float4_ub(void *to, const void *from, const struct attrib *attr)
+{
+	const GLfloat *src = from;
+	unsigned long *dest = to;
+	unsigned long ret = COLOR4(src);
 
-		switch (ctx->vertex_array.color.type) {
-		case GL_UNSIGNED_BYTE:
-			if (*adr == 0)
-				next = *adr = (unsigned long) ctx->vertex_array.color.ptr;
-			next += 4;
-			fmt |= GE_COLOR_8888 << 2;
-			break;
-		default:
-			goto bailout;
-		}
-	}
+	//psp_log("(%g,%g,%g,%g) -> %08x\n", src[0], src[1], src[2], src[3], ret);
+	*dest = ret;
+}
 
-	if (ctx->vertex_array.normal.enabled) {
-		if (next && next != (unsigned long) ctx->vertex_array.normal.ptr)
-			goto bailout;
+static void cvt_color_ub3_ub(void *to, const void *from, const struct attrib *attr)
+{
+	const unsigned char *src = from;
+	unsigned long *dest = to;
 
-		if ((ge_type = glfmt2gefmt(ctx->vertex_array.normal.type)) <= 0)
-			goto bailout;
+	*dest = 0xff000000 | (src[2] << 16) | (src[1] << 8) | src[0];
+}
 
-		if (*adr == 0)
-			*adr = (unsigned long) ctx->vertex_array.normal.ptr;
-		next += 3 * (1 << (ge_type - 1));
-		fmt |= (ge_type << 5);
-	}
+static void cvt_float2_float3(void *to, const void *from, const struct attrib *attr)
+{
+	const float *src = from;
+	float *dest = to;
 
-	if (ctx->vertex_array.vertex.enabled) {
-		if (next && next != (unsigned long) ctx->vertex_array.vertex.ptr)
-			goto bailout;
+	dest[0] = src[0];
+	dest[1] = src[1];
+	dest[2] = 0.f;
+}
 
-		if (ctx->vertex_array.vertex.size != 3)
-			goto bailout;
+static void cvt_short2_short3(void *to, const void *from, const struct attrib *attr)
+{
+	const short *src = from;
+	short *dest = to;
 
-		if ((ge_type = glfmt2gefmt(ctx->vertex_array.vertex.type)) <= 0)
-			goto bailout;
+	dest[0] = src[0];
+	dest[1] = src[1];
+	dest[2] = 0;
+}
 
-		if (*adr == 0)
-			*adr = (unsigned long) ctx->vertex_array.vertex.ptr;
-		next += 3 * (1 << (ge_type - 1));
-		fmt |= (ge_type << 7);
-	}
+static void cvt_byte2_byte3(void *to, const void *from, const struct attrib *attr)
+{
+	const unsigned char *src = from;
+	unsigned char *dest = to;
 
-	if (*adr & 0x0f)		/* not 16-byte aligned! */
-		goto bailout;
-
-	/* check that all array strides are equal and word-aligned */
-	stride = ((next - *adr) + 0x03) & ~0x03;
-
-	if (ctx->vertex_array.vertex.enabled && ctx->vertex_array.vertex.stride != stride)
-		goto bailout;
-
-	if (ctx->vertex_array.normal.enabled && ctx->vertex_array.normal.stride != stride)
-		goto bailout;
-
-	if (ctx->vertex_array.color.enabled && ctx->vertex_array.color.stride != stride)
-		goto bailout;
-
-	if (ctx->vertex_array.texcoord.enabled && ctx->vertex_array.texcoord.stride != stride)
-		goto bailout;
-
-	return fmt;
-
-bailout:
-	return 0;
+	dest[0] = src[0];
+	dest[1] = src[1];
+	dest[2] = 0;
 }
 
 
-#define GE_POINTS		0
-#define GE_LINES		1
-#define GE_LINE_STRIP		2
-#define GE_TRIANGLES		3
-#define GE_TRIANGLE_STRIP	4
-#define GE_TRIANGLE_FAN		5
-#define GE_QUADS		6
+/* 
+   Examine the currently enabled vertex attribute arrays to compute a
+   hardware vertex format, along with enough information to convert
+   the arrays into that format.
+ */
+void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt)
+{
+	unsigned hwformat = 0;
+	struct varray *varray = &ctx->vertex_array;
+	struct attrib *attr = vfmt->attribs;
+	unsigned offset;
 
+	memset(vfmt, 0, sizeof(*vfmt));
+
+	offset = 0;
+
+	if (!varray->vertex.enabled)
+		return;
+
+	if (varray->texcoord.enabled) {
+		unsigned hwtype = glfmt2gefmt(varray->texcoord.type);
+
+		hwformat |= GE_TEXTURE_SHIFT(hwtype);
+
+		attr->array = &varray->texcoord;
+		offset = ROUNDUP(offset, ge_sizeof(hwtype));
+		attr->offset = offset;
+		attr->size = ge_sizeof(hwtype) * 2;
+		offset += attr->size;
+
+		attr++;
+	}
+
+	if (varray->color.enabled) {
+		unsigned type = varray->color.type;
+		unsigned size = varray->color.size;
+
+		/* Always use RGBA8888 for now, but we could use other
+		   color formats by extending glColorPointer to accept
+		   more types (GL_UNSIGNED_SHORT_5_6_5, etc). */
+		hwformat |= GE_COLOR_8888;
+
+		assert(type == GL_FLOAT || type == GL_UNSIGNED_BYTE);
+		assert(size == 3 || size == 4);
+
+		if (type == GL_FLOAT) {
+			if (size == 3)
+				attr->convert = cvt_color_float3_ub;
+			else
+				attr->convert = cvt_color_float4_ub;
+		} else if (type == GL_UNSIGNED_BYTE && size == 3)
+			attr->convert = cvt_color_ub3_ub;
+
+		attr->array = &varray->color;
+		offset = ROUNDUP(offset, 4);
+		attr->offset = offset;
+		attr->size = 4;
+		offset += 4;
+
+		attr++;
+	}
+
+	if (varray->normal.enabled) {
+		unsigned hwtype = glfmt2gefmt(varray->normal.type);
+
+		hwformat |= GE_NORMAL_SHIFT(hwtype);
+
+		attr->array = &varray->normal;
+		offset = ROUNDUP(offset, ge_sizeof(hwtype));
+		attr->offset = offset;
+		attr->size = ge_sizeof(hwtype) * 3;
+		offset += attr->size;
+
+		attr++;
+	}
+
+	if (varray->vertex.enabled) {
+		unsigned hwtype = glfmt2gefmt(varray->vertex.type);
+		unsigned size = varray->vertex.size;
+
+		hwformat |= GE_VERTEX_SHIFT(hwtype);
+
+		/* size must be either 2 or 3  */
+		if (size == 2) {
+			switch(hwtype) {
+			case GE_INT_8BIT:	attr->convert = cvt_byte2_byte3; break;
+			case GE_INT_16BIT:	attr->convert = cvt_short2_short3; break;
+			case GE_FLOAT_32BIT:	attr->convert = cvt_float2_float3; break;
+			}
+		}
+
+		attr->array = &varray->vertex;
+		offset = ROUNDUP(offset, ge_sizeof(hwtype));
+		attr->offset = offset;
+		attr->size = ge_sizeof(hwtype) * 3;
+		offset += attr->size;
+
+		attr++;
+	}
+
+	offset = ROUNDUP(offset, 4);
+
+	vfmt->nattrib = attr - vfmt->attribs;
+	vfmt->hwformat = hwformat;
+	vfmt->vertex_size = offset;
+
+	psp_log("format: %x %d attr, %d byte vertex\n",
+		vfmt->hwformat, vfmt->nattrib, vfmt->vertex_size);
+}
+
+/* 
+   Generate a vertex array in hardware format based on the current set
+   of array pointers set up in the context.  It will copy as many
+   vertices into memory at "to" as will fit into "space" (up to
+   "count"), and return the number actually copied.
+*/
+int __pspgl_gen_varray(const struct vertex_format *vfmt, int first, int count, 
+		       void *to, int space)
+{
+	int i;
+	unsigned char *dest = to;
+	int nvtx = space / vfmt->vertex_size;
+
+	if (nvtx > count)
+		nvtx = count;
+
+	for(i = 0; i < vfmt->nattrib; i++) {
+		struct pspgl_vertex_array *a = vfmt->attribs[i].array;
+
+		if (a->enabled)
+			a->tmpptr = a->ptr + (first * a->stride);
+		else
+			a->tmpptr = NULL;
+	}
+
+	for(i = 0; i < nvtx; i++) {
+		int j;
+
+		for(j = 0; j < vfmt->nattrib; j++) {
+			const struct attrib *attr = &vfmt->attribs[j];
+			struct pspgl_vertex_array *a = attr->array;
+
+			if (attr->convert)
+				(*attr->convert)(&dest[attr->offset], a->tmpptr, attr);
+			else
+				memcpy(&dest[attr->offset], a->tmpptr, attr->size);
+
+			a->tmpptr += a->stride;
+		}
+		dest += vfmt->vertex_size;
+	}
+
+	return nvtx;
+}
 
 long __pspgl_glprim2geprim (GLenum glprim)
 {
 	static const char geprim_tab [] = {
 		GE_POINTS, GE_LINES, GE_LINE_STRIP, GE_LINE_STRIP,
 		GE_TRIANGLES, GE_TRIANGLE_STRIP, GE_TRIANGLE_FAN, 
-		GE_QUADS, GE_TRIANGLE_STRIP, GE_TRIANGLE_FAN
+		GE_TRIANGLE_FAN, GE_TRIANGLE_STRIP, GE_TRIANGLE_FAN
 	};
 
 	if ((unsigned) glprim > sizeof(geprim_tab)/sizeof(geprim_tab[0]))
@@ -159,45 +285,25 @@ long __pspgl_glprim2geprim (GLenum glprim)
 }
 
 
-void __pspgl_varray_draw (GLenum mode, GLenum index_type, const GLvoid *indices, GLint first, GLsizei count)
-{
-	unsigned long adr;
-	unsigned long vertex_fmt = ge_vertex_fmt(pspgl_curctx, &adr);
-	long prim = __pspgl_glprim2geprim(mode);
+/* 
+   This table indicates how each primitive type uses vertices:
 
-	if (prim < 0 || vertex_fmt == 0) {
-		GLERROR(GL_INVALID_ENUM);
-		return;
-	}
+    - The first column indicates the amount of overlap required in
+      order to split a primitive into pieces (for example, a split strip
+      needs the last two vertices from the previous piece to be copied).
+    - The second column indicates the minimum number of vertices needed
+      to draw anything at all.
+    - The third column indicates what multiple of vertices are required in
+      total (every triangle needs three complete vertices, but a strip can
+      make progress with single vertices after the first 2).
+ */
 
-	__pspgl_context_flush_pending_matrix_changes(pspgl_curctx);
-
-	if (indices) {
-		switch (index_type) {
-		case GL_UNSIGNED_BYTE:
-			vertex_fmt |= (GE_INT_8BIT << 11);
-			break;
-		case GL_UNSIGNED_SHORT:
-			vertex_fmt |= (GE_INT_16BIT << 11);
-			break;
-		/*  XXX : can we handle 32 bit integer indices??
-		case GL_UNSIGNED_INT:
-			vertex_fmt |= (GE_INT_32BIT << 11);
-			break;
-		*/
-		default:
-			GLERROR(GL_INVALID_ENUM);
-			return;
-		}
-		sendCommandiUncached(CMD_BASE, (((unsigned long) indices) >> 8) & 0xf0000);
-		sendCommandiUncached(CMD_INDEXPTR, ((unsigned long) indices) & 0xffffff);
-	}
-
- 	sendCommandi(CMD_VERTEXTYPE, vertex_fmt);
- 	sendCommandiUncached(CMD_BASE, (adr >> 8) & 0xf0000);
- 	sendCommandiUncached(CMD_VERTEXPTR, adr & 0xffffff);
- 	sendCommandiUncached(CMD_PRIM, (prim << 16) | count);
-
-	/* XXX TODO: we handle line loops as line strips. Here we need to render the final, closing line, too. */
-}
-
+const struct prim_info __pspgl_prim_info[] = {
+	[GE_POINTS]         = { 0, 1, 1 },
+	[GE_LINES]          = { 0, 2, 2 },
+	[GE_SPRITES]        = { 0, 2, 2 },
+	[GE_TRIANGLES]      = { 0, 3, 3 },
+	[GE_LINE_STRIP]     = { 1, 2, 1 },
+	[GE_TRIANGLE_STRIP] = { 2, 3, 1 },
+	[GE_TRIANGLE_FAN]   = { 2, 3, 1 },
+};

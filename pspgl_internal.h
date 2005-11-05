@@ -19,6 +19,7 @@ struct pspgl_vertex_array {
 	GLenum type;
 	GLsizei stride;
 	const GLvoid *ptr;
+	const GLvoid *tmpptr;	/* used while walking an array */
 };
 
 
@@ -52,7 +53,8 @@ struct pspgl_context {
 		GLfloat normal [3];
 	} current;
 
-	struct {
+	struct varray {
+#define VARRAY_MAX	4	/* number of arrays */
 		struct pspgl_vertex_array vertex;
 		struct pspgl_vertex_array normal;
 		struct pspgl_vertex_array color;
@@ -149,8 +151,46 @@ extern EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_su
 
 
 /* pspgl_varray.c */
+#define MAX_ATTRIB	VARRAY_MAX
+
+struct vertex_format
+{
+	unsigned hwformat;
+	unsigned vertex_size;
+
+	int nattrib;
+	struct attrib {
+		unsigned offset;	/* offset into output vertex */
+		unsigned size;		/* size of element in output vertex */
+
+		struct pspgl_vertex_array *array; /* source array */
+
+		void (*convert)(void *to, const void *from, const struct attrib *attr);
+	} attribs[MAX_ATTRIB];
+};
+
+struct prim_info {
+	unsigned overlap;	/* when starting a new batch, how many prev verts do we need */
+	unsigned minvtx;	/* what's the min needed to draw a single prim? */
+	unsigned vtxmult;	/* what multiple of verts needed per prim? */
+};
+
+extern const struct prim_info __pspgl_prim_info[];
+
+/* Max batch size of vertices we try to use; this is 1/4 the command
+   buffer at the moment. */
+#define MAX_VTX_BATCH	(DLIST_SIZE * sizeof(unsigned) / 4)
+
+extern unsigned __pspgl_gl_sizeof(GLenum type);
 extern long __pspgl_glprim2geprim (GLenum glprim);
-extern void __pspgl_varray_draw (GLenum mode, GLenum index_type, const GLvoid *indices, GLint first, GLsizei count);
+extern void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt);
+extern int __pspgl_gen_varray(const struct vertex_format *vfmt, int first, int count, 
+			 void *to, int space);
+extern void __pspgl_varray_draw (GLenum mode, GLint first, GLsizei count);
+extern void __pspgl_varray_draw_elts (GLenum mode, GLenum index_type, const GLvoid *indices, 
+				 GLsizei count);
+extern void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type, const void *indices, 
+				      GLsizei count, unsigned minidx, unsigned maxidx);
 
 
 /* glTexImage2D.c */
@@ -182,7 +222,6 @@ static inline GLclampf CLAMPF (GLfloat x)
 {
 	return (x < 0.0 ? 0.0 : x > 1.0 ? 1.0 : x);
 }
-
 
 static inline
 unsigned long COLOR3 (const GLfloat c[3])

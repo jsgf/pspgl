@@ -1,7 +1,7 @@
 #include "pspgl_internal.h"
 
 
-static void enable_clientstate (GLenum array, GLenum enable)
+static void enable_clientstate (GLenum array, GLboolean enable)
 {
 	switch (array) {
 	case GL_VERTEX_ARRAY:
@@ -24,11 +24,11 @@ static void enable_clientstate (GLenum array, GLenum enable)
 
 void glEnableClientState (GLenum array)
 {
-	enable_clientstate(array, 1);
+	enable_clientstate(array, GL_TRUE);
 }
 
 
 void glDisableClientState (GLenum array)
 {
-	enable_clientstate(array, 0);
+	enable_clientstate(array, GL_FALSE);
 }

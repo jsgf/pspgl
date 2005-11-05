@@ -47,7 +47,7 @@ void glInterleavedArrays (GLenum format, GLsizei stride, const GLvoid *pointer)
 		return;
 	}
 
-	pspgl_curctx->vertex_array.vertex.enabled = 1;
+	pspgl_curctx->vertex_array.vertex.enabled = GL_TRUE;
 	pspgl_curctx->vertex_array.texcoord.enabled = array_desc[idx].enable_texcoord;
 	pspgl_curctx->vertex_array.color.enabled = array_desc[idx].enable_color;
 	pspgl_curctx->vertex_array.normal.enabled = array_desc[idx].enable_normal;
