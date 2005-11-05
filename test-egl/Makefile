@@ -6,7 +6,7 @@ RM = rm -f
 PSPPATH := $(shell psp-config --pspsdk-path)
 PSPGL_LFLAGS = -lGLU -lGL -lpspdebug -lpspge -lpspdisplay -lpspctrl -lpspsdk -lm -lc -lpspuser -lpsputility -lpspkernel -lpsprtc
 CFLAGS = -g -Wall -O2 -MD -I$(PSPPATH)/include -I..
-LFLAGS = -g -Wall -O2 -DMODULE_NAME="test-egl" psp-setup.c -L$(PSPPATH)/lib -L.. $(PSPGL_LFLAGS)
+LFLAGS = -g -Wall -O2 -DMODULE_NAME="test-egl" psp-setup.c -L.. -L$(PSPPATH)/lib $(PSPGL_LFLAGS)
 
 TARGET = pspGL-cube
 OBJS = eglcube.o logo.o
