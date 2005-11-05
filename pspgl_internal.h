@@ -12,7 +12,7 @@
 #include "pspgl_texobj.h"
 
 
-#define NUM_CMDLISTS	4
+#define NUM_CMDLISTS	16
 
 struct pspgl_vertex_array {
 	GLenum enabled;
