@@ -25,7 +25,7 @@ void glGetIntegerv (GLenum pname, GLint *params)
 
 	switch (pname) {
 	case GL_MAX_TEXTURE_SIZE:
-		params[0] = 256;		/* XXX CHECKME!! */
+		params[0] = 512;
 		break;
 	case GL_VIEWPORT:
 		/* XXX IMPRPOVE: better read from registers / register cache */

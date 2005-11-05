@@ -44,7 +44,8 @@ static void set_mipmap_regs(unsigned level, struct pspgl_teximg *img)
 	}
 }
 
-void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level, struct pspgl_teximg *timg)
+void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level,
+			       struct pspgl_teximg *timg)
 {
 	struct pspgl_teximg *old_timg = tobj->images[level];
 
@@ -80,19 +81,34 @@ void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level, struct
 		psp_log("replaced texture image %p at level %d with %p\n", 
 			old_timg, level, timg);
 
-		/* release the tobj's reference to the old texture image */
 		__pspgl_teximg_free(old_timg);
+	}
+
+	if (timg && (level == 0)) {
+		int maxlvl;
+		int lw, lh;
+
+		lw = lg2(timg->width);
+		lh = lg2(timg->height);
+
+		maxlvl = ((lw > lh) ? lw : lh);
+		if (maxlvl >= MIPMAP_LEVELS)
+			maxlvl = MIPMAP_LEVELS-1;
+
+		psp_log("setting %dx%d maxlevel to %d\n", 
+			timg->width, timg->height, maxlvl);
+		sendCommandi(CMD_TEXMODE, (maxlvl << 16) | (0 << 8) | 0);
 	}
 
 	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);
 }
 
+#if 0
 static inline GLboolean mipmap_filter(GLenum filter)
 {
 	return filter >= GL_NEAREST_MIPMAP_NEAREST && filter <= GL_LINEAR_MIPMAP_LINEAR;
 }
 
-#if 0
 static GLboolean texobj_is_complete(struct pspgl_texobj *tobj)
 {
 	if (tobj == NULL) {
@@ -154,6 +170,10 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 
 	if (level < 0 || level > MIPMAP_LEVELS)
 		goto invalid_value;
+	/* PSP supports 512x512 textures, but only goes down to 2x2
+	   mipmaps for them, so just ignore any higher level */
+	if (level == MIPMAP_LEVELS)
+		return;
 
 	if (border != 0)
 		goto invalid_value;

@@ -4,7 +4,8 @@
 /**
  *  cached register write, save value and mark as touched...
  */
-void __pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd, unsigned long argi) 
+void __pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd,
+			       unsigned long argi) 
 {
 	unsigned long new = ((cmd) << 24) | ((argi) & 0xffffff);
 
@@ -15,7 +16,8 @@ void __pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd, unsig
 }
 
 
-void __pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd, unsigned long argi, unsigned long mask)
+void __pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd,
+				      unsigned long argi, unsigned long mask)
 {
 	unsigned long new = (cmd << 24) | (c->ge_reg[cmd] & ~mask) | (argi & mask & 0xffffff);
 

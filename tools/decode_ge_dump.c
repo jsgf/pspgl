@@ -592,8 +592,40 @@ unsigned process_insn (uint32_t insn)
 	case 0xc4:
 		DUMP("CLUT size %d", arg);
 		break;
+	case 0xc2:
+		DUMP("Texture mode: maxlevels=%d ?=%d swizzle=%d",
+		     (arg >> 16) & 0xff, (arg >> 8) & 0xff, arg & 0xff);
+		break;
+	case 0xc3:
+		DUMP("Texture Format %d (%s)", arg,
+		     arg == 0 ? "RGB565" :
+		     arg == 1 ? "RGBA551" :
+		     arg == 2 ? "RGBA4444" :
+		     arg == 3 ? "RGBA8888" :
+		     arg == 4 ? "INDEX4" :
+		     arg == 5 ? "INDEX8" :
+		     arg == 6 ? "INDEX16" :
+		     arg == 7 ? "INDEX32" :
+		     arg == 8 ? "DXT1" :
+		     arg == 9 ? "DXT3" :
+		     arg == 10 ? "DXT5" : "???");
+		break;
 	case 0xc7:
 		DUMP("Texture Wrap Mode S %d (%s), T %d (%s)", arg & 0xff, (arg & 0xff) ? "clamp" : "repeat", arg >> 8, (arg >> 8) ? "clamp" : "repeat");
+		break;
+	case 0xc6: {
+		static const char *filt[] = { "nearest", "linear",
+					      "2?", "3?",
+					      "nearest_mipmap_nearest",
+					      "linear_mipmap_nearest",
+					      "nearest_mipmap_linear",
+					      "linear_mipmap_linear" };
+		DUMP("Texture filter: mag=%s min=%s",
+		     filt[(arg >> 8) & 0x7], filt[arg & 0x7]);
+		break;
+	}
+	case 0xc8:
+		DUMP("Mipmap bias: %d", (arg << 8) >> 8);
 		break;
 	case 0xca:
 		DUMP("TextureEnv Color 0x%06x", arg);

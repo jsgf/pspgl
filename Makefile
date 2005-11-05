@@ -148,7 +148,9 @@ libGLU.a_OBJS = \
 	gluLookAt.o \
 	gluLookAtf.o \
 	gluPerspective.o \
-	gluPerspectivef.o
+	gluPerspectivef.o \
+	gluScaleImage.o \
+	pspglu.o
 
 libglut.a_OBJS = \
 	glut.o
