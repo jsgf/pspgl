@@ -257,7 +257,7 @@ extern void __pspgl_varray_draw (GLenum mode, GLint first, GLsizei count);
 extern void __pspgl_varray_draw_elts (GLenum mode, GLenum index_type, const GLvoid *indices, 
 				 GLsizei count);
 extern void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type, const void *indices, 
-				      GLsizei count, unsigned minidx, unsigned maxidx);
+				      GLsizei count, int minidx, int maxidx);
 extern void __pspgl_varray_bind_buffer(struct pspgl_vertex_array *va,
 				       struct pspgl_bufferobj *buf);
 

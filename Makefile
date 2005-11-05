@@ -6,7 +6,7 @@ AR = $(ARCH)ar
 RANLIB = $(ARCH)ranlib
 RM = rm -f
 CFLAGS = -g -Wall -O2 -G0 -fsingle-precision-constant -I. -I $(PSPPATH)/include
-LFLAGS = -g -Wall -O2 -G0 -L $(PSPPATH)/lib
+LFLAGS = -g -Wall -O2 -G0 -L$(PSPPATH)/lib
 
 DEPDIR = .deps
 
