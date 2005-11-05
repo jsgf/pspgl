@@ -95,15 +95,6 @@ static void copy_5551(const struct pspgl_texfmt *fmt, void *to, const void *from
 		*dest++ = swizzle_5551(*src++);
 }
 
-static void copy_5551_alpha(const struct pspgl_texfmt *fmt, void *to, const void *from, unsigned width)
-{
-	unsigned short *dest = to;
-	const unsigned short *src = from;
-
-	while(width--)
-		*dest++ = swizzle_5551(*src++ | 0x0001); /* insert alpha */
-}
-
 static void copy_4444(const struct pspgl_texfmt *fmt, void *to, const void *from, unsigned width)
 {
 	unsigned short *dest = to;
@@ -111,15 +102,6 @@ static void copy_4444(const struct pspgl_texfmt *fmt, void *to, const void *from
 
 	while(width--)
 		*dest++ = swizzle_4444(*src++);
-}
-
-static void copy_4444_alpha(const struct pspgl_texfmt *fmt, void *to, const void *from, unsigned width)
-{
-	unsigned short *dest = to;
-	const unsigned short *src = from;
-
-	while(width--)
-		*dest++ = swizzle_4444(*src++ | 0x000f); /* insert alpha */
 }
 
 static void copy_888_alpha(const struct pspgl_texfmt *fmt, void *to, const void *from, unsigned width)
@@ -179,13 +161,24 @@ static void copy_expand_L(const struct pspgl_texfmt *fmt, void *to, const void *
 static const struct pspgl_texfmt texformats[] = {
 	/* format       type                        source sz   hwformat      hw size   converter               use tex alpha */
 	{ GL_RGB,	GL_UNSIGNED_BYTE,		3,	GE_RGBA_8888, 4,	copy_888_alpha,		GE_TEXENV_RGB  },
-	{ GL_RGB,	GL_UNSIGNED_SHORT_5_5_5_1,	2,	GE_RGBA_5551, 2,	copy_5551_alpha,	GE_TEXENV_RGB  },
+	{ GL_RGB,	GL_UNSIGNED_SHORT_5_5_5_1,	2,	GE_RGBA_5551, 2,	copy_5551,		GE_TEXENV_RGB  },
 	{ GL_RGB,	GL_UNSIGNED_SHORT_5_6_5,	2,	GE_RGB_565,   2,	copy_565,		GE_TEXENV_RGB  },
-	{ GL_RGB,	GL_UNSIGNED_SHORT_4_4_4_4,	2,	GE_RGBA_4444, 2,	copy_4444_alpha,	GE_TEXENV_RGB  },
+	{ GL_RGB,	GL_UNSIGNED_SHORT_4_4_4_4,	2,	GE_RGBA_4444, 2,	copy_4444,		GE_TEXENV_RGB  },
+
+	{ GL_RGB,	GL_UNSIGNED_SHORT_1_5_5_5_REV,	2,	GE_RGBA_5551, 2,	copy,			GE_TEXENV_RGB  },
+	{ GL_RGB,	GL_UNSIGNED_SHORT_5_6_5_REV,	2,	GE_RGB_565,   2,	copy,			GE_TEXENV_RGB  },
+	{ GL_RGB,	GL_UNSIGNED_SHORT_4_4_4_4_REV,	2,	GE_RGBA_4444, 2,	copy,			GE_TEXENV_RGB  },
+
+	{ GL_BGR,	GL_UNSIGNED_SHORT_5_6_5,	2,	GE_RGB_565,   2,	copy,			GE_TEXENV_RGB  },
 
 	{ GL_RGBA,	GL_UNSIGNED_BYTE,		4,	GE_RGBA_8888, 4,	copy,			GE_TEXENV_RGBA },
 	{ GL_RGBA,	GL_UNSIGNED_SHORT_5_5_5_1,	2,	GE_RGBA_5551, 2,	copy_5551,		GE_TEXENV_RGBA },
 	{ GL_RGBA,	GL_UNSIGNED_SHORT_4_4_4_4,	2,	GE_RGBA_4444, 2,	copy_4444,		GE_TEXENV_RGBA },
+
+	{ GL_RGBA,	GL_UNSIGNED_SHORT_1_5_5_5_REV,	2,	GE_RGBA_5551, 2,	copy,			GE_TEXENV_RGBA },
+	{ GL_RGBA,	GL_UNSIGNED_SHORT_4_4_4_4_REV,	2,	GE_RGBA_4444, 2,	copy,			GE_TEXENV_RGBA },
+
+	{ GL_ABGR_EXT,	GL_UNSIGNED_SHORT_4_4_4_4,	2,	GE_RGBA_4444, 2,	copy,			GE_TEXENV_RGBA },
 
 	{ GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,		2,	GE_RGBA_8888, 4,	copy_expand_LA,		GE_TEXENV_RGBA },
 

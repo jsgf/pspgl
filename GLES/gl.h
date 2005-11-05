@@ -426,8 +426,13 @@ typedef int             GLsizeiptr;
 #define GL_ALPHA                          0x1906
 #define GL_RGB                            0x1907
 #define GL_RGBA                           0x1908
+#define GL_BGR				  0x80E0
+#define GL_BGRA				  0x80E1
 #define GL_LUMINANCE                      0x1909
 #define GL_LUMINANCE_ALPHA                0x190A
+#define GL_INTENSITY			  0x8049
+
+#define GL_ABGR_EXT                       0x8000
 
 /* PixelStoreParameter */
 #define GL_UNPACK_ALIGNMENT               0x0CF5
@@ -436,8 +441,11 @@ typedef int             GLsizeiptr;
 /* PixelType */
 /*      GL_UNSIGNED_BYTE */
 #define GL_UNSIGNED_SHORT_4_4_4_4         0x8033
+#define GL_UNSIGNED_SHORT_4_4_4_4_REV	  0x8365
 #define GL_UNSIGNED_SHORT_5_5_5_1         0x8034
+#define GL_UNSIGNED_SHORT_1_5_5_5_REV	  0x8366
 #define GL_UNSIGNED_SHORT_5_6_5           0x8363
+#define GL_UNSIGNED_SHORT_5_6_5_REV	  0x8364
 
 /* ShadingModel */
 #define GL_FLAT                           0x1D00
