@@ -205,7 +205,8 @@ static int idx_sizeof(GLenum idx_type)
 }
 
 /* If its possible to directly use indices from a buffer, then return
-   a pointer to the buffer. */
+   a pointer to the buffer (or NULL if there is no useful buffer).
+   Updates *hwformat appropriately if we can use the buffer. */
 static void *buffered_index(GLenum idxtype, const void *indices, unsigned *hwformat)
 {
 	struct pspgl_bufferobj *idxbuf = pspgl_curctx->vertex_array.indexbuffer;
@@ -314,11 +315,11 @@ static void draw_range_elts_locked(GLenum mode, GLenum idx_type, const void *ind
 		indices = __pspgl_bufferobj_map(pspgl_curctx->vertex_array.indexbuffer, 
 					     GL_READ_ONLY, (void *)indices);
 
-		hwformat |= convert_indices(idxbuf, indices, idx_type, l->first, count);
+		hwformat |= convert_indices(idxbuf, indices, idx_type, l->cached_first, count);
 
 		/* Add an extra index for the final edge */
 		if (mode == GL_LINE_LOOP)
-			convert_indices(idxbuf + (idxsize * count), indices, idx_type, l->first, 1);
+			convert_indices(idxbuf + (idxsize * count), indices, idx_type, l->cached_first, 1);
 
 		__pspgl_bufferobj_unmap(pspgl_curctx->vertex_array.indexbuffer, GL_READ_ONLY);
 	} else
@@ -326,7 +327,7 @@ static void draw_range_elts_locked(GLenum mode, GLenum idx_type, const void *ind
 
 	sendCommandi(CMD_VERTEXTYPE, hwformat);
 
-	vtxbuf = l->cached_array->base;
+	vtxbuf = l->cached_array->base + l->cached_array_offset;
 
 	sendCommandiUncached(CMD_BASE, ((unsigned)vtxbuf >> 8) & 0xf0000);
 	sendCommandiUncached(CMD_VERTEXPTR, ((unsigned)vtxbuf) & 0xffffff);
@@ -365,7 +366,6 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 				    const void *const indices, GLsizei count, 
 				    unsigned minidx, unsigned maxidx)
 {
-	struct locked_arrays *l = &pspgl_curctx->vertex_array.locked;
 	long prim;
 	struct vertex_format vfmt;
 	struct prim_info pi;
@@ -387,9 +387,7 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 
 	__pspgl_context_flush_pending_matrix_changes(pspgl_curctx);
 
-	if (minidx >= l->first &&
-	    maxidx <= (l->first + l->count) &&
-	    __pspgl_cache_arrays()) {
+	if (__pspgl_cache_arrays()) {
 		/* We have potentially usable locked+cached arrays */
 		draw_range_elts_locked(mode, idx_type, indices, count);
 		return;

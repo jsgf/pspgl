@@ -7,12 +7,12 @@ static void varray_draw_locked(GLenum mode, GLint first, GLsizei count)
 	long prim = __pspgl_glprim2geprim(mode);
 	unsigned long buf;
 
-	first -= l->first;
+	first -= l->cached_first;
 
 	psp_log("mode=%d drawing %d-%d vertces from locked buffer\n",
 		mode, first, first+count);
 
-	buf = (unsigned long)l->cached_array->base;
+	buf = (unsigned long)l->cached_array->base + l->cached_array_offset;
 	buf += first * l->vfmt.vertex_size;
 
 	sendCommandi(CMD_VERTEXTYPE, l->vfmt.hwformat);
@@ -45,7 +45,6 @@ static void varray_draw_locked(GLenum mode, GLint first, GLsizei count)
 
 void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 {
-	struct locked_arrays *l = &pspgl_curctx->vertex_array.locked;
 	long prim = __pspgl_glprim2geprim(mode);
 	struct vertex_format vfmt;
 	const GLint vtx0 = first;	/* used for batching if there's a fan */
@@ -67,15 +66,8 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 
 	__pspgl_context_flush_pending_matrix_changes(pspgl_curctx);
 
-	/* Check to see if we can use the locked array fast path
-
-	   XXX TODO: if the vertices are in buffers and in hardware
-	   format, they can be drawn directly from the buffers without
-	   conversion.
-	 */
-	if (first >= l->first &&
-	    (first + count) <= (l->first + l->count) &&
-	    __pspgl_cache_arrays()) {
+	/* Check to see if we can use the locked array fast path */
+	if (__pspgl_cache_arrays()) {
 		/* FAST: draw from locked array */
 		varray_draw_locked(mode, first, count);
 		return;

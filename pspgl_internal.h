@@ -97,6 +97,8 @@ struct pspgl_context {
 			struct vertex_format vfmt;
 
 			struct pspgl_buffer *cached_array;
+			unsigned cached_array_offset;
+			GLint cached_first;
 		} locked;
 
 		struct pspgl_bufferobj *arraybuffer;
@@ -245,8 +247,12 @@ extern unsigned __pspgl_gl_sizeof(GLenum type);
 extern long __pspgl_glprim2geprim (GLenum glprim);
 extern unsigned __pspgl_enabled_array_bits(void);
 extern void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt);
+extern GLboolean __pspgl_vertex_is_native(const struct vertex_format *vfmt);
+
 extern int __pspgl_gen_varray(const struct vertex_format *vfmt, int first, int count, 
 			 void *to, int space);
+
+
 extern void __pspgl_varray_draw (GLenum mode, GLint first, GLsizei count);
 extern void __pspgl_varray_draw_elts (GLenum mode, GLenum index_type, const GLvoid *indices, 
 				 GLsizei count);

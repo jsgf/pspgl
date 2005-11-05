@@ -15,6 +15,7 @@ void glBufferDataARB(GLenum target, GLsizeiptr size,
 {
 	struct pspgl_bufferobj *buf, **bufp;
 	struct pspgl_buffer *databuf;
+	GLsizeiptr allocsize;
 	void *data;
 
 	bufp = __pspgl_bufferobj_for_target(target);
@@ -48,16 +49,17 @@ void glBufferDataARB(GLenum target, GLsizeiptr size,
 	   STREAM+DYNAMIC	system memory?
 	 */
 
+	allocsize = ROUNDUP(size, CACHELINE_SIZE);
+
 	/* cache-line aligned for easy uncached access later */
-	data = memalign(CACHELINE_SIZE, ROUNDUP(size, CACHELINE_SIZE));
+	data = memalign(CACHELINE_SIZE, allocsize);
 
 	if (data == NULL) {
 		GLERROR(GL_OUT_OF_MEMORY);
 		return;
 	}
 
-	databuf = __pspgl_buffer_new(data, ROUNDUP(size, CACHELINE_SIZE),
-					 data_free_heap);
+	databuf = __pspgl_buffer_new(data, allocsize, data_free_heap);
 
 	if (databuf == NULL) {
 		free(data);

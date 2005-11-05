@@ -392,11 +392,26 @@ void __pspgl_varray_bind_buffer(struct pspgl_vertex_array *va,
 		return;
 	}
 
-	if (va->buffer != NULL)
-		__pspgl_bufferobj_free(va->buffer);
-	va->buffer = buf;
+	/* If the array was previously coming out of an array we've
+	   been using as a vertex cache, then uncache it.  We do this
+	   even if the actual buffer hasn't changed, in case the
+	   gl*Pointer call changed the type/size of the array (we
+	   could check to see if this happened, but programs should be
+	   careful not to make redundant state changes, and it isn't
+	   very expensive to restore the cache_array anyway). */
+	if (va->buffer &&
+	    pspgl_curctx->vertex_array.locked.cached_array == va->buffer->data) {
+		psp_log("uncaching array due to pointer update\n");
+		__pspgl_uncache_arrays();
+	}
+
 	if (buf)
 		buf->refcount++;
+
+	if (va->buffer != NULL)
+		__pspgl_bufferobj_free(va->buffer);
+
+	va->buffer = buf;	
 }
 
 /* 

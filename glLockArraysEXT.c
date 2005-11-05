@@ -25,6 +25,8 @@ static struct pspgl_buffer *alloc_array_buffer(unsigned bytes)
 	void (*freep)(struct pspgl_buffer *);
 	struct pspgl_buffer *data;
 
+	bytes = ROUNDUP(bytes, CACHELINE_SIZE);
+
 	/* Try placing cached array in EDRAM; seems to be good for
 	   about 20% performance improvement. */
 	p = __pspgl_vidmem_alloc(bytes);
@@ -58,11 +60,6 @@ GLboolean __pspgl_cache_arrays(void)
 	unsigned size;
 	int count;
 
-	if (l->count == 0) {
-		psp_log("failed: not locked\n");
-		return GL_FALSE; /* nothing locked */
-	}
-
 	if (l->cached_array != NULL) {
 		psp_log("OK: already cached\n");
 		return GL_TRUE;
@@ -70,10 +67,47 @@ GLboolean __pspgl_cache_arrays(void)
 
 	__pspgl_ge_vertex_fmt(pspgl_curctx, &l->vfmt);
 
+	/* If the vertex is in hardware format, and the vertex arrays
+	   are in buffer objects then we can just use them directly as
+	   a locked array. */
+	if (__pspgl_vertex_is_native(&l->vfmt) &&
+	    l->vfmt.nattrib >= 1) {
+		struct pspgl_vertex_array *va =  l->vfmt.attribs[0].array;
+		struct pspgl_bufferobj *buf = va->buffer;
+		int i;
+
+		for (i = 1; buf && i < l->vfmt.nattrib; i++)
+			if (l->vfmt.attribs[i].array->buffer != buf)
+				buf = NULL;
+
+		if (buf) {
+			psp_log("using buffer %p(->%p), offset %d as cached array\n",
+				buf, buf->data->base, (va->ptr - NULL));
+
+			cached = buf->data;
+			cached->refcount++;
+
+			assert(cached->refcount > 1);
+
+			l->cached_array = cached;
+			l->cached_array_offset = (va->ptr - NULL);
+			l->cached_first = 0;
+
+			return GL_TRUE;
+		}
+	}
+
 	size = l->vfmt.vertex_size * l->count;
 
 	psp_log("caching arrays %d-%d, vfmt=%x arrays=%x, %d bytes\n",
-		l->first, l->first+l->count, l->vfmt.hwformat, l->vfmt.arrays, size);
+		l->first, l->first + l->count, l->vfmt.hwformat, l->vfmt.arrays, size);
+
+	/* No serendipidous locking, so only cache an array if the app
+	   explicitly locked the arrays. */
+	if (l->count == 0) {
+		psp_log("failed: not locked\n");
+		return GL_FALSE; /* nothing locked */
+	}
 
 	if (size == 0 || size >= MAX_CACHED_ARRAY) {
 		psp_log("failed: size=%d\n", size);
@@ -87,6 +121,8 @@ GLboolean __pspgl_cache_arrays(void)
 	}
 
 	l->cached_array = cached;
+	l->cached_array_offset = 0;
+	l->cached_first = l->first;
 
 	void *p = __pspgl_buffer_map(cached, GL_WRITE_ONLY_ARB);
 
