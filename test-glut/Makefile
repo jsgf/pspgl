@@ -4,9 +4,9 @@ PSP_INSTALL = ../tools/psp-install
 RM = rm -f
 
 PSPPATH := $(shell psp-config --pspsdk-path)
-PSPGL_LFLAGS = -lglut -lGLU -lGL -lm -lpspdebug -lpspge -lpspdisplay -lpspctrl -lpspsdk -lpsplibc -lpspuser -lpspkernel
+PSPGL_LFLAGS = -lglut -lGLU -lGL -lm -lpspdebug -lpspge -lpspdisplay -lpspctrl -lpspsdk -lpsplibc -lpspuser -lpspkernel -lpsprtc
 CFLAGS = -g -Wall -O2 -MD -I$(PSPPATH)/include -I..
-LFLAGS = -g -Wall -O2 -DMODULE_NAME="test-glut" psp-setup.c -L$(PSPPATH)/lib -L.. $(PSPGL_LFLAGS)
+LFLAGS = -g -Wall -O2 -DMODULE_NAME="test-glut" psp-setup.c -L.. -L$(PSPPATH)/lib $(PSPGL_LFLAGS)
 
 TARGET = glut-simple
 OBJS = simple.o

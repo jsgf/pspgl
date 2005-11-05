@@ -3,7 +3,8 @@
 
 
 /******* PSP specific debugging ********************************************/
-extern void __psp_log (const char *fmt, ...);
+#if !SYS
+extern void __pspgl_log (const char *fmt, ...);
 
 /* enable GLerror logging to "ms0:/log.txt" */
 #if 1
@@ -13,13 +14,27 @@ extern void __psp_log (const char *fmt, ...);
 		x;							\
 		errcode = glGetError();					\
 		if (errcode != GL_NO_ERROR) {				\
-			__psp_log("%s (%d): GL error 0x%04x\n",		\
+			__pspgl_log("%s (%d): GL error 0x%04x\n",	\
 				__FUNCTION__, __LINE__,			\
 				(unsigned int) errcode);		\
 		}							\
 	} while (0)
 #else
 	#define GLCHK(x) x
+#endif
+#else
+#include <stdio.h>
+	#define GLCHK(x)						\
+	do {								\
+		GLint errcode;						\
+		x;							\
+		errcode = glGetError();					\
+		if (errcode != GL_NO_ERROR) {				\
+			printf("%s (%d): GL error 0x%04x\n",		\
+				__FUNCTION__, __LINE__,			\
+				(unsigned int) errcode);		\
+		}							\
+	} while (0)
 #endif
 /******* end of PSP specific debugging *************************************/
 
@@ -46,7 +61,7 @@ void display (void)
 
 	GLCHK(glMatrixMode(GL_MODELVIEW));
 	GLCHK(glLoadIdentity());
-	GLCHK(glTranslatef(0.0f, 0.0f, -2.5f));
+	//GLCHK(glTranslatef(0.0f, 0.0f, -2.5f));
 //	GLCHK(glRotatef(angle * 0.79f, 1.0f, 0.0f, 0.0f));
 //	GLCHK(glRotatef(angle * 0.98f, 0.0f, 1.0f, 0.0f));
 	GLCHK(glRotatef(angle * 1.32f, 0.0f, 0.0f, 1.0f));
@@ -54,10 +69,10 @@ void display (void)
 	GLCHK(glShadeModel(GL_SMOOTH));
 
 	GLCHK(glClear(GL_COLOR_BUFFER_BIT));
-	GLCHK(glBegin(GL_TRIANGLES));
-		GLCHK(glColor3f(0.0f, 0.0f, 1.0f)); GLCHK(glVertex3f(1.0f, 0.0f, 0.0f));
-		GLCHK(glColor3f(0.0f, 1.0f, 0.0f)); GLCHK(glVertex3f(0.0f, 1.0f, 0.0f));
-		GLCHK(glColor3f(1.0f, 0.0f, 0.0f)); GLCHK(glVertex3f(0.0f, 0.0f, 1.0f));
+	glBegin(GL_TRIANGLES);
+		glColor3f(0.0f, 0.0f, 1.0f); glVertex3f(1.0f, 0.0f, 0.0f);
+		glColor3f(0.0f, 1.0f, 0.0f); glVertex3f(0.0f, 1.0f, 0.0f);
+		glColor3f(1.0f, 0.0f, 0.0f); glVertex3f(0.0f, 0.0f, 1.0f);
 	GLCHK(glEnd());
 	glutSwapBuffers();
 	glutPostRedisplay();
