@@ -18,6 +18,7 @@ struct pspgl_vertex_array {
 	GLint size;
 	GLenum type;
 	GLsizei stride;
+	GLboolean native;	/* size and type match hardware */
 	const GLvoid *ptr;
 	const GLvoid *tmpptr;	/* used while walking an array */
 };

@@ -113,6 +113,48 @@ static void cvt_byte2_byte3(void *to, const void *from, const struct attrib *att
 	dest[2] = 0;
 }
 
+/* Returns true if the application arrays are configured in hardware format */
+GLboolean __pspgl_vertex_is_native(const struct vertex_format *vfmt)
+{
+	int i;
+	const struct pspgl_vertex_array *array, *next;
+	const int nattr = vfmt->nattrib;
+	const void *ptr, *cycle;
+
+	if (nattr == 0) {
+		assert(vfmt->vertex_size == 0);
+		return GL_TRUE;
+	}
+
+	array = vfmt->attribs[0].array;
+	next = vfmt->attribs[1].array;
+	ptr = array->ptr + (array->size * __pspgl_gl_sizeof(array->type));
+	cycle = array->ptr + array->stride;
+
+	/* Check each attribute array element is contigious with the
+	   following one */
+	for(i = 0; i < nattr-1; i++) {
+		psp_log("attr %d native=%d ptr+size=%p next->ptr=%p\n",
+			i, array->native, ptr, next->ptr);
+
+		if (!array->native || ptr != next->ptr)
+			return GL_FALSE;
+
+		array = next;
+		next = vfmt->attribs[i+1].array;
+		ptr = array->ptr + (array->size * __pspgl_gl_sizeof(array->type));
+	}
+
+	psp_log("attr %d native=%d ptr+size=%p cycle=%p\n",
+		i, array->native, ptr, cycle);
+
+	/* Make sure the last attribute of the first vertex is
+	   contigious with the first attribute of the next vertex.  */
+	if (!array->native || ptr != cycle)
+		return GL_FALSE;
+
+	return GL_TRUE;
+}
 
 unsigned __pspgl_enabled_array_bits(void)
 {
@@ -155,6 +197,8 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 
 		hwformat |= GE_TEXTURE_SHIFT(hwtype);
 
+		assert(varray->texcoord.size >= 2 && varray->texcoord.size <= 4);
+
 		attr->array = &varray->texcoord;
 		offset = ROUNDUP(offset, ge_sizeof(hwtype));
 		attr->offset = offset;
@@ -181,8 +225,10 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 				attr->convert = cvt_color_float3_ub;
 			else
 				attr->convert = cvt_color_float4_ub;
-		} else if (type == GL_UNSIGNED_BYTE && size == 3)
-			attr->convert = cvt_color_ub3_ub;
+		} else {
+			if (size == 3)
+				attr->convert = cvt_color_ub3_ub;
+		}
 
 		attr->array = &varray->color;
 		offset = ROUNDUP(offset, 4);
@@ -212,6 +258,8 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 		unsigned size = varray->vertex.size;
 
 		hwformat |= GE_VERTEX_SHIFT(hwtype);
+
+		assert(size == 2 || size == 3);
 
 		/* size must be either 2 or 3  */
 		if (size == 2) {
@@ -258,6 +306,16 @@ int __pspgl_gen_varray(const struct vertex_format *vfmt, int first, int count,
 
 	if (nvtx > count)
 		nvtx = count;
+
+	/* Check to see if the user was kind enough to supply the
+	   arrays in hardware format. */
+	if (__pspgl_vertex_is_native(vfmt)) {
+		psp_log("arrays in native layout\n");
+		memcpy(to,
+		       vfmt->attribs[0].array->ptr + (first * vfmt->attribs[0].array->stride),
+		       nvtx * vfmt->vertex_size);
+		return nvtx;
+	}
 
 	for(i = 0; i < vfmt->nattrib; i++) {
 		struct pspgl_vertex_array *a = vfmt->attribs[i].array;

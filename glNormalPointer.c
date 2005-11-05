@@ -16,8 +16,12 @@ void glNormalPointer (GLenum type, GLsizei stride, const GLvoid *pointer)
 	if (stride == 0)
 		stride = __pspgl_gl_sizeof(type) * 3;
 
+	psp_log("ptr=%p type=%x stride=%d\n",
+		pointer, type, stride);
+
 	pspgl_curctx->vertex_array.normal.size = 3;
 	pspgl_curctx->vertex_array.normal.type = type;
 	pspgl_curctx->vertex_array.normal.stride = stride;
 	pspgl_curctx->vertex_array.normal.ptr = pointer;
+	pspgl_curctx->vertex_array.normal.native = GL_TRUE;
 }
