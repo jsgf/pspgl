@@ -3,9 +3,8 @@
 
 struct clear_vertex {
 	unsigned long color;
-	GLfloat x;
-	GLfloat y;
-	GLfloat z;
+	short x,y,z;
+	short _pad;
 };
 
 
@@ -14,7 +13,7 @@ void glClear (GLbitfield mask)
 	struct pspgl_dlist *dlist = pspgl_curctx->dlist_current;
 	struct clear_vertex *vbuf;
 	struct pspgl_surface *s = pspgl_curctx->draw;
-	unsigned long clearmask = COLOR4(pspgl_curctx->clear.color);
+	unsigned long clearmask = pspgl_curctx->clear.color;
 	unsigned long clearmode = 0;
 
 	if (mask & ~(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)) {
@@ -47,20 +46,20 @@ void glClear (GLbitfield mask)
 		clearmode |= GU_DEPTH_BUFFER_BIT;
 
 	vbuf[0].color = clearmask;
-	vbuf[0].x = 0.0;
-	vbuf[0].y = 0.0;
+	vbuf[0].x = 0;
+	vbuf[0].y = 0;
 	vbuf[0].z = pspgl_curctx->clear.depth;
 
 	vbuf[1].color = clearmask;
-	vbuf[1].x = 480.0;
-	vbuf[1].y = 272.0;
+	vbuf[1].x = s->width;
+	vbuf[1].y = s->height;
 	vbuf[1].z = pspgl_curctx->clear.depth;
 
 	/* enable clear mode */
 	sendCommandi(CMD_CLEARMODE, (clearmode << 8) | 1);
 
 	/* draw array */
-	sendCommandi(CMD_VERTEXTYPE, GE_COLOR_8888 | GE_VERTEX_32BITF | GE_TRANSFORM_2D);              /* xform: 2D, vertex format: RGB8888 (uint32), xyz (float32) */
+	sendCommandi(CMD_VERTEXTYPE, GE_COLOR_8888 | GE_VERTEX_16BIT | GE_TRANSFORM_2D);
 	sendCommandiUncached(CMD_BASE, (((unsigned long) vbuf) >> 8) & 0xf0000); /* vertex array BASE */
 	sendCommandiUncached(CMD_VERTEXPTR, ((unsigned long) vbuf) & 0xffffff);        /* vertex array, Adress */
 	sendCommandiUncached(CMD_PRIM, (GE_SPRITES << 16) | 2);          /* sprite (type 6), 2 vertices */

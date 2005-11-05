@@ -19,10 +19,10 @@ void glGetFloatv (GLenum pname, GLfloat *params)
 		params[1] = 1.0f;
 		break;
 	case GL_COLOR_CLEAR_VALUE:
-		params[0] = pspgl_curctx->clear.color[0];
-		params[1] = pspgl_curctx->clear.color[1];
-		params[2] = pspgl_curctx->clear.color[2];
-		params[3] = pspgl_curctx->clear.color[3];
+		params[0] = ((pspgl_curctx->clear.color >> 0) & 0xff) / 255.f;
+		params[1] = ((pspgl_curctx->clear.color >> 8) & 0xff) / 255.f;
+		params[2] = ((pspgl_curctx->clear.color >>16) & 0xff) / 255.f;
+		params[3] = ((pspgl_curctx->clear.color >>24) & 0xff) / 255.f;
 		break;
 	case GL_MODELVIEW_MATRIX:	s = &pspgl_curctx->modelview_stack; goto get_matrix;
 	case GL_TEXTURE_MATRIX:		s = &pspgl_curctx->texture_stack; goto get_matrix;

@@ -100,7 +100,7 @@ struct pspgl_context {
 	} vertex_array;
 
 	struct {
-		GLclampf color [4];
+		uint32_t color;
 		GLint stencil;
 		unsigned short depth;
 	} clear;

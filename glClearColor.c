@@ -2,9 +2,9 @@
 
 void glClearColor (GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha)
 {
-	pspgl_curctx->clear.color[0] = CLAMPF(red);
-	pspgl_curctx->clear.color[1] = CLAMPF(green);
-	pspgl_curctx->clear.color[2] = CLAMPF(blue);
-	pspgl_curctx->clear.color[3] = CLAMPF(alpha);
+	pspgl_curctx->clear.color = ((((int) (255.0 * CLAMPF(alpha))) << 24) |
+				     (((int) (255.0 * CLAMPF(blue))) << 16) |
+				     (((int) (255.0 * CLAMPF(green))) << 8) |
+				     ((int) (255.0 * CLAMPF(red))));
 }
 
