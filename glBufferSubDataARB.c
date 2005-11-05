@@ -28,7 +28,7 @@ void glBufferSubDataARB(GLenum target, GLintptrARB offset, GLsizeiptrARB size,
 		return;
 	}
 
-	/* XXX synchronise if buffer is in use by hardware */
+	__pspgl_buffer_dlist_sync(buf->data);
 
 	p = __pspgl_buffer_map(buf->data, GL_WRITE_ONLY_ARB);
 

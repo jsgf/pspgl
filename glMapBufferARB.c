@@ -18,10 +18,16 @@ GLvoid *glMapBufferARB(GLenum target, GLenum access)
 		return NULL;
 	}
 
+	if (access != GL_READ_ONLY_ARB)
+		__pspgl_buffer_dlist_sync(buf->data);
+
 	buf->access = access;
 	buf->mapped = GL_TRUE;
 
 	p = __pspgl_buffer_map(buf->data, access);
+
+	psp_log("mapped buf %p data %p -> %p\n",
+		buf, buf->data->base, p);
 
 	return p;
 }

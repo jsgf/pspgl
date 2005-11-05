@@ -43,7 +43,10 @@ static int gen_varray_elts(const struct vertex_format *vfmt, int first, int coun
 	for(i = 0; i < vfmt->nattrib; i++) {
 		struct pspgl_vertex_array *a = vfmt->attribs[i].array;
 		ptrs[i] = __pspgl_bufferobj_map(a->buffer, GL_READ_ONLY_ARB, (void *)a->ptr);
+		psp_log("a->ptr=%p mapped to %p\n", a->ptr, ptrs[i]);
 	}
+
+	psp_log("mapped elts=%p\n", elts);
 
 	for(i = 0; i < nvtx; i++) {
 		int j;
@@ -135,7 +138,7 @@ static void draw_range_elts_fallback(GLenum mode, GLenum idx_type, const void *i
 
 		__pspgl_context_flush_pending_matrix_changes(pspgl_curctx);
 		sendCommandi(CMD_VERTEXTYPE, vfmt->hwformat);
-		sendCommandiUncached(CMD_BASE, ((unsigned)buf >> 8) & 0xf0000);
+		sendCommandiUncached(CMD_BASE, ((unsigned)buf >> 8) & 0x0f0000);
 		sendCommandiUncached(CMD_VERTEXPTR, ((unsigned)buf) & 0xffffff);
 		sendCommandiUncached(CMD_PRIM, (prim << 16) | done);
 	}
@@ -201,7 +204,38 @@ static int idx_sizeof(GLenum idx_type)
 	return idxsize;
 }
 
-/* 
+/* If its possible to directly use indices from a buffer, then return
+   a pointer to the buffer. */
+static void *buffered_index(GLenum idxtype, const void *indices, unsigned *hwformat)
+{
+	struct pspgl_bufferobj *idxbuf = pspgl_curctx->vertex_array.indexbuffer;
+	void *ret = NULL;
+
+	if (idxbuf && (idxtype == GL_UNSIGNED_BYTE || idxtype == GL_UNSIGNED_SHORT)) {
+		if (idxbuf->mapped) {
+			GLERROR(GL_INVALID_OPERATION);
+			return NULL;
+		}
+
+		assert(idxbuf->data->mapped == 0);
+
+		if (idxtype == GL_UNSIGNED_BYTE)
+			*hwformat |= GE_VINDEX_8BIT;
+		else
+			*hwformat |= GE_VINDEX_16BIT;
+
+		/* This pointer is for hardware use, so we don't need
+		   to (in fact, shouldn't) map the buffer. */
+		ret = __pspgl_bufferobj_deref(idxbuf, (void *)indices);
+	}
+
+	psp_log("idxtype=%x idxbuf=%p indices=%p hwformat=%x ret=%p\n", 
+		idxtype, idxbuf, indices, *hwformat, ret);
+
+	return ret;
+}
+
+/*
    We have a locked vertex array, so try to directly use it.  This
    means that we don't have to do any vertex format conversion here;
    we only need to copy the index data into the command buffer.
@@ -219,6 +253,7 @@ static void draw_range_elts_locked(GLenum mode, GLenum idx_type, const void *ind
 	unsigned hwformat;
 	void *vtxbuf;
 	unsigned idxsize;
+	GLboolean directidx;
 
 	prim = __pspgl_glprim2geprim(mode);
 
@@ -238,51 +273,56 @@ static void draw_range_elts_locked(GLenum mode, GLenum idx_type, const void *ind
 	if (mode == GL_LINE_LOOP)
 		extra = 1;
 
-	idxbuf = __pspgl_dlist_insert_space(pspgl_curctx->dlist_current, 
-					    idxsize * (count + extra));
-
-	if (idxbuf == NULL) {
-		struct vertex_format vfmt;
-
-		/*
-		  SLOW: index data won't fit.
-			   
-		  Generate a new vertex format in case one of the
-		  arrays has changed shape since it was cached.  The
-		  spec doesn't require us to this (since changing a
-		  locked array results in undefined behaviour), but
-		  this is being nice.
-			
-		  XXX We could generate batches of indices out
-		  of the locked array, like we do with normal
-		  batched dispatch.  But it would be nice not
-		  to have yet another version of the batched
-		  array code...
-		*/
-		psp_log("can't get idxbuf (%d bytes): falling back to slow path\n",
-			idxsize * (count + extra));
-
-		__pspgl_ge_vertex_fmt(pspgl_curctx, &vfmt);
-		draw_range_elts_fallback(mode, idx_type, indices, count, &vfmt);
-		return;
-	}
-	
-	/* FAST: render directly from locked vertices */
-
-	psp_log("using fast path\n");
-
 	hwformat = l->vfmt.hwformat;
 
-	indices = __pspgl_bufferobj_map(pspgl_curctx->vertex_array.indexbuffer, 
-				     GL_READ_ONLY, (void *)indices);
+	idxbuf = NULL;
+	if (extra == 0)
+		idxbuf = buffered_index(idx_type, indices, &hwformat);
 
-	hwformat |= convert_indices(idxbuf, indices, idx_type, l->first, count);
+	if (idxbuf == NULL) {
+		idxbuf = __pspgl_dlist_insert_space(pspgl_curctx->dlist_current, 
+						    idxsize * (count + extra));
 
-	/* Add an extra index for the final edge */
-	if (mode == GL_LINE_LOOP)
-		convert_indices(idxbuf + (idxsize * count), indices, idx_type, l->first, 1);
+		if (idxbuf == NULL) {
+			struct vertex_format vfmt;
 
-	__pspgl_bufferobj_unmap(pspgl_curctx->vertex_array.indexbuffer, GL_READ_ONLY);
+			/*
+			  SLOW: index data won't fit.
+			   
+			  Generate a new vertex format in case one of the
+			  arrays has changed shape since it was cached.  The
+			  spec doesn't require us to this (since changing a
+			  locked array results in undefined behaviour), but
+			  this is being nice.
+			
+			  XXX We could generate batches of indices out
+			  of the locked array, like we do with normal
+			  batched dispatch.  But it would be nice not
+			  to have yet another version of the batched
+			  array code...
+			*/
+			psp_log("can't get idxbuf (%d bytes): falling back to slow path\n",
+				idxsize * (count + extra));
+
+			__pspgl_ge_vertex_fmt(pspgl_curctx, &vfmt);
+			draw_range_elts_fallback(mode, idx_type, indices, count, &vfmt);
+			return;
+		}
+
+		directidx = GL_FALSE;
+
+		indices = __pspgl_bufferobj_map(pspgl_curctx->vertex_array.indexbuffer, 
+					     GL_READ_ONLY, (void *)indices);
+
+		hwformat |= convert_indices(idxbuf, indices, idx_type, l->first, count);
+
+		/* Add an extra index for the final edge */
+		if (mode == GL_LINE_LOOP)
+			convert_indices(idxbuf + (idxsize * count), indices, idx_type, l->first, 1);
+
+		__pspgl_bufferobj_unmap(pspgl_curctx->vertex_array.indexbuffer, GL_READ_ONLY);
+	} else
+		directidx = GL_TRUE;
 
 	sendCommandi(CMD_VERTEXTYPE, hwformat);
 
@@ -297,6 +337,8 @@ static void draw_range_elts_locked(GLenum mode, GLenum idx_type, const void *ind
 	sendCommandiUncached(CMD_PRIM, (prim << 16) | count);
 
 	__pspgl_dlist_set_cleanup(__pspgl_dlist_cleanup_varray, l->cached_array);
+	if (directidx)
+		__pspgl_buffer_dlist_use(pspgl_curctx->vertex_array.indexbuffer->data);
 }
 
 /* 
@@ -333,7 +375,6 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 	unsigned vtxsize, idxsize;
 	unsigned hwformat;
 	unsigned extra = 0;
-	const void *idxmap;
 
 	prim = __pspgl_glprim2geprim(mode);
 
@@ -377,7 +418,19 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 	if (mode == GL_LINE_LOOP)
 		extra = 1;
 
-	idxsize *= (count + extra);
+	void *idxbuf = NULL;
+
+	hwformat = vfmt.hwformat;
+
+	/* Check to see if we can directly use an index array out of a
+	   buffer.   */
+	if (extra == 0)
+		idxbuf = buffered_index(idx_type, (void *)indices, &hwformat);
+
+	if (idxbuf == NULL)
+		idxsize *= (count + extra); /* allocate some space for indices */
+	else
+		idxsize = 0;	/* no need to allocate space */
 
 	maxbatch = (MAX_VTX_BATCH - idxsize - 16);
 
@@ -385,8 +438,6 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 		maxbatch /= vfmt.vertex_size;
 	else
 		maxbatch = 0;
-
-	hwformat = vfmt.hwformat;
 
 	psp_log("prim=%d maxbatch=%d numvtx=%d count=%d maxidx=%d minidx=%d\n",
 		prim, maxbatch, numvtx, count, maxidx, minidx);
@@ -403,8 +454,10 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 	unsigned char *buf = __pspgl_dlist_insert_space(pspgl_curctx->dlist_current, 
 							vtxsize + idxsize);
 	unsigned char *vtxbuf = buf;
-	void *idxbuf = buf+vtxsize;
 	unsigned done;
+
+	if (idxbuf == NULL)
+		idxbuf = buf+vtxsize;
 
 	if (buf)
 		done = __pspgl_gen_varray(&vfmt, minidx, numvtx, vtxbuf, vtxsize);
@@ -415,15 +468,23 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 		return;
 	}
 
-	idxmap = __pspgl_bufferobj_map(pspgl_curctx->vertex_array.indexbuffer, GL_READ_ONLY, (void *)indices);
+	if (idxsize != 0) {
+		const void *idxmap;
 
-	hwformat |= convert_indices(idxbuf, idxmap, idx_type, minidx, count);
+		idxmap = __pspgl_bufferobj_map(pspgl_curctx->vertex_array.indexbuffer, 
+					    GL_READ_ONLY, (void *)indices);
 
-	/* Add an extra index for the final edge of a line loop */
-	if (mode == GL_LINE_LOOP)
-		convert_indices(idxbuf + (idxsize * count), idxmap, idx_type, minidx, 1);
+		hwformat |= convert_indices(idxbuf, idxmap, idx_type, minidx, count);
 
-	__pspgl_bufferobj_unmap(pspgl_curctx->vertex_array.indexbuffer, GL_READ_ONLY);
+		/* Add an extra index for the final edge of a line loop */
+		if (mode == GL_LINE_LOOP)
+			convert_indices(idxbuf + (idxsize * count), idxmap, idx_type, minidx, 1);
+
+		__pspgl_bufferobj_unmap(pspgl_curctx->vertex_array.indexbuffer, GL_READ_ONLY);
+	} else {
+		/* hardware will take a reference */
+		pspgl_curctx->vertex_array.indexbuffer->data->refcount++;
+	}
 
 	sendCommandi(CMD_VERTEXTYPE, hwformat);
 
@@ -433,4 +494,8 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 	sendCommandiUncached(CMD_INDEXPTR, ((unsigned)idxbuf) & 0xffffff);
 
 	sendCommandiUncached(CMD_PRIM, (prim << 16) | count);
+
+	if (idxsize == 0)
+		__pspgl_buffer_dlist_use(pspgl_curctx->vertex_array.indexbuffer->data);
+					  
 }

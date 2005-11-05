@@ -7,8 +7,7 @@
 
 static void data_free_heap(struct pspgl_buffer *data)
 {
-	if (data->base)
-		free(data->base);
+	free(data->base);
 }
 
 void glBufferDataARB(GLenum target, GLsizeiptr size,
@@ -65,18 +64,21 @@ void glBufferDataARB(GLenum target, GLsizeiptr size,
 		GLERROR(GL_OUT_OF_MEMORY);
 		return;
 	}
-	databuf->base = data;
 
 	if (buf->data) {
 		if (buf->mapped)
 			__pspgl_buffer_unmap(buf->data, buf->access);
 
+		psp_log("freeing data %p for buffer %p\n", buf->data, buf);
 		__pspgl_buffer_free(buf->data);
 	}
 
 	buf->mapped = GL_FALSE;
 	buf->usage = usage;
 	buf->data = databuf;
+
+	psp_log("attaching data %p(%p) to buffer %p\n",
+		databuf, databuf->base, buf);
 
 	if (init_data != NULL) {
 		void *p;

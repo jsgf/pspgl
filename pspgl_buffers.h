@@ -4,12 +4,12 @@
 #include "pspgl_internal.h"
 
 struct pspgl_buffer {
-	int refcount;
+	short refcount;
+	short mapped;		/* internal map counter */
+	short dlist_usage;	/* number of times a dlist refers to this data */
 
 	void *base;
 	GLsizeiptr size;
-
-	int mapped;		/* internal map counter */
 
 	void (*free)(struct pspgl_buffer *);
 };
@@ -17,7 +17,6 @@ struct pspgl_buffer {
 struct pspgl_bufferobj {
 	int refcount;
 
-	GLenum target;
 	GLenum usage, access;
 	GLboolean mapped;	/* glMapBuffer called */
 
@@ -26,7 +25,7 @@ struct pspgl_bufferobj {
 
 /* Create new buffer, but does not allocate any storage for it.
    Returns a buffer with a refcount of 1 */
-struct pspgl_bufferobj *__pspgl_bufferobj_new(GLenum target, struct pspgl_buffer *data);
+struct pspgl_bufferobj *__pspgl_bufferobj_new(struct pspgl_buffer *data);
 
 /* Decrements refcount, and frees if it hits 0 */
 void __pspgl_bufferobj_free(struct pspgl_bufferobj *);
@@ -46,7 +45,6 @@ void __pspgl_bufferobj_unmap(const struct pspgl_bufferobj *buf, GLenum access);
    is unknown/invalid, and sets GLERROR appropriately. */
 struct pspgl_bufferobj **__pspgl_bufferobj_for_target(GLenum target);
 
-
 struct pspgl_buffer *__pspgl_buffer_new(void *base, GLsizeiptr size,
 						void (*free)(struct pspgl_buffer *));
 void __pspgl_buffer_free(struct pspgl_buffer *data);
@@ -58,6 +56,7 @@ void *__pspgl_buffer_map(struct pspgl_buffer *data, GLenum access);
    buffer_map(). */
 void  __pspgl_buffer_unmap(struct pspgl_buffer *data, GLenum access);
 
-void __pspgl_dlist_cleanup_buffer(void *);
+void __pspgl_buffer_dlist_use(struct pspgl_buffer *data);
+void __pspgl_buffer_dlist_sync(struct pspgl_buffer *data);
 
 #endif	/* PSPGL_BUFFERS_H */

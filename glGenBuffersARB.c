@@ -18,7 +18,7 @@ void glGenBuffersARB (GLsizei n, GLuint *buffers)
 
 		id = __pspgl_hash_uniquekey(hash);
 
-		bufp = __pspgl_bufferobj_new(0, NULL);
+		bufp = __pspgl_bufferobj_new(NULL);
 		__pspgl_hash_insert(hash, id, bufp);
 
 		buffers[i] = id;

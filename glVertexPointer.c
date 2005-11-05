@@ -1,9 +1,9 @@
 #include "pspgl_internal.h"
-
+#include "pspgl_buffers.h"
 
 void glVertexPointer (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
 {
-	struct pspgl_vertex_array *va = &pspgl_curctx->vertex_array.normal;
+	struct pspgl_vertex_array *va = &pspgl_curctx->vertex_array.vertex;
 	GLboolean native;
 
 	if (size < 2 || size > 4) {
@@ -26,8 +26,9 @@ void glVertexPointer (GLint size, GLenum type, GLsizei stride, const GLvoid *poi
 
 	native = (size == 3);
 
-	psp_log("ptr=%p size=%d type=%x stride=%d native=%d\n",
-		pointer, size, type, stride, native);
+	psp_log("ptr=%p(%p) size=%d type=%x stride=%d native=%d\n",
+		pointer, __pspgl_bufferobj_deref(pspgl_curctx->vertex_array.arraybuffer, (void *)pointer),
+		size, type, stride, native);
 
 	va->size = size;
 	va->type = type;

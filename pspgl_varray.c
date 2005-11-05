@@ -136,12 +136,12 @@ GLboolean __pspgl_vertex_is_native(const struct vertex_format *vfmt)
 	/* Check each attribute array element is contigious with the
 	   following one */
 	for(i = 0; i < nattr-1; i++) {
-		psp_log("attr %d native=%d ptr+size=%p next->ptr=%p (abs %p)\n",
-			i, array->native, ptr, next->ptr,
-			__pspgl_bufferobj_deref(next->buffer, next->ptr));
+		const void *nextptr = __pspgl_bufferobj_deref(next->buffer, (void *)next->ptr);
 
-		if (!array->native || 
-		    ptr != __pspgl_bufferobj_deref(next->buffer, (void *)next->ptr))
+		psp_log("attr %d native=%d ptr+size=%p next->ptr=%p\n",
+			i, array->native, ptr, nextptr);
+
+		if (!array->native || ptr != nextptr)
 			return GL_FALSE;
 
 		array = next;
@@ -264,9 +264,11 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 
 		hwformat |= GE_VERTEX_SHIFT(hwtype);
 
-		assert(size == 2 || size == 3);
+		assert(size >= 2 && size <= 4);
 
-		/* size must be either 2 or 3  */
+		/* Size must be either 2, 3 or 4. For size==2, we need
+		   to fill in an extra z coord; for size==4, we just
+		   ignore w  */
 		if (size == 2) {
 			switch(hwtype) {
 			case GE_INT_8BIT:	attr->convert = cvt_byte2_byte3; break;

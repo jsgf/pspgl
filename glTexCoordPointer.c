@@ -1,5 +1,5 @@
 #include "pspgl_internal.h"
-
+#include "pspgl_buffers.h"
 
 void glTexCoordPointer (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
 {
@@ -26,8 +26,9 @@ void glTexCoordPointer (GLint size, GLenum type, GLsizei stride, const GLvoid *p
 
 	native = (size == 2);
 
-	psp_log("ptr=%p size=%d type=%x stride=%d native=%d\n",
-		pointer, size, type, stride, native);
+	psp_log("ptr=%p(%p) size=%d type=%x stride=%d native=%d\n",
+		pointer, __pspgl_bufferobj_deref(pspgl_curctx->vertex_array.arraybuffer, (void *)pointer),
+		size, type, stride, native);
 
 	va->size = size;
 	va->type = type;
