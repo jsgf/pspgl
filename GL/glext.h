@@ -6569,6 +6569,13 @@ GLAPI void APIENTRY glWeightPointerPSP(GLint size, GLenum type, GLsizei stride,
 
 #endif
 
+#ifndef GL_PSP_view_matrix
+#define GL_PSP_view_matrix 1
+
+#define GL_VIEW_PSP	0x11300
+
+#endif
+
 #ifdef __cplusplus
 }
 #endif

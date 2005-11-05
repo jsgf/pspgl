@@ -145,6 +145,7 @@ struct pspgl_context {
 	struct pspgl_matrix_stack projection_stack;
 	struct pspgl_matrix_stack modelview_stack;
 	struct pspgl_matrix_stack texture_stack;
+	struct pspgl_matrix_stack view_stack;
 	struct pspgl_matrix_stack bone_stacks[NBONES];
 
 	struct pspgl_matrix_stack *current_matrix_stack;

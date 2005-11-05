@@ -53,6 +53,7 @@ EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
 	c->projection_stack.flags |= MF_DIRTY;
 	c->modelview_stack.flags |= MF_DIRTY;
 	c->texture_stack.flags |= MF_DIRTY;
+	c->view_stack.flags |= MF_DIRTY;
 	for(i = 0; i < NBONES; i++)
 		c->bone_stacks[i].flags |= MF_DIRTY;
 

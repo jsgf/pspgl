@@ -10,6 +10,8 @@ void glMatrixMode (GLenum mode)
 	case GL_MODELVIEW:	s = &c->modelview_stack; break;
 	case GL_TEXTURE:	s = &c->texture_stack; break;
 	case GL_PROJECTION:	s = &c->projection_stack; break;
+	case GL_VIEW_PSP:	s = &c->view_stack; break;
+
 	case GL_BONE0_PSP ... GL_BONE7_PSP:
 		s = &c->bone_stacks[mode - GL_BONE0_PSP];
 		break;

@@ -82,25 +82,6 @@ unsigned long ge_init_state [] =
 	0xde000007,	/* Depth Test Function GL_LESS -> GE_GEQUAL */
 };
 
-
-static const
-unsigned long ge_matrix_init_state [] = {
-	0x3c000000,	/* View Matrix Select = 0 */
-	0x3d3f8000,	/* View Matrix Upload 1.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d3f8000,	/* View Matrix Upload 1.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d3f8000,	/* View Matrix Upload 1.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-	0x3d000000,	/* View Matrix Upload 0.00000 */
-};
-
-
 void __pspgl_ge_init (struct pspgl_context *c)
 {
 	int i;
@@ -109,10 +90,6 @@ void __pspgl_ge_init (struct pspgl_context *c)
 		unsigned long cmd = ge_init_state[i];
 		c->ge_reg[cmd >> 24] = cmd;
 	}
-
-	/* matrix registers are overloaded, not cached. Use direct write-through. */
-	for (i=0; i<sizeof(ge_matrix_init_state)/sizeof(ge_matrix_init_state[0]); i++)
-		__pspgl_dlist_enqueue_cmd(c->dlist_current, ge_matrix_init_state[i]);
 
 	glScissor(0, 0, c->draw->width, c->draw->height);
 	glViewport(0, 0, c->draw->width, c->draw->height);

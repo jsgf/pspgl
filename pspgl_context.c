@@ -104,6 +104,7 @@ static void flush_pending_matrix_changes (struct pspgl_context *c)
 	flush_matrix(c, CMD_MAT_PROJ_TRIGGER, 0, &c->projection_stack);
 	flush_matrix(c, CMD_MAT_MODEL_TRIGGER, 0, &c->modelview_stack);
 	flush_matrix(c, CMD_MAT_TEXTURE_TRIGGER, 0, &c->texture_stack);
+	flush_matrix(c, CMD_MAT_VIEW_TRIGGER, 0, &c->view_stack);
 
 	for(i = 0; i < NBONES; i++)
 		flush_matrix(c, CMD_MAT_BONE_TRIGGER, i, &c->bone_stacks[i]);

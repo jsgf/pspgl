@@ -31,6 +31,7 @@ EGLBoolean eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 		free(c->projection_stack.stack);
 		free(c->modelview_stack.stack);
 		free(c->texture_stack.stack);
+		free(c->view_stack.stack);
 
 		free(c);
 	}

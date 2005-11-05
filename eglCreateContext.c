@@ -37,6 +37,7 @@ EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_
 	init_matrix_stack(&ctx->projection_stack, 2, 0);
 	init_matrix_stack(&ctx->texture_stack, 2, 0);
 	init_matrix_stack(&ctx->modelview_stack, 16, 0);
+	init_matrix_stack(&ctx->view_stack, 8, 0);
 	for(i = 0; i < NBONES; i++)
 		init_matrix_stack(&ctx->bone_stacks[i], 1, MF_DISABLED);
 
