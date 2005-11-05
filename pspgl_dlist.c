@@ -139,7 +139,7 @@ static void sync_list(struct pspgl_dlist *list)
 	sceGeListSync(list->qid, PSP_GE_LIST_DONE);
 
 	if (pspgl_curctx->stats.enabled)
-		pspgl_curctx->stats.queuewait += __pspgl_ticks_to_us(now() - start);
+		pspgl_curctx->stats.queuewait += now() - start;
 
 	list->qid = -1;
 

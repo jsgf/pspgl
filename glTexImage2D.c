@@ -31,9 +31,8 @@ static void set_mipmap_regs(unsigned level, struct pspgl_teximg *img)
 
 		/* XXX pin image while texture registers refer to it */
 
-		psp_log("set level %d image=%p %dx%d stride=%d\n",
-			level, img->image, img->width, img->height,
-			img->stride);
+		psp_log("set level %d image=%p %dx%d\n",
+			level, img->image, img->width, img->height);
 
 		sendCommandi(CMD_TEX_MIPMAP0 + level, ptr);
 		sendCommandi(CMD_TEX_STRIDE0 + level, ((ptr >> 8) & 0xf0000) | img->width);
@@ -84,7 +83,7 @@ void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level, struct
 
 	if (old_timg != NULL) {
 		psp_log("replaced texture image %p(%d) at level %d with %p\n", 
-			old_timg, old_timg->refcount,
+			old_timg, old_timg->image.refcount,
 			level, timg);
 
 		/* release the tobj's reference to the old texture image */

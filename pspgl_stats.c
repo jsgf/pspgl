@@ -74,7 +74,7 @@ void glGetStatisticsuivPSP(GLenum stats, GLuint *ret)
 		ret[0] = pspgl_curctx->stats.buffer_issues;
 		break;
 	case GL_STATS_QUEUEWAITTIME_PSP:
-		ret[0] = pspgl_curctx->stats.queuewait;
+		ret[0] = __pspgl_ticks_to_us(pspgl_curctx->stats.queuewait);
 		break;
 
 	default:
