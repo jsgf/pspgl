@@ -19,7 +19,9 @@ struct pspgl_texfmt {
 
 	void (*convert)(const struct pspgl_texfmt *, void *to, const void *from, unsigned width);
 
-	unsigned texalpha;
+	unsigned flags;
+#define TF_ALPHA	(1<<0)
+#define TF_NATIVE	(1<<1)
 };
 
 

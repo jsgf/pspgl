@@ -140,41 +140,41 @@ static void copy_index4(const struct pspgl_texfmt *fmt, void *to, const void *fr
 
 
 const struct pspgl_texfmt __pspgl_texformats[] = {
-	/* format       type                        source sz   hwformat      hw size   converter               use tex alpha */
-	{ GL_RGB,	GL_UNSIGNED_BYTE,		3,	GE_RGBA_8888, 4,	copy_888_alpha,		GE_TEXENV_RGB  },
-	{ GL_RGB,	GL_UNSIGNED_SHORT_5_5_5_1,	2,	GE_RGBA_5551, 2,	copy_5551,		GE_TEXENV_RGB  },
-	{ GL_RGB,	GL_UNSIGNED_SHORT_5_6_5,	2,	GE_RGB_565,   2,	copy_565,		GE_TEXENV_RGB  },
-	{ GL_RGB,	GL_UNSIGNED_SHORT_4_4_4_4,	2,	GE_RGBA_4444, 2,	copy_4444,		GE_TEXENV_RGB  },
+	/* format       type                        source sz   hwformat      hw size   converter               flags */
+	{ GL_RGB,	GL_UNSIGNED_BYTE,		3,	GE_RGBA_8888, 4,	copy_888_alpha,		0  },
+	{ GL_RGB,	GL_UNSIGNED_SHORT_5_5_5_1,	2,	GE_RGBA_5551, 2,	copy_5551,		0  },
+	{ GL_RGB,	GL_UNSIGNED_SHORT_5_6_5,	2,	GE_RGB_565,   2,	copy_565,		0  },
+	{ GL_RGB,	GL_UNSIGNED_SHORT_4_4_4_4,	2,	GE_RGBA_4444, 2,	copy_4444,		0  },
 
-	{ GL_RGB,	GL_UNSIGNED_SHORT_1_5_5_5_REV,	2,	GE_RGBA_5551, 2,	copy,			GE_TEXENV_RGB  },
-	{ GL_RGB,	GL_UNSIGNED_SHORT_5_6_5_REV,	2,	GE_RGB_565,   2,	copy,			GE_TEXENV_RGB  },
-	{ GL_RGB,	GL_UNSIGNED_SHORT_4_4_4_4_REV,	2,	GE_RGBA_4444, 2,	copy,			GE_TEXENV_RGB  },
+	{ GL_RGB,	GL_UNSIGNED_SHORT_1_5_5_5_REV,	2,	GE_RGBA_5551, 2,	copy,			TF_NATIVE  },
+	{ GL_RGB,	GL_UNSIGNED_SHORT_5_6_5_REV,	2,	GE_RGB_565,   2,	copy,			TF_NATIVE  },
+	{ GL_RGB,	GL_UNSIGNED_SHORT_4_4_4_4_REV,	2,	GE_RGBA_4444, 2,	copy,			TF_NATIVE  },
 
-	{ GL_BGR,	GL_UNSIGNED_SHORT_5_6_5,	2,	GE_RGB_565,   2,	copy,			GE_TEXENV_RGB  },
+	{ GL_BGR,	GL_UNSIGNED_SHORT_5_6_5,	2,	GE_RGB_565,   2,	copy,			TF_NATIVE  },
 
-	{ GL_RGBA,	GL_UNSIGNED_BYTE,		4,	GE_RGBA_8888, 4,	copy,			GE_TEXENV_RGBA },
-	{ GL_RGBA,	GL_UNSIGNED_SHORT_5_5_5_1,	2,	GE_RGBA_5551, 2,	copy_5551,		GE_TEXENV_RGBA },
-	{ GL_RGBA,	GL_UNSIGNED_SHORT_4_4_4_4,	2,	GE_RGBA_4444, 2,	copy_4444,		GE_TEXENV_RGBA },
+	{ GL_RGBA,	GL_UNSIGNED_BYTE,		4,	GE_RGBA_8888, 4,	copy,			TF_ALPHA | TF_NATIVE },
+	{ GL_RGBA,	GL_UNSIGNED_SHORT_5_5_5_1,	2,	GE_RGBA_5551, 2,	copy_5551,		TF_ALPHA },
+	{ GL_RGBA,	GL_UNSIGNED_SHORT_4_4_4_4,	2,	GE_RGBA_4444, 2,	copy_4444,		TF_ALPHA },
 
-	{ GL_RGBA,	GL_UNSIGNED_SHORT_1_5_5_5_REV,	2,	GE_RGBA_5551, 2,	copy,			GE_TEXENV_RGBA },
-	{ GL_RGBA,	GL_UNSIGNED_SHORT_4_4_4_4_REV,	2,	GE_RGBA_4444, 2,	copy,			GE_TEXENV_RGBA },
+	{ GL_RGBA,	GL_UNSIGNED_SHORT_1_5_5_5_REV,	2,	GE_RGBA_5551, 2,	copy,			TF_ALPHA | TF_NATIVE },
+	{ GL_RGBA,	GL_UNSIGNED_SHORT_4_4_4_4_REV,	2,	GE_RGBA_4444, 2,	copy,			TF_ALPHA | TF_NATIVE },
 
-	{ GL_ABGR_EXT,	GL_UNSIGNED_SHORT_4_4_4_4,	2,	GE_RGBA_4444, 2,	copy,			GE_TEXENV_RGBA },
+	{ GL_ABGR_EXT,	GL_UNSIGNED_SHORT_4_4_4_4,	2,	GE_RGBA_4444, 2,	copy,			TF_ALPHA | TF_NATIVE },
 
-	{ GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,		2,	GE_RGBA_8888, 4,	copy_expand_LA,		GE_TEXENV_RGBA },
+	{ GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,		2,	GE_RGBA_8888, 4,	copy_expand_LA,		TF_ALPHA },
 
 	/* XXX These two could use an indexed mode to save space */
-	{ GL_LUMINANCE,	GL_UNSIGNED_BYTE,		1,	GE_RGBA_8888, 4,	copy_expand_L,		GE_TEXENV_RGB  },
-	{ GL_ALPHA,	GL_UNSIGNED_BYTE,		1,	GE_RGBA_8888, 4,	copy_expand_A,		GE_TEXENV_RGBA },
+	{ GL_LUMINANCE,	GL_UNSIGNED_BYTE,		1,	GE_RGBA_8888, 4,	copy_expand_L,		0  },
+	{ GL_ALPHA,	GL_UNSIGNED_BYTE,		1,	GE_RGBA_8888, 4,	copy_expand_A,		TF_ALPHA },
 #if 0
 	/* an intensity (L==A) format with efficent (1 byte/texel) storage is very useful for fonts */
-	{ GL_INTENSITY,	GL_UNSIGNED_BYTE,		1,	GE_INDEX_8BIT, 1,	xxx,			GE_TEXENV_RGBA },
+	{ GL_INTENSITY,	GL_UNSIGNED_BYTE,		1,	GE_INDEX_8BIT, 1,	xxx,			TF_ALPHA },
 #endif
 
  	/* Indexed textures */
- 	{ GL_COLOR_INDEX4_EXT,	GL_UNSIGNED_BYTE,	0,	GE_INDEX_4BIT, 0,	copy_index4,		0 /* ? */},
- 	{ GL_COLOR_INDEX8_EXT,	GL_UNSIGNED_BYTE,	1,	GE_INDEX_8BIT, 1,	copy,			0 /* ? */},
- 	{ GL_COLOR_INDEX16_EXT,	GL_UNSIGNED_SHORT,	2,	GE_INDEX_16BIT, 2,	copy,			0 /* ? */},
+ 	{ GL_COLOR_INDEX4_EXT,	GL_UNSIGNED_BYTE,	0,	GE_INDEX_4BIT, 0,	copy_index4,		TF_NATIVE },
+ 	{ GL_COLOR_INDEX8_EXT,	GL_UNSIGNED_BYTE,	1,	GE_INDEX_8BIT, 1,	copy,			TF_NATIVE },
+ 	{ GL_COLOR_INDEX16_EXT,	GL_UNSIGNED_SHORT,	2,	GE_INDEX_16BIT, 2,	copy,			TF_NATIVE },
 
 	{0,0}
 };
@@ -321,5 +321,6 @@ void __pspgl_update_texenv(struct pspgl_texobj *tobj)
 		fmt = tobj->cmap->texfmt;
 
 	if (fmt)
-		__pspgl_context_writereg_masked(pspgl_curctx, CMD_TEXENV_FUNC, fmt->texalpha, 0x100);
+		__pspgl_context_writereg_masked(pspgl_curctx, CMD_TEXENV_FUNC,
+						(fmt->flags & TF_ALPHA) ? GE_TEXENV_RGBA : GE_TEXENV_RGB, 0x100);
 }
