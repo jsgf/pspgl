@@ -7,6 +7,7 @@
 #include <GLES/egl.h>
 #include <GLES/gl.h>
 
+#include "glchk.h"
 
 extern unsigned char logo_start[];
 
@@ -73,46 +74,6 @@ struct Vertex __attribute__((aligned(16))) vertices [12*3] =
 
 
 int done = 0;
-
-/* disable verbose logging to "ms0:/pspgl.ge" */
-#if 1
-	#include "pspgl_internal.h"	/* dirty hack, required for psp_log() */
-#else
-	#define psp_log(x...) do {} while (0)
-	extern void __psp_log (const char *fmt, ...);
-#endif
-
-/* enable GLerror logging to "ms0:/pspgl.ge" */
-#if 1
-	#define EGLCHK(x)							\
-	do {									\
-		EGLint errcode;							\
-		psp_log("%d: %s\n", __LINE__, # x );				\
-		x;								\
-		errcode = eglGetError();					\
-		if (errcode != EGL_SUCCESS) {					\
-			__pspgl_log("%s (%d): EGL error 0x%04x\n",			\
-				__FUNCTION__, __LINE__, (unsigned int) errcode);\
-		}								\
-	} while (0)
-
-	#define GLCHK(x)							\
-	do {									\
-		GLint errcode;							\
-		psp_log("%d: %s\n", __LINE__, # x );				\
-		x;								\
-		errcode = glGetError();						\
-		if (errcode != GL_NO_ERROR) {					\
-			__pspgl_log("%s (%d): GL error 0x%04x\n",			\
-				__FUNCTION__, __LINE__, (unsigned int) errcode);\
-		}								\
-	} while (0)
-#else
-	#define EGLCHK(x) x
-	#define GLCHK(x) x
-#endif
-
-
 
 static const EGLint attrib_list [] = {
 	EGL_RED_SIZE, 1,

@@ -7,11 +7,11 @@ RM = rm -f
 
 PSPPATH := $(shell psp-config --pspsdk-path)
 PSPGL_LFLAGS = -lglut -lGLU -lGL -lm -lpspdebug -lpspge -lpspdisplay -lpspctrl -lpspsdk -lpsplibc -lpspuser -lpspkernel -lpsprtc
-CFLAGS = -g -Wall -O2 -MD -I.. -I$(PSPPATH)/include
+CFLAGS = -g -Wall -O2 -MD -MF $(DEPDIR)/$*.d -I.. -I$(PSPPATH)/include
 LDFLAGS = -g -Wall -L.. -L$(PSPPATH)/lib
 
 TESTS=bezier copytex depthtest eglcube glut idxtex spots \
-	tex texsubimage varray vertexblend
+	tex texsubimage varray vertexblend mipmaps
 
 BUILDDATE := $(shell date "+%Y/%m/%d %k:%M:%S")
 PSP_EBOOT_TITLE = $(TARGET) $(BUILDDATE)
@@ -22,9 +22,10 @@ PSP_EBOOT_PIC1 = NULL
 PSP_EBOOT_SND0 = NULL
 PSP_EBOOT_PSAR = NULL
 
+DEPDIR = .deps
 PSPSDK := $(shell psp-config --pspsdk-path)
 
-all: $(TESTS:%=%.elf)
+all: $(DEPDIR) $(TESTS:%=%.elf)
 
 install: $(TESTS:%=install-%)
 
@@ -48,22 +49,26 @@ spots.elf: firefox.o
 tex.elf: firefox.o
 texsubimage.elf: one.o two.o three.o four.o
 varray.elf: firefox.o
+mipmaps.elf: sky.o ground.o
 
-%.elf: %.o psp-setup.c
-	$(CC) -o $@ -DMODULE_NAME="$*" $(LDFLAGS) $(CFLAGS) $(filter %.o,$^) psp-setup.c $(PSPGL_LFLAGS)
+psp-setup-%.o: psp-setup.c 
+	$(CC) $(CFLAGS) -o $@ -c -DMODULE_NAME="$(patsubst psp-setup-%.o,%,$@)" psp-setup.c
+
+%.elf: %.o psp-setup-%.o
+	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(filter %.o,$^) $(PSPGL_LFLAGS)
 
 %.sys: %-sys.o
 	cc -o $@ $^ -lglut -lGL
 
-%.o: %.raw
-	(sym=`echo $* | tr '-' '_'`; \
-	 echo -e ".data\n.global $${sym}_start\n$${sym}_start:\n\t.incbin \"$<\"" | $(AS) -o $@)
-
 %.raw: %.png
-	convert -geometry 64x64 $< rgba:$@
+	convert $< rgba:$@
 
 %-mono.raw: %.png
-	convert -geometry 64x64 $< gray:$@
+	convert $< gray:$@
+
+%.o: %.raw
+	(sym=`echo $(notdir $*) | tr '-' '_'`; \
+	 echo -e ".data\n.global $${sym}_start\n$${sym}_start:\n\t.incbin \"$<\"" | $(AS) -o $@)
 
 %.o: %.dxt3
 	(sym=`echo $(notdir $*) | tr '-' '_'`; \
@@ -82,8 +87,11 @@ textab.h: $(DXTTEX) Makefile
 %-sys.o: %.c
 	cc -g -DSYS -c -o $@ $<
 
+$(DEPDIR):
+	mkdir $(DEPDIR)
+
 clean:
-	$(RM) *.d *.o $(DXTOBJ) *.a *.elf *.sys *~
+	$(RM) $(DEPDIR)/*.d *.o $(DXTOBJ) *.a *.elf *.sys *~
 
 -include $(wildcard *.d) dummy
 

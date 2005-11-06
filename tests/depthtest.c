@@ -4,57 +4,8 @@
 #include <GL/glut.h>
 #include <math.h>
 
-#ifndef SYS
-#define SYS 0
-#endif
+#include "glchk.h"
 
-#define DO_VB	(0 && !SYS)
-
-#if !SYS
-
-extern void __pspgl_log (const char *fmt, ...);
-
-/* disable verbose logging to "ms0:/pspgl.ge" */
-#if 0
-	#define psp_log(x...) __pspgl_log(x)
-#else
-	#define psp_log(x...) do {} while (0)
-#endif
-
-/* enable GLerror logging to "ms0:/log.txt" */
-#if 1
-	#define GLCHK(x)							\
-	do {									\
-		GLint errcode;							\
-		psp_log(#x "\n");							\
-		x;								\
-		errcode = glGetError();						\
-		if (errcode != GL_NO_ERROR) {					\
-			__pspgl_log("%s (%d): GL error 0x%04x\n",			\
-				__FUNCTION__, __LINE__, (unsigned int) errcode);\
-		}								\
-	} while (0)
-#else
-	#define GLCHK(x) x
-#endif
-
-#else
-#if 1
-#include <stdio.h>
-	#define GLCHK(x)							\
-	do {									\
-		GLint errcode;							\
-		x;								\
-		errcode = glGetError();						\
-		if (errcode != GL_NO_ERROR) {					\
-			printf("%s (%d): GL error 0x%04x\n",			\
-				__FUNCTION__, __LINE__, (unsigned int) errcode);\
-		}								\
-	} while (0)
-#else
-	#define GLCHK(x) x
-#endif
-#endif
 
 static
 void reshape (int w, int h)

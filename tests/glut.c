@@ -1,43 +1,7 @@
 #include <stdlib.h>
 #include <GL/glut.h>
 
-
-/******* PSP specific debugging ********************************************/
-#if !SYS
-extern void __pspgl_log (const char *fmt, ...);
-
-/* enable GLerror logging to "ms0:/log.txt" */
-#if 1
-	#define GLCHK(x)						\
-	do {								\
-		GLint errcode;						\
-		x;							\
-		errcode = glGetError();					\
-		if (errcode != GL_NO_ERROR) {				\
-			__pspgl_log("%s (%d): GL error 0x%04x\n",	\
-				__FUNCTION__, __LINE__,			\
-				(unsigned int) errcode);		\
-		}							\
-	} while (0)
-#else
-	#define GLCHK(x) x
-#endif
-#else
-#include <stdio.h>
-	#define GLCHK(x)						\
-	do {								\
-		GLint errcode;						\
-		x;							\
-		errcode = glGetError();					\
-		if (errcode != GL_NO_ERROR) {				\
-			printf("%s (%d): GL error 0x%04x\n",		\
-				__FUNCTION__, __LINE__,			\
-				(unsigned int) errcode);		\
-		}							\
-	} while (0)
-#endif
-/******* end of PSP specific debugging *************************************/
-
+#include "glchk.h"
 
 static
 void reshape (int w, int h)
