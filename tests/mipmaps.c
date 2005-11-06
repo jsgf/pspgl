@@ -4,7 +4,7 @@
 #include <GL/glut.h>
 
 #include "glchk.h"
-
+#include "perfmeter.h"
 
 static
 void reshape (int w, int h)
@@ -91,6 +91,8 @@ void display (void)
 	static GLfloat angle;
 	int i;
 
+	pm_framestart();
+
 	angle += delta;
 
 	GLCHK(glShadeModel(GL_SMOOTH));
@@ -147,6 +149,9 @@ void display (void)
 	glTranslatef(0,0,15);
 	for(i = 0; i < MESH-1; i++)
 		GLCHK(glDrawElements(GL_TRIANGLE_STRIP, MESH*2, IDX_TYPE, NULL+(i * MESH*2 * sizeof(idx_t))));
+
+
+	pm_frameend();
 
 #if SYS
 	usleep(1000000/100);
