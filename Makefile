@@ -180,8 +180,7 @@ tar: clean
 clean:
 	$(RM) -rf *.o *.a $(DEPDIR)
 	make -C tools clean
-	make -C test-egl clean
-	make -C test-glut clean
+	make -C tests clean
 	make -C test-q3 clean
 	make -C test-vfpu clean
 

@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <endian.h>
 #include <sys/types.h>
 #include <sys/mman.h>
 
@@ -17,13 +18,24 @@ uint32_t swap32 (uint32_t x)
 		((x << 24) & 0xff000000);
 }
 
+static inline
+uint16_t swap16 (uint16_t x)
+{
+	return  ((x >> 8) & 0x00ff) |
+		((x << 8) & 0xff00);
+}
 
-#if defined(__BIG_ENDIAN__)
+
+#if __BYTE_ORDER == __BIG_ENDIAN
 #define be32_to_cpu(x) (x)
 #define le32_to_cpu(x) swap32(x)
-#elif defined(__LITTLE_ENDIAN__)
+#define be16_to_cpu(x) (x)
+#define le16_to_cpu(x) swap16(x)
+#elif __BYTE_ORDER == __LITTLE_ENDIAN
 #define le32_to_cpu(x) (x)
 #define be32_to_cpu(x) swap32(x)
+#define le16_to_cpu(x) (x)
+#define be16_to_cpu(x) swap16(x)
 #else
 #error unknown endianess!!
 #endif
@@ -58,7 +70,7 @@ static unsigned varray;
 static unsigned iarray;
 
 #define B2F(ptr, idx)	(((signed char *)ptr)[idx])
-#define S2F(ptr, idx)	(((signed short *)ptr)[idx])
+#define S2F(ptr, idx)	le16_to_cpu(((signed short *)ptr)[idx])
 #define F2F(ptr, idx)	(((float*)ptr)[idx])
 
 #ifdef GE_TEXTURE_SHIFT
@@ -128,7 +140,7 @@ process_vertex(const void *vtx)
 
 		switch(vformat & GE_COLOR_SHIFT(7)) {
 		case GE_COLOR_5650:
-			col = *(unsigned short *)vtx;
+			col = le16_to_cpu(*(unsigned short *)vtx);
 			vtx += 2;
 
 			b = ((col >> 8) & 0xf8) * 255 / 0xf8;
@@ -137,7 +149,7 @@ process_vertex(const void *vtx)
 			a = 255;
 			break;
 		case GE_COLOR_5551:
-			col = *(unsigned short *)vtx;
+			col = le16_to_cpu(*(unsigned short *)vtx);
 			vtx += 2;
 
 			b = ((col >> 10) & 0x1f) * 255 / 0x1f;
@@ -147,7 +159,7 @@ process_vertex(const void *vtx)
 
 			break;
 		case GE_COLOR_4444:
-			col = *(unsigned short *)vtx;
+			col = le16_to_cpu(*(unsigned short *)vtx);
 			vtx += 2;
 
 			a = ((col >> 12) & 0x0f) * 255 / 0x0f;
@@ -243,7 +255,7 @@ process_index(const void *idxp)
 		break;
 
 	case GE_VINDEX_16BIT:
-		idx = *((unsigned short *)idxp);
+		idx = le16_to_cpu(*((unsigned short *)idxp));
 		idxp += 2;
 		break;
 

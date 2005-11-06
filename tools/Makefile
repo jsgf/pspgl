@@ -1,6 +1,6 @@
 CC = gcc
 RM = rm -f
-CFLAGS = -g -O0 -Wall -D__LITTLE_ENDIAN__
+CFLAGS = -g -O0 -Wall
 
 TARGETS = decode_ge_dump
 
