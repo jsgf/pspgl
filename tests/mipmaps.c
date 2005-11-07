@@ -101,6 +101,7 @@ void display (void)
 
 	GLCHK(glColor4f(1,1,1,1));
 	GLCHK(glEnable(GL_TEXTURE_2D));
+	GLCHK(glDisable(GL_BLEND));
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -314,16 +315,38 @@ int main(int argc, char* argv[])
 	GLCHK(glGenTextures(NTEX, texid));
 
 	GLCHK(glBindTexture(GL_TEXTURE_2D, texid[0]));
-#if 0
-	gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, GROUND_SIZE, GROUND_SIZE, 
-			  GL_RGBA, GL_UNSIGNED_BYTE, ground_start);
-#else
-	build_tinted_mipmaps(GROUND_SIZE, GROUND_SIZE, ground_start);
+	if (1) {
+		GLCHK(glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE));
+#if GL_PSP_mipmap_debug
+		GLCHK(glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP_DEBUG_PSP, GL_TRUE));
 #endif
+		GLCHK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 
+				   GROUND_SIZE, GROUND_SIZE, 0,
+				   GL_RGBA, GL_UNSIGNED_BYTE, ground_start));
+	} else {
+		if (0)
+			gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, GROUND_SIZE, GROUND_SIZE, 
+					  GL_RGBA, GL_UNSIGNED_BYTE, ground_start);
+		else
+			build_tinted_mipmaps(GROUND_SIZE, GROUND_SIZE, ground_start);
+	}
 
 	GLCHK(glBindTexture(GL_TEXTURE_2D, texid[1]));
-	gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, SKY_SIZE, SKY_SIZE, 
-			  GL_RGBA, GL_UNSIGNED_BYTE, sky_start);
+	if (1) {
+		GLCHK(glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE));
+#if GL_PSP_mipmap_debug
+		GLCHK(glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP_DEBUG_PSP, GL_TRUE));
+#endif
+		GLCHK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 
+				   SKY_SIZE, SKY_SIZE, 0,
+				   GL_RGBA, GL_UNSIGNED_BYTE, sky_start));
+	} else {
+		if (0)
+			gluBuild2DMipmaps(GL_TEXTURE_2D, GL_RGBA, SKY_SIZE, SKY_SIZE, 
+					  GL_RGBA, GL_UNSIGNED_BYTE, sky_start);
+		else
+			build_tinted_mipmaps(SKY_SIZE, SKY_SIZE, sky_start);
+	}
 
 	genmesh();
 

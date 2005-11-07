@@ -32,6 +32,10 @@ struct pspgl_texobj {
 	GLenum		target;		/* either 0 or GL_TEXTURE_2D */
 	GLclampf	priority;
 
+	unsigned	flags;
+#define TOF_GENERATE_MIPMAPS		(1<<0)
+#define TOF_GENERATE_MIPMAP_DEBUG	(1<<1)
+
 #define TEXOBJ_NTEXREG	(TEXSTATE_END - TEXSTATE_START + 1)
 	uint32_t	ge_texreg[TEXOBJ_NTEXREG];
 	const struct pspgl_texfmt *texfmt;
@@ -50,6 +54,7 @@ struct pspgl_teximg {
 	short			 srcgeneration;	/* generation when the src image was converted */
 
 	unsigned	width, height;
+	unsigned	stride;
 
 	const struct pspgl_texfmt *texfmt;
 };

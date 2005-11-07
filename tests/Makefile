@@ -54,7 +54,7 @@ mipmaps.elf: sky.o ground.o
 psp-setup-%.o: psp-setup.c 
 	$(CC) $(CFLAGS) -o $@ -c -DMODULE_NAME="$(patsubst psp-setup-%.o,%,$@)" psp-setup.c
 
-%.elf: %.o perfmeter.o psp-setup-%.o
+%.elf: %.o perfmeter.o psp-setup-%.o ../libGL.a ../libGLU.a ../libglut.a
 	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(filter %.o,$^) $(PSPGL_LFLAGS)
 
 %.sys: %-sys.o

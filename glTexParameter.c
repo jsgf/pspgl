@@ -1,4 +1,5 @@
 #include "pspgl_internal.h"
+#include "pspgl_texobj.h"
 
 static
 int filter_gl2ge (GLenum f)
@@ -58,6 +59,19 @@ void glTexParameterfv (GLenum target, GLenum pname, const GLfloat *params)
 	case GL_TEXTURE_MIN_FILTER:
 		update_texfilter(pspgl_curctx, (pname == GL_TEXTURE_MIN_FILTER) ? 0 : 8, params[0]);
 		break;
+	case GL_GENERATE_MIPMAP:
+		if (*params)
+			pspgl_curctx->texture.bound->flags |= TOF_GENERATE_MIPMAPS;
+		else
+			pspgl_curctx->texture.bound->flags &= ~TOF_GENERATE_MIPMAPS;
+		break;
+	case GL_GENERATE_MIPMAP_DEBUG_PSP:
+		if (*params)
+			pspgl_curctx->texture.bound->flags |= TOF_GENERATE_MIPMAP_DEBUG;
+		else
+			pspgl_curctx->texture.bound->flags &= ~TOF_GENERATE_MIPMAP_DEBUG;
+		break;
+
 	default:
 		goto invalid_enum;
 	}

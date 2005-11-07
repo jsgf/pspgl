@@ -22,6 +22,20 @@ static inline unsigned ispow2(unsigned n)
 	return (n & (n-1)) == 0;
 }
 
+static unsigned max_mipmap(unsigned width, unsigned height)
+{
+	int maxlvl;
+	int lw, lh;
+
+	lw = lg2(width);
+	lh = lg2(height);
+
+	maxlvl = ((lw > lh) ? lw : lh);
+	if (maxlvl >= MIPMAP_LEVELS)
+		maxlvl = MIPMAP_LEVELS-1;
+	return maxlvl;
+}
+
 static void set_mipmap_regs(unsigned level, struct pspgl_teximg *img)
 {
 	if (img) {
@@ -33,7 +47,7 @@ static void set_mipmap_regs(unsigned level, struct pspgl_teximg *img)
 			level, img->image, img->width, img->height);
 
 		sendCommandi(CMD_TEX_MIPMAP0 + level, ptr);
-		sendCommandi(CMD_TEX_STRIDE0 + level, ((ptr >> 8) & 0xf0000) | img->width);
+		sendCommandi(CMD_TEX_STRIDE0 + level, ((ptr >> 8) & 0xf0000) | img->stride);
 		sendCommandi(CMD_TEX_SIZE0 + level, (h_lg2 << 8) | w_lg2);
 	} else {
 		psp_log("set level %d image=NULL", level);
@@ -42,6 +56,225 @@ static void set_mipmap_regs(unsigned level, struct pspgl_teximg *img)
 		sendCommandi(CMD_TEX_STRIDE0 + level, 0);
 		sendCommandi(CMD_TEX_SIZE0 + level, 0);
 	}
+}
+
+/* Update mipmaps for bound texture.  Uses render-to-texture to
+   perform the scaling.  The core of this is very simple, but managing
+   all the state is pretty fiddley. */
+void __pspgl_update_mipmaps(void)
+{
+	struct pspgl_teximg *timg;
+	const struct pspgl_texfmt *texfmt;
+	unsigned levels, level;
+	struct pspgl_buffer *mipmaps;
+	struct pspgl_texobj *tobj = pspgl_curctx->texture.bound;
+
+	if (tobj == NULL ||
+	    (tobj->flags & TOF_GENERATE_MIPMAPS) == 0 ||
+	    tobj->images[0] == NULL ||
+	    tobj->texfmt == NULL ||
+	    tobj->texfmt->hwformat > GE_RGBA_8888)
+		return;
+
+	timg = tobj->images[0];
+
+	/* 
+	   Save state: lighting, texture, depth/alpha/color tests, framebuffer
+
+	   Set up state
+
+	   for (each level, 0-(N-1))
+	     set MIPMAP0 -> level
+	     allocate image for level+1
+	     set framebuffer -> level+1
+	     draw quad at 1/4 scale
+
+	   restore state
+
+	   XXX TODO implement glPush/PopAttrib
+	 */
+
+	GLuint texture = getReg(CMD_ENA_TEXTURE);
+	GLuint lighting = getReg(CMD_ENA_LIGHTING);
+	GLuint alpha = getReg(CMD_ENA_ALPHA_TEST);
+	GLuint depth = getReg(CMD_ENA_DEPTH_TEST);
+	GLuint stencil = getReg(CMD_ENA_STENCIL_TEST);
+	GLuint blending = getReg(CMD_ENA_BLEND);
+	GLuint logic = getReg(CMD_ENA_LOGIC);
+	GLuint rgbmask = getReg(CMD_RGB_MASK);
+	GLuint alphamask = getReg(CMD_ALPHA_MASK);
+	GLuint shademodel = getReg(CMD_SHADEMODEL);
+	GLuint filter = getReg(CMD_TEXFILT);
+	GLuint wrap = getReg(CMD_TEXWRAP);
+	GLuint drawptr = getReg(CMD_DRAWBUF);
+	GLuint drawwidth = getReg(CMD_DRAWBUFWIDTH);
+	GLuint texenv = getReg(CMD_TEXENV_FUNC);
+	GLuint texmode = getReg(CMD_TEXMODE);
+	GLuint fbformat = getReg(CMD_PSM);
+	GLboolean scissor = pspgl_curctx->scissor_test.enabled;
+
+	glDisable(GL_SCISSOR_TEST);
+
+	sendCommandi(CMD_ENA_TEXTURE, 1);
+	sendCommandi(CMD_ENA_LIGHTING, 0);
+	sendCommandi(CMD_ENA_ALPHA_TEST, 0);
+	sendCommandi(CMD_ENA_DEPTH_TEST, 0);
+	sendCommandi(CMD_ENA_STENCIL_TEST, 0);
+	sendCommandi(CMD_ENA_BLEND, 0);
+	sendCommandi(CMD_ENA_LOGIC, 0);
+	sendCommandi(CMD_RGB_MASK, 0);
+	sendCommandi(CMD_ALPHA_MASK, 0);
+	sendCommandi(CMD_SHADEMODEL, 0);
+	sendCommandi(CMD_TEXFILT, (GE_TEX_FILTER_LINEAR << 8) | GE_TEX_FILTER_LINEAR);
+	sendCommandi(CMD_TEXWRAP, (GE_TEX_WRAP_CLAMP << 8) | GE_TEX_WRAP_CLAMP);
+	sendCommandi(CMD_TEXMODE, (0 << 16) | 0);
+
+	if (tobj->flags & TOF_GENERATE_MIPMAP_DEBUG)
+		sendCommandi(CMD_TEXENV_FUNC, GE_TEXENV_RGBA | GE_TEXENV_MODULATE);
+	else
+		sendCommandi(CMD_TEXENV_FUNC, GE_TEXENV_RGBA | GE_TEXENV_REPLACE);
+
+	unsigned mipmap_size = 0;
+	unsigned w = timg->width;
+	unsigned h = timg->height;
+
+	/* Compute how much memory we'll need for this mipmap
+	   pyramid */
+	levels = max_mipmap(w, h);
+	for(level = 1; level <= levels; level++) {
+		if (w > 1)
+			w /= 2;
+		if (h > 1)
+			h /= 2;
+		mipmap_size += w*h;
+	}
+
+	texfmt = tobj->texfmt;
+	mipmaps = __pspgl_buffer_new(mipmap_size * texfmt->hwsize, GL_STATIC_COPY_ARB);
+	unsigned mipmapoff = 0;
+
+	psp_log("allocated %d pixels (%d bytes) of mipmap buffer at %p\n",
+		mipmap_size, mipmap_size * texfmt->hwsize, mipmaps);
+
+	w = timg->width;
+	h = timg->height;
+	unsigned tw = w;
+	unsigned th = h;
+
+	/* texture format and framebuffer format match */
+	sendCommandi(CMD_TEXFMT, texfmt->hwformat);
+	sendCommandi(CMD_PSM, texfmt->hwformat);
+
+	/* mipmap0 is already pointing to our base texture */
+	for(level = 1; level <= levels; level++) {
+		static const unsigned levelcols[] = {
+			/*a b g r  */
+			0xffffffff,
+			0xffc0ffff,
+			0xffffc0ff,
+			0xffc0c0ff,
+			0xffffffc0,
+			0xffc0ffc0,
+			0xffffc0c0,
+			0xffc0c0c0,
+		};
+		struct vertex {
+			unsigned short s,t;
+			unsigned long color;
+			unsigned short x,y,z;
+		} *vertexbuf;
+		unsigned fbptr;
+
+		if (tw > 1)
+			tw /= 2;
+		if (th > 1)
+			th /= 2;
+
+		/* allocate teximg if necessary */
+		if (tobj->images[level] == NULL)
+			tobj->images[level] = __pspgl_teximg_new(NULL, NULL,
+								 tw, th, 0, texfmt);
+
+		/* replace buffer with pointer to our generated mipmap buffer */
+		__pspgl_buffer_free(tobj->images[level]->image);
+		tobj->images[level]->image = mipmaps;
+		mipmaps->refcount++;
+		tobj->images[level]->offset = mipmapoff;
+		tobj->images[level]->texfmt = texfmt;
+
+		psp_log("level %d has mipmap at offset %d (ptr %p); %dx%d->%dx%d\n",
+			level, mipmapoff, mipmaps->base+mipmapoff,
+			w, h, tw, th);
+
+		fbptr = (unsigned)(mipmaps->base + mipmapoff);
+		sendCommandi(CMD_DRAWBUF, fbptr);
+		sendCommandi(CMD_DRAWBUFWIDTH, ((fbptr & 0xff000000) >> 8) | tw);
+
+		mipmapoff += tw * th * texfmt->hwsize;
+
+		sendCommandi(CMD_SCISSOR1, (0 << 10) | 0);
+		sendCommandi(CMD_SCISSOR2, ((th-1) << 10) | (tw-1));
+
+		vertexbuf = __pspgl_dlist_insert_space(pspgl_curctx->dlist_current,
+						       sizeof(*vertexbuf) * 2);
+
+		vertexbuf[0].s = 0;
+		vertexbuf[0].t = 0;
+		vertexbuf[0].color = 0;
+		vertexbuf[0].x = 0;
+		vertexbuf[0].y = 0;
+		vertexbuf[0].z = 0;
+
+		vertexbuf[1].s = w;
+		vertexbuf[1].t = h;
+		vertexbuf[1].color = levelcols[level];
+		vertexbuf[1].x = tw;
+		vertexbuf[1].y = th;
+		vertexbuf[1].z = 0;
+
+		__pspgl_context_render_prim(pspgl_curctx, GE_SPRITES, 2,
+					    GE_COLOR_8888 | GE_VERTEX_16BIT |
+					    GE_TEXTURE_16BIT | GE_TRANSFORM_2D,
+					    vertexbuf, NULL);
+
+		/* set mipmap0 to point to the mipmap we just generated */
+		w = tw;
+		h = th;
+		set_mipmap_regs(0, tobj->images[level]);
+		sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);
+	}
+
+	/* all the appropriate texture images have a reference now */
+	__pspgl_buffer_free(mipmaps);
+
+	/* restore all mipmaps to their proper places */
+	for(level = 0; level <= levels; level++)
+		set_mipmap_regs(level, tobj->images[level]);
+
+	/* restore GL state */
+	if (scissor)
+		glEnable(GL_SCISSOR_TEST);
+	else
+		glDisable(GL_SCISSOR_TEST);
+
+	sendCommandi(CMD_ENA_TEXTURE, texture);
+	sendCommandi(CMD_ENA_LIGHTING, lighting);
+	sendCommandi(CMD_ENA_ALPHA_TEST, alpha);
+	sendCommandi(CMD_ENA_DEPTH_TEST, depth);
+	sendCommandi(CMD_ENA_STENCIL_TEST, stencil);
+	sendCommandi(CMD_ENA_BLEND, blending);
+	sendCommandi(CMD_ENA_LOGIC, logic);
+	sendCommandi(CMD_RGB_MASK, rgbmask);
+	sendCommandi(CMD_ALPHA_MASK, alphamask);
+	sendCommandi(CMD_SHADEMODEL, shademodel);
+	sendCommandi(CMD_TEXFILT, filter);
+	sendCommandi(CMD_TEXWRAP, wrap);
+	sendCommandi(CMD_TEXENV_FUNC, texenv);
+	sendCommandi(CMD_TEXMODE, texmode);
+
+	sendCommandi(CMD_DRAWBUF, drawptr);
+	sendCommandi(CMD_DRAWBUFWIDTH, drawwidth);
+	sendCommandi(CMD_PSM, fbformat);
 }
 
 void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level,
@@ -85,15 +318,7 @@ void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level,
 	}
 
 	if (timg && (level == 0)) {
-		int maxlvl;
-		int lw, lh;
-
-		lw = lg2(timg->width);
-		lh = lg2(timg->height);
-
-		maxlvl = ((lw > lh) ? lw : lh);
-		if (maxlvl >= MIPMAP_LEVELS)
-			maxlvl = MIPMAP_LEVELS-1;
+		int maxlvl = max_mipmap(timg->width, timg->height);
 
 		psp_log("setting %dx%d maxlevel to %d\n", 
 			timg->width, timg->height, maxlvl);
@@ -219,6 +444,9 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 	__pspgl_set_texture_image(tobj, level, timg);
 
 	__pspgl_update_texenv(tobj);
+
+	if (level == 0)
+		__pspgl_update_mipmaps();
 	return;
 
 invalid_enum:

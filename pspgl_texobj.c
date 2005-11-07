@@ -304,7 +304,6 @@ static void tobj_setstate(struct pspgl_texobj *tobj, unsigned reg, unsigned sett
 	tobj->ge_texreg[reg - TEXSTATE_START] = (reg << 24) | (setting & 0xffffff);
 }
 
-
 struct pspgl_texobj *__pspgl_texobj_new(GLuint id, GLenum target)
 {
 	struct pspgl_texobj *tobj = malloc(sizeof(*tobj));
@@ -349,6 +348,7 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 {
 	struct pspgl_teximg *timg;
 	unsigned srcsize;
+	unsigned stride = width;
 
 	timg = malloc(sizeof(*timg));
 	if (timg == NULL)
@@ -358,8 +358,8 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 
 	srcsize = size;
 	if (size == 0) {
-		size = width * height * texfmt->hwsize;
-		srcsize = width * height * texfmt->pixsize;
+		size = stride * height * texfmt->hwsize;
+		srcsize = stride * height * texfmt->pixsize;
 	}
 
 	timg->image = NULL;
@@ -368,6 +368,8 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 
 	timg->width = width;
 	timg->height = height;
+	timg->stride = stride;
+
 	timg->texfmt = texfmt;
 
 	if (buffer != NULL) {

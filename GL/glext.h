@@ -6576,6 +6576,13 @@ GLAPI void APIENTRY glWeightPointerPSP(GLint size, GLenum type, GLsizei stride,
 
 #endif
 
+#ifndef GL_PSP_mipmap_debug
+#define GL_PSP_mipmap_debug 1
+
+#define GL_GENERATE_MIPMAP_DEBUG_PSP	0x11301
+
+#endif
+
 #ifdef __cplusplus
 }
 #endif
