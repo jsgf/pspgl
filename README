@@ -10,7 +10,7 @@ of the demos.  Here an example how to build for a 1.50 PSP on MacOS-X:
 
    $ export PSP_MOUNTDIR=/Volumes/PSP
    $ export PSP_REVISION=1.50
-   $ make && make -C test-egl clean install
+   $ make && make -C tests clean install
    $ make && make -C test-glut clean install
 
 All OpenGL-ES fixed-point commands are not implemented. Please take a look
@@ -21,17 +21,7 @@ if you want to switch off these extensions.
 You can also use the GL/gl.h include set, but should avoid double-precision
 function calls for performance reasons.
 
-Texture objects are not yet implemented, glTexImage2D always binds the current 
-texture. See the eglcube demo for an example.
-
 Display lists are used internally, but not exposed to the GL API.
-
-Vertex Arrays are supported, but only the interleaved native PSP vertex formats.
-No repacking is done, vertex data pointers must be aligned to 16byte boundaries,
-since they are passed directly to the DMA controller for maximum performance.
-
-PSP-extensions (Sprites, Bezier patches, Vertex and Matrix blending) are not yet
-implemented. Well-done patches are welcome!
 
 Only a minimum set of the core GLUT functions is implemented.
 
@@ -50,8 +40,6 @@ GL applications for the PSP:
  - antialiasing can get switched on/off only globally
  - No user-defined clip planes are supported
  - only single-pixel wide lines and points
- - Alpha channel and Stencil buffer in the frambuffer are shared.
-   (Enable Stencil test if you want to write to the stencil buffer)
  - We don't know yet whether/how the fog function can get changed.
  - Only single-sided lighting, for two sided shading you need a CW and a CCW pass.
  - No wireframe rendering, we don' know whether the PSP supports this.
@@ -61,5 +49,7 @@ This list is by no means complete, please report if you encounter other issues.
 All files are BSD-licensed, feel free to use it in free or commercial projects.
 enjoy, have fun,
 
-Holger Waechtler
+See http://www.goop.org/psp/gl for more documentation about this library.
 
+Holger Waechtler
+Jeremy Fitzhardinge
