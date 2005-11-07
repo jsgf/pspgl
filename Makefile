@@ -1,11 +1,12 @@
-PSPPATH := $(shell psp-config --pspsdk-path)
+PSPPATH := $(shell psp-config --psp-prefix)
+PSPSDK := $(shell psp-config --pspsdk-path)
 ARCH = psp-
 
 CC = $(ARCH)gcc
 AR = $(ARCH)ar
 RANLIB = $(ARCH)ranlib
 RM = rm -f
-CFLAGS = -g -Wall -O2 -G0 -fsingle-precision-constant -I. -I $(PSPPATH)/include
+CFLAGS = -g -Wall -O2 -G0 -fsingle-precision-constant -I. -I $(PSPPATH)/include -I $(PSPSDK)/include
 LFLAGS = -g -Wall -O2 -G0 -L$(PSPPATH)/lib
 
 DEPDIR = .deps
