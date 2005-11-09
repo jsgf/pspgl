@@ -6,8 +6,8 @@ PSP_INSTALL = ../tools/psp-install
 RM = rm -f
 
 PSPPATH := $(shell psp-config --pspsdk-path)
-PSPGL_LFLAGS = -lglut -lGLU -lGL -lm -lpspdebug -lpspge -lpspdisplay -lpspctrl -lpspsdk -lpsplibc -lpspuser -lpspkernel -lpsprtc
-CFLAGS = -g -Wall -O2 -MD -MF $(DEPDIR)/$*.d -I.. -I$(PSPPATH)/include
+PSPGL_LFLAGS = -lglut -lGLU -lGL -lm -lc -lpsputility -lpspdebug -lpspge -lpspdisplay -lpspctrl -lpspsdk -lpsplibc -lpspuser -lpspkernel -lpsprtc
+CFLAGS = -g -Wall -O2 -MD -MF $(DEPDIR)/$(basename $@).d -I.. -I$(PSPPATH)/include
 LDFLAGS = -g -Wall -L.. -L$(PSPPATH)/lib
 
 TESTS=bezier copytex depthtest eglcube glut idxtex spots \
@@ -54,8 +54,8 @@ mipmaps.elf: sky.o ground.o
 psp-setup-%.o: psp-setup.c 
 	$(CC) $(CFLAGS) -o $@ -c -DMODULE_NAME="$(patsubst psp-setup-%.o,%,$@)" psp-setup.c
 
-%.elf: %.o perfmeter.o psp-setup-%.o ../libGL.a ../libGLU.a ../libglut.a
-	$(CC) -o $@ $(LDFLAGS) $(CFLAGS) $(filter %.o,$^) $(PSPGL_LFLAGS)
+%.elf: %.o perfmeter.o screenshot.o psp-setup-%.o ../libGL.a ../libGLU.a ../libglut.a
+	$(CC) -o $@ $(LDFLAGS) $(filter %.o,$^)  -lpng -lz $(PSPGL_LFLAGS)
 
 %.sys: %-sys.o
 	cc -o $@ $^ -lglut -lGL
@@ -81,8 +81,8 @@ textab.h: $(DXTTEX) Makefile
          echo "};" )> $@ || rm -f $@
 
 
-%.o: %.c
-	$(CC) $(CFLAGS) -c $<
+%.o: $(DEPDIR) %.c
+	$(CC) $(CFLAGS) -c $*.c
 
 %-sys.o: %.c
 	cc -g -DSYS -c -o $@ $<

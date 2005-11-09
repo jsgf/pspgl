@@ -40,6 +40,7 @@ static float cutoff = 40, d_cutoff = 0;
 static float exponent = 40, d_exponent = 0;
 static int nlights = 4;
 static int lights_changed = 1;
+static int shot = 0;
 
 static void set_lights()
 {
@@ -248,6 +249,11 @@ void display (void)
 
 	pm_frameend();
 
+	if (shot) {
+		shot = 0;
+		screenshot("spots");
+	}
+
 	glutSwapBuffers();
 	glutPostRedisplay();
 }
@@ -305,6 +311,9 @@ void keydown (unsigned char key, int x, int y)
 		break;
 	case 'q':			/* square*/
 		js_lock = !js_lock;
+		break;
+	case 'a':		/* start */
+		shot = 1;
 		break;
 	case 'x':			/* cross button */
 		exit(0);
@@ -418,7 +427,7 @@ int main(int argc, char* argv[])
 	GLCHK(glLockArraysEXT(0, MESH*MESH));
 
 	GLCHK(glEnable(GL_DEPTH_TEST));
-	GLCHK(glClearColor(0,0,.5,.1));
+	GLCHK(glClearColor(0,0,.5,1));
 
 	GLCHK(glEnable(GL_NORMALIZE));
 

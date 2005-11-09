@@ -48,6 +48,7 @@ static int lights_changed = 1;
 static unsigned render;
 static const GLenum prims[] = { GL_TRIANGLES, GL_LINES, GL_POINTS };
 static int primidx = 0;
+static int shot = 0;
 
 #define R_HULL	(1<<0)
 #define R_NORM	(1<<1)
@@ -414,6 +415,11 @@ void display (void)
 
 	pm_frameend();
 
+	if (shot) {
+		shot = 0;
+		screenshot("bezier");
+	}
+
 	glutSwapBuffers();
 	glutPostRedisplay();
 }
@@ -479,7 +485,7 @@ void keydown (unsigned char key, int x, int y)
 		primidx = (primidx + 1) % 6;
 		break;
 	case 'a':			/* startbutton */
-		exit(0);
+		shot = 1;
 		break;
 	default:
 		;
@@ -585,7 +591,7 @@ int main(int argc, char* argv[])
 	GLCHK(glLockArraysEXT(0, MESHX*MESHY));
 
 	GLCHK(glEnable(GL_DEPTH_TEST));
-	GLCHK(glClearColor(0,0,.5,.1));
+	GLCHK(glClearColor(0,0,.5,1));
 
 	GLCHK(glEnable(GL_NORMALIZE));
 

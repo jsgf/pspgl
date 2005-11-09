@@ -25,6 +25,7 @@ void reshape (int w, int h)
 
 static float delta = 1.0;
 static int mipmaps = 1;
+static int shot = 0;
 
 #define NTEX	2
 static GLuint texid[NTEX];
@@ -158,6 +159,11 @@ void display (void)
 	usleep(1000000/100);
 #endif
 
+	if (shot) {
+		shot = 0;
+		screenshot("mipmaps");
+	}
+
 	glutSwapBuffers();
 	glutPostRedisplay();
 }
@@ -173,7 +179,10 @@ void keydown (unsigned char key, int x, int y)
 	case 'o':			/* round */
 		delta = 0.0f;
 		break;
-	case 'q':			/* square*/
+	case 'a':		/* start */
+		shot = 1;
+		break;
+	case 'n':			/* note */
 		break;
 	case 'x':			/* cross button */
 		exit(0);

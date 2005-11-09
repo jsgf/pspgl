@@ -26,6 +26,7 @@
 #define NTRIS	(CYL_SLICES * (CYL_ROWS - 1) * 6)
 #define NSTRIPS (CYL_SLICES * CYL_ROWS * 2)
 
+static int shot = 0;
 static GLuint buffers[2];
 
 static struct vertex {
@@ -276,6 +277,11 @@ void display (void)
 
 	pm_frameend();
 
+	if (shot) {
+		shot = 0;
+		screenshot("vertexblend");
+	}
+
 	glutSwapBuffers();
 	glutPostRedisplay();
 }
@@ -296,6 +302,9 @@ void keydown (unsigned char key, int x, int y)
 			GLCHK(glUnlockArraysEXT());
 		else
 			GLCHK(glLockArraysEXT(0, NVERT));
+		break;
+	case 'a':
+		shot = 1;
 		break;
 	case 'x':			/* cross button */
 		exit(0);

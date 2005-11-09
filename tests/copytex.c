@@ -28,6 +28,7 @@ void reshape (int w, int h)
 
 
 static int bounce = 1;
+static int shot = 0;
 
 extern unsigned char firefox_start[];
 
@@ -120,6 +121,12 @@ void display (void)
 	pm_frameend();
 
 	//usleep(1000000/30);
+
+	if (shot) {
+		shot = 0;
+		screenshot("copytex");
+	}
+
 	glutSwapBuffers();
 	glutPostRedisplay();
 }
@@ -135,6 +142,9 @@ void keydown (unsigned char key, int x, int y)
 		bounce = 0;
 		break;
 	case 'q':			/* square*/
+		break;
+	case 'a':
+		shot = 1;
 		break;
 	case 'x':			/* cross button */
 		exit(0);

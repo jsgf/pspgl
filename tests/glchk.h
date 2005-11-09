@@ -67,4 +67,6 @@ extern void __pspgl_log (const char *fmt, ...);
 #define psp_log	printf
 #endif
 
+void screenshot(const char *);
+
 #endif /* _glchk_h */
