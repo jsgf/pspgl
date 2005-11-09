@@ -24,6 +24,7 @@ void glCopyTexImage2D(GLenum target,
 	struct pspgl_texobj *tobj;
 	struct pspgl_teximg *timg;
 	struct pspgl_surface *read;
+	int dest_x, dest_y;
 
 	read = pspgl_curctx->read;
 	fb_fmt = formats[read->pixfmt].format;
@@ -41,6 +42,32 @@ void glCopyTexImage2D(GLenum target,
 	assert(width == timg->width);
 	assert(height == timg->height);
 
+	dest_x = 0;
+	dest_y = 0;
+
+	if (x < 0) {
+		x = -x;
+		dest_x += x;
+		width -= x;
+		x = 0;
+	}
+	if ((x + width) > read->width)
+		width -= (x + width) - read->width;
+
+	if (y < 0) {
+		y = -y;
+		dest_y += y;
+		height -= y;
+		y = 0;
+	}
+	if ((y + height) > read->height)
+		height -= (y + height) - read->height;
+
+	if (width <= 0 || height <= 0) {
+		GLERROR(GL_INVALID_VALUE);
+		return;
+	}
+
 	/* The framebuffer and the texture are upside down with
 	   respect to each other, so we need to flip the image (in the
 	   framebuffer, lower addresses are in the upper-left, but for
@@ -49,12 +76,15 @@ void glCopyTexImage2D(GLenum target,
 	y = read->height - y;
 
 	__pspgl_copy_pixels(read->color_buffer[!read->current_front], -read->pixelperline, x, y,
-			    timg->image->base + timg->offset, timg->width, 0, 0,
+			    timg->image->base + timg->offset, timg->width, dest_x, dest_y,
 			    width, height, read->pixfmt);
 	__pspgl_dlist_pin_buffer(timg->image);
 
 	sendCommandi(CMD_TEXCACHE_SYNC, getReg(CMD_TEXCACHE_SYNC)+1);
 	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);
+
+	if (level == 0)
+		__pspgl_update_mipmaps();
 
 	return;
 }

@@ -75,6 +75,9 @@ void glTexSubImage2D( GLenum target, GLint level,
 
 	__pspgl_buffer_unmap(timg->image, GL_WRITE_ONLY_ARB);
 
+	if (level == 0)
+		__pspgl_update_mipmaps();
+
 	return;
 
   out_of_memory:

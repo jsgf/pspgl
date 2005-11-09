@@ -46,16 +46,6 @@ static struct magnify {
 	int rad;
 } mag[NMAG];
 
-static unsigned pow2(unsigned x)
-{
-	unsigned ret = 1;
-
-	while(ret < x)
-		ret <<= 1;
-
-	return ret;
-}
-
 static
 void display (void)
 {
@@ -86,7 +76,8 @@ void display (void)
 
 	for(i = 0; i < NMAG; i++) {
 		struct magnify *m = &mag[i];
-		int texdim = pow2(m->rad/2);
+		//int texdim = pow2(m->rad/2);
+		int texdim = 128;
 
 		GLCHK(glEnable(GL_TEXTURE_2D));
 		GLCHK(glBindTexture(GL_TEXTURE_2D, 2));
@@ -226,15 +217,19 @@ int main(int argc, char* argv[])
 
 	GLCHK(glEnable(GL_SCISSOR_TEST));
 
+	/* logo texture */
 	GLCHK(glBindTexture(GL_TEXTURE_2D, 1));
 	GLCHK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 64, 64, 0, 
 			   GL_RGBA, GL_UNSIGNED_BYTE, firefox_start));
 	GLCHK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
 	GLCHK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
 
+	/* magnifier texture */
 	GLCHK(glBindTexture(GL_TEXTURE_2D, 2));
-	GLCHK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST));
-	GLCHK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
+	GLCHK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+	GLCHK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR));
+	GLCHK(glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE));
+	GLCHK(glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP_DEBUG_PSP, GL_TRUE));
 
 	GLCHK(glEnable(GL_TEXTURE_2D));
 

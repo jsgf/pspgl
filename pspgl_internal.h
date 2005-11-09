@@ -279,6 +279,7 @@ extern void __pspgl_find_minmax_indices(GLenum idx_type, const void *indices, un
 /* glTexImage2D.c */
 struct pspgl_teximg;
 extern void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level, struct pspgl_teximg *timg);
+extern void __pspgl_update_mipmaps(void);
 
 static inline unsigned ispow2(unsigned n)
 {
