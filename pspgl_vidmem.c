@@ -16,23 +16,36 @@ struct vidmem_chunk {
 
 
 static struct vidmem_chunk *vidmem_map = NULL;
-static unsigned long vidmem_map_len = 0;
+static unsigned long vidmem_map_len = 0, vidmem_map_size = 0;
 
 
 static
-void *vidmem_map_insert_new (unsigned long idx, unsigned long adr, unsigned long size)
+void *vidmem_map_insert_new (unsigned long idx, void *adr,
+			     unsigned long size)
 {
-	void *tmp = realloc(vidmem_map, (vidmem_map_len + 1) * sizeof(vidmem_map[0]));
+	/* grow map if necessary */
+	if ((vidmem_map_len+1) > vidmem_map_size) {
+		void *tmp;
 
-	if (!tmp)
-		return NULL;
+		if (vidmem_map_size == 0)
+			vidmem_map_size = 4;
+		else
+			vidmem_map_size *= 2;
 
-	psp_log("alloc vidmem %lu: adr 0x%08x - size 0x%08x\n", idx, (unsigned int) adr, (unsigned int) size);
+		tmp = realloc(vidmem_map, vidmem_map_size * sizeof(vidmem_map[0]));
 
-	vidmem_map = tmp;
-	memmove(&vidmem_map[idx+1], &vidmem_map[idx], (vidmem_map_len-idx) * sizeof(vidmem_map[0]));
+		if (!tmp)
+			return NULL;
+		vidmem_map = tmp;
+	}
+
+	psp_log("alloc vidmem %lu: adr 0x%08p - size 0x%08x\n",
+		idx, adr, (unsigned int) size);
+
+	memmove(&vidmem_map[idx+1], &vidmem_map[idx],
+		(vidmem_map_len-idx) * sizeof(vidmem_map[0]));
 	vidmem_map_len++;
-	vidmem_map[idx].ptr = (void*) adr;
+	vidmem_map[idx].ptr = adr;
 	vidmem_map[idx].len = size;
 
 	return vidmem_map[idx].ptr;
@@ -41,44 +54,57 @@ void *vidmem_map_insert_new (unsigned long idx, unsigned long adr, unsigned long
 
 void* __pspgl_vidmem_alloc (unsigned long size)
 {
-	unsigned long start = (unsigned long) sceGeEdramGetAddr();
-	unsigned long adr = start;
+	void *start = sceGeEdramGetAddr();
+	void *adr = start;
 	unsigned long i;
 
-	for (i=0; i<vidmem_map_len; i++) {
-		if (vidmem_map[i].ptr != NULL) {
-			unsigned long new_adr = (unsigned long) vidmem_map[i].ptr;
-			if (size <= new_adr - adr)
-				return vidmem_map_insert_new(i, adr, size);
-			adr = new_adr + vidmem_map[i].len;
-		}
+	size = ROUNDUP(size, CACHELINE_SIZE); /* make sure eveything is usefully aligned */
+
+	for(i = 0; i < vidmem_map_len; i++) {
+		void *new_adr = vidmem_map[i].ptr;
+
+		if ((adr+size) <= new_adr)
+			return vidmem_map_insert_new(i, adr, size);
+
+		adr = new_adr + vidmem_map[i].len;
 	}
 
-	if (adr + size > start + sceGeEdramGetSize())
+	if ((adr + size) > (start + sceGeEdramGetSize()))
 		return NULL;
 
 	return vidmem_map_insert_new(vidmem_map_len, adr, size);
 }
 
+static int addr_cmp(const void *key, const void *b)
+{
+	const void *k = *(void **)key;
+	const struct vidmem_chunk *kb = b;
+
+	if (k < kb->ptr)
+		return -1;
+	if (k == kb->ptr)
+		return 0;
+	return 1;
+}
 
 void  __pspgl_vidmem_free (void * ptr)
 {
-	int i;
+	struct vidmem_chunk *chunk;
 
-	for (i=0; i<vidmem_map_len; i++) {
-		if (vidmem_map[i].ptr == ptr) {
-			void *tmp;
-			
-			psp_log("free vidmem %d: adr 0x%08x - size 0x%08x\n", i,
-				(unsigned int) ptr, (unsigned int) vidmem_map[i].len);
+	chunk = bsearch(&ptr, vidmem_map, vidmem_map_len, 
+			sizeof(*vidmem_map), addr_cmp);
+
+	if (chunk) {
+		int i = chunk - vidmem_map;
+		psp_log("free vidmem %d: adr 0x%08p - size 0x%08x\n", i,
+			ptr, (unsigned int) vidmem_map[i].len);
 			
 			vidmem_map_len--;
-			memmove(&vidmem_map[i], &vidmem_map[i+1], (vidmem_map_len-i) * sizeof(vidmem_map[0]));
-			tmp = realloc(vidmem_map, vidmem_map_len * sizeof(vidmem_map[0]));
-			if (tmp)
-				vidmem_map = tmp;
-		}
-	}
+			memmove(&vidmem_map[i], &vidmem_map[i+1],
+				(vidmem_map_len-i) * sizeof(vidmem_map[0]));
+	} else
+		__pspgl_log("%s: didn't find chunk for pointer %p\n",
+			    __FUNCTION__, ptr);
 }
 
 
