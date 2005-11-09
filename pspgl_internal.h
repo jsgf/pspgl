@@ -224,6 +224,11 @@ extern EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_su
 extern GLboolean __pspgl_cache_arrays(void);
 extern void __pspgl_uncache_arrays(void);
 
+/* glReadPixels.c */
+extern void __pspgl_copy_pixels(const void *srcbuf, int srcstride, int srcx, int srcy,
+				void *dstbuf, int dststride, int dstx, int dsty,
+				int width, int height, unsigned hwpixfmt);
+
 /* pspgl_stats.c */
 
 #include <time.h>

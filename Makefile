@@ -104,6 +104,7 @@ libGL.a_OBJS = \
 	glPolygonMode.o \
 	glPolygonOffset.o \
 	glPrioritizeTextures.o \
+	glReadPixels.o \
 	glRotatef.o \
 	glScalef.o \
 	glScaled.o \

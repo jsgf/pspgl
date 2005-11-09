@@ -4,61 +4,6 @@
 #include "pspgl_internal.h"
 #include "pspgl_texobj.h"
 
-static inline int absi(int x)
-{
-	return (x < 0) ? -x : x;
-}
-
-static inline int sgni(int x)
-{
-	if (x < 0)
-		return -1;
-	if (x == 0)
-		return 0;
-	return 1;
-}
-
-static void copy_pixels(const void *srcbuf, int srcstride, int srcx, int srcy,
-			void *dstbuf, int dststride, int dstx, int dsty,
-			int width, int height, unsigned pixfmt)
-{
-	sendCommandiUncached(CMD_COPY_SRC, (unsigned)srcbuf);
-	sendCommandiUncached(CMD_COPY_DST, (unsigned)dstbuf);
-
-	if (srcstride < 0 || dststride < 0) {
-		int sdy = sgni(srcstride);
-		int ddy = sgni(dststride);
-
-		srcstride = absi(srcstride);
-		dststride = absi(dststride);
-
-		sendCommandiUncached(CMD_COPY_SRC_STRIDE, (((unsigned)srcbuf & 0xff000000) >> 8) | srcstride);
-		sendCommandiUncached(CMD_COPY_DST_STRIDE, (((unsigned)dstbuf & 0xff000000) >> 8) | dststride);
-
-		sendCommandiUncached(CMD_COPY_SIZE, ((1-1) << 10) | (width-1));
-
-		while(height--) {
-			sendCommandiUncached(CMD_COPY_SRC_XY, (srcy << 10) | srcx);
-			sendCommandiUncached(CMD_COPY_DST_XY, (dsty << 10) | dstx);
-
-			sendCommandiUncached(CMD_COPY_START, (pixfmt == GE_RGBA_8888));
-
-			srcy += sdy;
-			dsty += ddy;
-		}
-	} else {
-		sendCommandiUncached(CMD_COPY_SRC_STRIDE, (((unsigned)srcbuf & 0xff000000) >> 8) | srcstride);
-		sendCommandiUncached(CMD_COPY_DST_STRIDE, (((unsigned)dstbuf & 0xff000000) >> 8) | dststride);
-
-		sendCommandiUncached(CMD_COPY_SRC_XY, (srcy << 10) | srcx);
-		sendCommandiUncached(CMD_COPY_DST_XY, (dsty << 10) | dstx);
-
-		sendCommandiUncached(CMD_COPY_SIZE, ((height-1) << 10) | (width-1));
-
-		sendCommandiUncached(CMD_COPY_START, (pixfmt == GE_RGBA_8888));
-	}
-}
-
 static const struct {
 	GLenum format, type;
 } formats[] = {
@@ -103,9 +48,9 @@ void glCopyTexImage2D(GLenum target,
 	*/
 	y = read->height - y;
 
-	copy_pixels(read->color_buffer[!read->current_front], -read->pixelperline, x, y,
-		    timg->image->base + timg->offset, timg->width, 0, 0,
-		    width, height, read->pixfmt);
+	__pspgl_copy_pixels(read->color_buffer[!read->current_front], -read->pixelperline, x, y,
+			    timg->image->base + timg->offset, timg->width, 0, 0,
+			    width, height, read->pixfmt);
 	__pspgl_dlist_pin_buffer(timg->image);
 
 	sendCommandi(CMD_TEXCACHE_SYNC, getReg(CMD_TEXCACHE_SYNC)+1);
