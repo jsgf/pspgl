@@ -80,7 +80,6 @@ GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
 {
 	void *p = NULL;
 
-	/* XXX allocate different types of memory based on usage */
 	size = ROUNDUP(size, CACHELINE_SIZE);
 
 	switch(usage) {
@@ -117,7 +116,7 @@ GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
 
 	buf->refcount = 1;
 	buf->mapped = 0;
-	buf->pinned = 0;
+	buf->flags = 0;
 	buf->generation = 0;
 
 	buf->pin_prevp = NULL;
@@ -258,12 +257,12 @@ void __pspgl_buffer_dlist_sync(struct pspgl_buffer *data)
 {
 	data->refcount++;	/* prevent freeing */
 
-	/* XXX This is overkill; we can wait for each dlist until the
-	   dlist_use count drops to 0  */
-	if (data->pinned > 0)
+	/* XXX This is overkill; we can wait for each dlist until this
+	   buffer stops being pinned. */
+	if (data->flags & BF_PINNED)
 		glFinish();
 
-	assert(data->pinned == 0);
+	assert((data->flags & BF_PINNED) == 0);
 
 	__pspgl_buffer_free(data); /* drop refcount */
 }

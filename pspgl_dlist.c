@@ -101,7 +101,7 @@ struct pspgl_dlist* __pspgl_dlist_create (int compile_and_run,
 /* Pin a buffer to a particular dlist.  If it is already attached
    to a dlist, move it to this dlist, so it remains pinned a little
    longer. */
-void __pspgl_dlist_pin_buffer(struct pspgl_buffer *data)
+void __pspgl_dlist_pin_buffer(struct pspgl_buffer *data, unsigned flags)
 {
 	struct pspgl_dlist *d = pspgl_curctx->dlist_current;
 
@@ -113,12 +113,9 @@ void __pspgl_dlist_pin_buffer(struct pspgl_buffer *data)
 		*(data->pin_prevp) = data->pin_next;
 	} else {
 		/* newly pinned */
-		data->pinned++;
 		data->refcount++;
 	}
-
-	assert(data->pinned > 0);
-	assert(data->refcount > data->pinned);
+	data->flags |= flags;
 
 	/* insert into current dlist pin list */
 	data->pin_prevp = &d->pins;
@@ -148,9 +145,7 @@ static void sync_list(struct pspgl_dlist *list)
 		data->pin_prevp = NULL;
 		data->pin_next = NULL;
 
-		assert(data->pinned > 0);
-		assert(data->refcount >= data->pinned);
-		data->pinned--;
+		data->flags &= ~BF_PINNED;
 
 		__pspgl_buffer_free(data);
 	}

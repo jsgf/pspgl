@@ -156,8 +156,8 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 	idxp = ibuf->base + ibuf_offset;
 
 	__pspgl_context_render_prim(pspgl_curctx, prim, count, hwformat, vtxp, idxp);
-	__pspgl_dlist_pin_buffer(vbuf);
-	__pspgl_dlist_pin_buffer(ibuf);
+	__pspgl_dlist_pin_buffer(vbuf, BF_PINNED_RD);
+	__pspgl_dlist_pin_buffer(ibuf, BF_PINNED_RD);
 
 	/* If we're drawing a line-loop, add an extra edge to close
 	   the loop */
@@ -184,7 +184,7 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 
 		__pspgl_context_render_prim(pspgl_curctx, GE_LINES, 2,
 					    hwformat, vtxp, idx);
-		__pspgl_dlist_pin_buffer(vbuf);
+		__pspgl_dlist_pin_buffer(vbuf, BF_PINNED_RD);
 	}
 
 	__pspgl_buffer_free(vbuf);

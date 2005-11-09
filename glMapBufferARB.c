@@ -18,7 +18,12 @@ GLvoid *glMapBufferARB(GLenum target, GLenum access)
 		return NULL;
 	}
 
-	if (access != GL_READ_ONLY_ARB)
+	/* If we're writing the buffer or the hardware is writing to
+	   the buffer, wait for the hardware to finish with it.  (The
+	   CPU and graphics hardware are allowed to read
+	   concurrently.) */
+	if (access != GL_READ_ONLY_ARB ||
+	    (buf->data->flags & BF_PINNED_WR))
 		__pspgl_buffer_dlist_sync(buf->data);
 
 	buf->access = access;

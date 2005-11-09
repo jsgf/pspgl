@@ -63,7 +63,7 @@ void glDrawBezierArraysPSP(GLenum mode, GLuint u, GLuint v, GLint first)
 	__pspgl_context_render_setup(c, vfmtp->hwformat, buf, NULL);
 	__pspgl_context_writereg_uncached(c, CMD_BEZIER, (v << 8) | u);
 	__pspgl_context_pin_textures(c);
-	__pspgl_dlist_pin_buffer(vbuf);
+	__pspgl_dlist_pin_buffer(vbuf, BF_PINNED_RD);
 
 	__pspgl_buffer_free(vbuf);
 }

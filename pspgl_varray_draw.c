@@ -55,7 +55,7 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 	buf += first * vfmtp->vertex_size;
 
 	__pspgl_context_render_prim(pspgl_curctx, prim, count, vfmtp->hwformat, buf, NULL);
-	__pspgl_dlist_pin_buffer(vbuf);
+	__pspgl_dlist_pin_buffer(vbuf, BF_PINNED_RD);
 
 	if (mode == GL_LINE_LOOP) {
 		GLushort *idx = __pspgl_dlist_insert_space(pspgl_curctx->dlist_current,
@@ -69,7 +69,7 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 		psp_log("drawing closing line on loop: idx=%d %d\n", idx[0], idx[1]);
 		__pspgl_context_render_prim(pspgl_curctx, GE_LINES, 2,
 					    vfmtp->hwformat | GE_VINDEX_16BIT, buf, idx);
-		__pspgl_dlist_pin_buffer(vbuf);
+		__pspgl_dlist_pin_buffer(vbuf, BF_PINNED_RD);
 	}
 
 	__pspgl_buffer_free(vbuf);

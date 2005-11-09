@@ -5,9 +5,14 @@
 
 struct pspgl_buffer {
 	short refcount;
-	short mapped;		/* internal map counter */
-	short pinned;		/* number of times this buffer is pinned */
 	short generation;	/* generation counter to detect changes */
+	signed char mapped;	/* mapping counter */
+	unsigned char flags;
+#define BF_PINNED_RD	(1<<0)	/* buffer is pinned for reading (by hardware) */
+#define BF_PINNED_WR	(1<<1)	/* buffer if pinned for writing (by hardware) */
+#define BF_PINNED (BF_PINNED_RD|BF_PINNED_WR)
+#define BF_UNMANAGED	(1<<2)	/* buffer is not allocated by us */
+#define BF_TRANSIENT	(1<<3)	/* buffer is in the transient pool */
 
 	/* Pointers for the pin list */
 	struct pspgl_buffer **pin_prevp;

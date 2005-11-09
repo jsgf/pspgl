@@ -134,13 +134,14 @@ void __pspgl_context_pin_textures(struct pspgl_context *c)
 	if (cmap == NULL)
 		cmap = tobj->cmap;
 	if (cmap)
-		__pspgl_dlist_pin_buffer(cmap->image);
+		__pspgl_dlist_pin_buffer(cmap->image, BF_PINNED_RD);
 
 	/* Walk the images pointed to by the texture object and make
 	   sure they're pinned. */
 	for (i = 0; i < MIPMAP_LEVELS; i++)
 		if (tobj->images[i] && tobj->images[i]->image)
-			__pspgl_dlist_pin_buffer(tobj->images[i]->image);
+			__pspgl_dlist_pin_buffer(tobj->images[i]->image,
+						 BF_PINNED_RD);
 }
 
 void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt, 

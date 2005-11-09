@@ -45,10 +45,12 @@ extern void __pspgl_dlist_await_completion (void);
 /* cancel the currently running wait queue */
 extern void __pspgl_dlist_cancel (void);
 
-/* Pin a pspgl_buffer, indicating it is being used by hardware.
-   The buffer is unpinned when the GE has reached the current point in
-   the commands stream.  */
-extern void __pspgl_dlist_pin_buffer(struct pspgl_buffer *data);
+/* Pin a pspgl_buffer, indicating it is being used by hardware.  The
+   buffer is unpinned when the GE has reached the current point in the
+   commands stream.  The flags contain one or both of BF_PINNED_RD or
+   BF_PINNED_WR to indicate whether the buffer is pinned for reading
+   or writing. */
+extern void __pspgl_dlist_pin_buffer(struct pspgl_buffer *data, unsigned flags);
 
 /**
  * insert END/FINISH commands at end of dlist.
