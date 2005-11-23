@@ -49,6 +49,7 @@ spots.elf: firefox.o
 tex.elf: firefox.o
 texsubimage.elf: one.o two.o three.o four.o
 varray.elf: firefox.o
+viewports.elf: firefox.o
 mipmaps.elf: sky.o ground.o
 
 psp-setup-%.o: psp-setup.c 
