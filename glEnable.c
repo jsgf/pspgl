@@ -64,17 +64,7 @@ static void enable_state (GLenum cap, int enable)
 		break;
 	case GL_SCISSOR_TEST:
 		pspgl_curctx->scissor_test.enabled = enable;
-		if (enable) {
-			glScissor(pspgl_curctx->scissor_test.x,
-				  pspgl_curctx->scissor_test.y,
-				  pspgl_curctx->scissor_test.width,
-				  pspgl_curctx->scissor_test.height);
-		} else {
-			glScissor(pspgl_curctx->viewport.x,
-				  pspgl_curctx->viewport.y,
-				  pspgl_curctx->viewport.width,
-				  pspgl_curctx->viewport.height);
-		}
+		__pspgl_set_scissor();
 		return;
 
 	case GL_VERTEX_BLEND_PSP:

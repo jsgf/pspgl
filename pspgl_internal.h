@@ -286,6 +286,8 @@ static inline unsigned ispow2(unsigned n)
 	return (n & (n-1)) == 0;
 }
 
+/* glScissor.c */
+extern void __pspgl_set_scissor(void);
 
 #define GLERROR(errcode)					\
 do {								\
