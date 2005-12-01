@@ -7,6 +7,46 @@
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
 
+static struct pspgl_buffer *list_head, *list_tail, *list_walk;
+
+static void buffer_remove(struct pspgl_buffer *b)
+{
+	if (list_walk == b)
+		list_walk = b->list_next;
+
+	if (b->list_prev == NULL) {
+		assert(list_head == b);
+		list_head = b->list_next;
+	} else
+		b->list_prev->list_next = b->list_next;
+
+	if (b->list_next == NULL) {
+		assert(list_tail == b);
+		list_tail = b->list_prev;
+	} else
+		b->list_next->list_prev = b->list_prev;
+}
+
+static void buffer_insert_head(struct pspgl_buffer *b)
+{
+	b->list_next = list_head;
+	b->list_prev = NULL;
+	list_head = b;
+
+	if (list_tail == NULL)
+		list_tail = b;
+}
+
+static void buffer_insert_tail(struct pspgl_buffer *b)
+{
+	b->list_next = NULL;
+	b->list_prev = list_tail;
+	list_tail = b;
+
+	if (list_head == NULL)
+		list_head = b;
+}
+
 struct pspgl_bufferobj *__pspgl_bufferobj_new(struct pspgl_buffer *data)
 {
 	struct pspgl_bufferobj *bufp;
@@ -75,8 +115,8 @@ static int is_edram_addr(void *p)
 	return (p >= edram_start) && (p < edram_end);
 }
 
-GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
-			      GLsizeiptr size, GLenum usage)
+static GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
+				     GLsizeiptr size, GLenum usage)
 {
 	void *p = NULL;
 
@@ -142,6 +182,8 @@ GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
 	buf->base = p;
 	buf->size = size;
 
+	buffer_insert_tail(buf);
+
 	return GL_TRUE;
 }
 
@@ -166,6 +208,8 @@ void __pspgl_buffer_free(struct pspgl_buffer *data)
 
 	if (--data->refcount)
 		return;
+
+	buffer_remove(data);
 
 	if (data->base) {
 		if (is_edram_addr(data->base))

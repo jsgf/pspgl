@@ -20,6 +20,10 @@ struct pspgl_buffer {
 	struct pspgl_buffer **pin_prevp;
 	struct pspgl_buffer  *pin_next;
 
+	/* Pointer used for the global buffer list */
+	struct pspgl_buffer *list_prev;
+	struct pspgl_buffer *list_next;
+
 	void *base;
 	GLsizeiptr size;
 };
@@ -59,7 +63,7 @@ struct pspgl_bufferobj **__pspgl_bufferobj_for_target(GLenum target);
 struct pspgl_buffer *__pspgl_buffer_new(GLsizeiptr size, GLenum usage);
 
 /* Initialize a buffer, allocating data according the "usage"; returns false on failure */
-GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf, GLsizeiptr size, GLenum usage);
+//GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf, GLsizeiptr size, GLenum usage);
 
 /* Decrement a buffer's count and free if it hits 0 */
 void __pspgl_buffer_free(struct pspgl_buffer *data);
