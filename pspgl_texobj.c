@@ -391,7 +391,7 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 		} 
 	}
 
-	if (timg->image == NULL) {
+	if (timg->image == NULL && size > 0) {
 		const void *src;
 
 		timg->image = __pspgl_buffer_new(size, GL_STATIC_DRAW_ARB);

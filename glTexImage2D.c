@@ -184,6 +184,7 @@ void __pspgl_update_mipmaps(void)
 			unsigned short x,y,z;
 		} *vertexbuf;
 		unsigned fbptr;
+		struct pspgl_teximg *timg;
 
 		if (tw > 1)
 			tw /= 2;
@@ -193,14 +194,21 @@ void __pspgl_update_mipmaps(void)
 		/* allocate teximg if necessary */
 		if (tobj->images[level] == NULL)
 			tobj->images[level] = __pspgl_teximg_new(NULL, NULL,
-								 tw, th, 0, texfmt);
+								 0, 0, 0, texfmt);
+
+		timg = tobj->images[level];
 
 		/* replace buffer with pointer to our generated mipmap buffer */
-		__pspgl_buffer_free(tobj->images[level]->image);
-		tobj->images[level]->image = mipmaps;
+		if (timg->image)
+			__pspgl_buffer_free(timg->image);
+		timg->width = tw;
+		timg->stride = tw;
+		timg->height = tw;
+
+		timg->image = mipmaps;
 		mipmaps->refcount++;
-		tobj->images[level]->offset = mipmapoff;
-		tobj->images[level]->texfmt = texfmt;
+		timg->offset = mipmapoff;
+		timg->texfmt = texfmt;
 
 		psp_log("level %d has mipmap at offset %d (ptr %p); %dx%d->%dx%d\n",
 			level, mipmapoff, mipmaps->base+mipmapoff,
@@ -240,7 +248,7 @@ void __pspgl_update_mipmaps(void)
 		/* set mipmap0 to point to the mipmap we just generated */
 		w = tw;
 		h = th;
-		set_mipmap_regs(0, tobj->images[level]);
+		set_mipmap_regs(0, timg);
 		sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);
 	}
 
