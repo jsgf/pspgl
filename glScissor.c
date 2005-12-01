@@ -9,16 +9,16 @@ void __pspgl_set_scissor(void)
 		b = c->draw->height - c->scissor_test.y;
 		t = b - c->scissor_test.height;
 		l = c->scissor_test.x;
-		r = l + c->scissor_test.width - 1;
+		r = l + c->scissor_test.width;
 	} else {
 		b = c->draw->height;
 		t = 0;
 		l = 0;
-		r = c->draw->width - 1;
+		r = c->draw->width;
 	}
 
 	sendCommandi(CMD_SCISSOR1, (t << 10) | l);
-	sendCommandi(CMD_SCISSOR2, ((b-1) << 10) | r);
+	sendCommandi(CMD_SCISSOR2, ((b - 1) << 10) | (r - 1));
 }
 
 void glScissor (GLint x, GLint y, GLsizei width, GLsizei height)
