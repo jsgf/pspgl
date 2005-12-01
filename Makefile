@@ -130,6 +130,7 @@ libGL.a_OBJS = \
 	glWeightPointerPSP.o \
 	pspgl_buffers.o \
 	pspgl_context.o \
+	pspgl_copy_pixels.o \
 	pspgl_dlist.o \
 	pspgl_ge_init.o \
 	pspgl_hash.o \
