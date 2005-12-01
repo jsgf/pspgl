@@ -33,7 +33,7 @@ extern void __pspgl_vram_dump (void);
  *  Note: This will seriously slow down program exection, so be patient.
  *  The resulting file "ms0:/pspgl.ge" can easily get analyzed with the tools/decode_ge_dump utility.
  */
-#if 0
+#if 1
 #define pspgl_ge_register_dump() __pspgl_ge_register_dump()
 #define pspgl_ge_matrix_dump() __pspgl_ge_matrix_dump()
 #define pspgl_dlist_dump(buf,len) __pspgl_dlist_dump(buf,len)

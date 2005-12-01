@@ -68,3 +68,58 @@ void __pspgl_copy_pixels(const void *srcbuf, int srcstride, int srcx, int srcy,
 	}
 }
 
+/* Copy memory with the GE.  Typically used for moving things to/from
+   or within vidmem.  Does not synchronize anything, and doesn't pin
+   any buffers.  Handles overlapping src and dst. */
+void __pspgl_copy_memory(const void *src, void *dst, size_t size)
+{
+	size_t xfersize;
+
+	psp_log("coping %p->%p %u\n", src, dst, size);
+
+	xfersize = size;
+
+	if ((dst < src && (dst+size) > src) ||
+	    (src < dst && (src+size) > dst)) {
+		if (dst < src)
+			xfersize = src - dst;
+		else
+			xfersize = dst - src;
+		psp_log("   OVERLAPPING: xfersize=%u\n",
+			xfersize);
+	}
+
+	/* Copy 32bpp "pixels" */
+	size /= 4;
+	xfersize /= 4;
+
+	/* Copy the data as a series of 512xN blits (or Nx1 for
+	   transfers of less than 512 words).  If the src and dst
+	   overlap, then the transfer size may be smaller. */
+	while(size > 0) {
+		unsigned w, h;
+		unsigned chunk = size;
+
+		if (chunk > xfersize)
+			chunk = xfersize;
+
+		if (chunk < 512) {
+			w = chunk;
+			h = 1;
+		} else {
+			w = 512;
+			h = chunk / 512;
+		}
+
+		psp_log("  chunk %p->%p %dx%d\n",
+			src, dst, w, h);
+
+		__pspgl_copy_pixels(src, w, 0, 0,
+				    dst, w, 0, 0,
+				    w, h, GE_RGBA_8888);
+
+		size -= w * h;
+		src += w * h;
+		dst += w * h;
+	}
+}

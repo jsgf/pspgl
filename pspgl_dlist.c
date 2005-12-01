@@ -123,6 +123,9 @@ void __pspgl_dlist_pin_buffer(struct pspgl_buffer *data, unsigned flags)
 	if (data->pin_next)
 		data->pin_next->pin_prevp = &data->pin_next;
 	d->pins = data;
+
+	/* tell buffer management this buffer wants to be in vidmem */
+	__pspgl_buffer_want_vidmem(data);
 }
 
 static void sync_list(struct pspgl_dlist *list)

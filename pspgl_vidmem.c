@@ -173,6 +173,52 @@ EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *
 	return EGL_TRUE;
 }
 
+size_t __pspgl_vidmem_evict(struct pspgl_buffer *buf)
+{
+	struct pspgl_buffer **chunk;
+	struct pspgl_buffer *standin;
+	void *t;
+
+	chunk = bsearch(&buf->base, vidmem_map, vidmem_map_len, 
+			sizeof(*vidmem_map), addr_cmp);
+
+	if (chunk == NULL)
+		return 0;		/* presume already evicted */
+
+	/* Don't evict migrating, pinned or mapped things */
+	if ((buf->flags & (BF_MIGRATING | BF_PINNED_FIXED)) || buf->mapped)
+		return 0;
+
+	psp_log("evicting buffer %p (vidmem %p-%p)\n",
+		buf, buf->base, buf->base+buf->size);
+
+	/* Allocate system memory buffer (assumes DYNAMIC_DRAW_ARB
+	   always allocates system memory) */
+	standin = __pspgl_buffer_new(buf->size, GL_DYNAMIC_DRAW_ARB);
+	if (standin == NULL)
+		return 0;
+
+	psp_log("  standin buffer %p->%p\n", standin, standin->base);
+
+	/* Swap owners of the memory and update the buffer which owns the vidmem */
+	t = buf->base;
+	buf->base = standin->base;
+	standin->base = t;
+	*chunk = standin;
+
+	/* Prevent another attempt to evict this buffer */
+	standin->flags |= BF_MIGRATING;
+
+	__pspgl_copy_memory(standin->base, buf->base, buf->size);
+	__pspgl_dlist_pin_buffer(buf, BF_PINNED_WR);
+	__pspgl_dlist_pin_buffer(standin, BF_PINNED_RD);
+
+	/* Free the vidmem when the copy completes */
+	__pspgl_buffer_free(standin);
+
+	return buf->size;
+}
+
 /* 
  * Compact video memory, to eliminate fragmentation.
  * 
@@ -186,7 +232,7 @@ EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *
  * finish before returning.
  *
  */
-GLboolean __pspgl_vidmem_compact(GLboolean sync)
+GLboolean __pspgl_vidmem_compact()
 {
 	int i;
 	struct pspgl_buffer **bufs;
@@ -204,8 +250,7 @@ GLboolean __pspgl_vidmem_compact(GLboolean sync)
 
 	for(i = 0; i < nbufs; i++) {
 		struct pspgl_buffer *b = bufs[i];
-		void *orig, *src, *dest;
-		unsigned size, xfersize;
+		void *orig;
 
 		psp_log("  %d: %p %d  (flags %x)\n", 
 			i, b->base, b->size, b->flags);
@@ -217,7 +262,7 @@ GLboolean __pspgl_vidmem_compact(GLboolean sync)
 		if ((b->flags & BF_PINNED_FIXED) || b->mapped)
 			continue;
 
-		orig = src = b->base;
+		orig = b->base;
 
 		/* Free chunk first... */
 		__pspgl_vidmem_free(b);
@@ -234,64 +279,17 @@ GLboolean __pspgl_vidmem_compact(GLboolean sync)
 		if (b->base == orig)
 			continue;
 
-		dest = b->base;
-
 		psp_log("copying buffer %p (%u bytes) from %p->%p\n",
-			b, b->size, orig, dest);
+			b, b->size, orig, b->base);
 
-		size = b->size;
-		size /= 4;	/* copy 32bpp "pixels" */
-		xfersize = size;
-
-		if ((dest < orig && dest+b->size > orig) ||
-		    (orig < dest && orig+b->size > dest)) {
-			if (dest < orig)
-				xfersize = orig - dest;
-			else
-				xfersize = dest - orig;
-			psp_log("   OVERLAPPING: xfersize=%u\n",
-				xfersize);
-		}
-
-		/* Use pixel-copying to move the data, on the
-		   assumption that since we're dealing with the GE's
-		   local memory, it will be the fastest thing to copy
-		   it.  Also, copying is synchronous with respect to
-		   other GE commands.  The xfersize is small enough to
-		   avoid overlapping copies. */
-		while(size > 0) {
-			unsigned w, h;
-			unsigned chunk = size;
-
-			if (chunk > xfersize)
-				chunk = xfersize;
-
-			if (chunk < 512) {
-				w = chunk;
-				h = 1;
-			} else {
-				w = 512;
-				h = chunk / 512;
-			}
-
-			psp_log("  chunk %p->%p %dx%d\n",
-				src, dest, w, h);
-
-			__pspgl_copy_pixels(src, w, 0, 0,
-					    dest, w, 0, 0,
-					    w, h, GE_RGBA_8888);
-			__pspgl_dlist_pin_buffer(b, BF_PINNED);
-
-			needsync = 1;
-			size -= w * h;
-			src += w * h;
-			dest += w * h;
-		}
+		needsync = 1;
+		__pspgl_copy_memory(orig, b->base, b->size);
+		__pspgl_dlist_pin_buffer(b, BF_PINNED);
 	}
 
 	free(bufs);
 
-	if (sync && needsync)
+	if (needsync)
 		glFinish();
 
 	return needsync;

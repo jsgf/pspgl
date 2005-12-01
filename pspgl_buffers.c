@@ -7,44 +7,63 @@
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
 
-static struct pspgl_buffer *list_head, *list_tail, *list_walk;
+static int list_pin;		/* if != 0, prevent buffer list rearrangements */
+
+/* All living buffers are kept in a circular list, with list_base
+   pointing to the head; list_base->list_prev is the tail.  list_base
+   is NULL if the list is empty. */
+static struct pspgl_buffer *list_base = NULL;
 
 static void buffer_remove(struct pspgl_buffer *b)
 {
-	if (list_walk == b)
-		list_walk = b->list_next;
+	assert(b->list_next != NULL);
+	assert(b->list_prev != NULL);
 
-	if (b->list_prev == NULL) {
-		assert(list_head == b);
-		list_head = b->list_next;
-	} else
-		b->list_prev->list_next = b->list_next;
+	if (list_base == b) {
+		list_base = b->list_next; /* shift to next head */
+		if (list_base == b)
+			list_base = NULL;	/* was last node on the list */
+	}
 
-	if (b->list_next == NULL) {
-		assert(list_tail == b);
-		list_tail = b->list_prev;
-	} else
-		b->list_next->list_prev = b->list_prev;
+	b->list_prev->list_next = b->list_next;
+	b->list_next->list_prev = b->list_prev;
+
+	b->list_next = b->list_prev = NULL;
 }
 
-static void buffer_insert_head(struct pspgl_buffer *b)
+static inline void buffer_insert_after(struct pspgl_buffer *after, struct pspgl_buffer *b)
 {
-	b->list_next = list_head;
-	b->list_prev = NULL;
-	list_head = b;
+	assert(b->list_next == NULL);
+	assert(b->list_prev == NULL);
+	assert(after->list_next != NULL);
+	assert(after->list_prev != NULL);
 
-	if (list_tail == NULL)
-		list_tail = b;
+	b->list_prev = after;
+	b->list_next = after->list_next;
+
+	after->list_next->list_prev = b;
+	after->list_next = b;
 }
 
-static void buffer_insert_tail(struct pspgl_buffer *b)
+static inline void buffer_insert_head(struct pspgl_buffer *b)
 {
-	b->list_next = NULL;
-	b->list_prev = list_tail;
-	list_tail = b;
+	if (list_base == NULL) {
+		b->list_next = b;
+		b->list_prev = b;
+	} else
+		buffer_insert_after(list_base, b);
 
-	if (list_head == NULL)
-		list_head = b;
+	list_base = b;
+}
+
+static inline void buffer_insert_tail(struct pspgl_buffer *b)
+{
+	if (list_base == NULL) {
+		b->list_next = b;
+		b->list_prev = b;
+		list_base = b;
+	} else
+		buffer_insert_after(list_base->list_prev, b);
 }
 
 struct pspgl_bufferobj *__pspgl_bufferobj_new(struct pspgl_buffer *data)
@@ -115,10 +134,48 @@ static int is_edram_addr(void *p)
 	return (p >= edram_start) && (p < edram_end);
 }
 
+/* Kick things out of vidmem until there's enough free space */
+static void evict_vidmem(size_t need)
+{
+	size_t evicted = 0;
+
+	/* If we're allocating lots of small stuff and we need to
+	   evict, then we may as well try to amortize the eviction for
+	   multiple allocations by doing a bit more work now. */
+	if (need < 64*1024)
+		need *= 4;
+
+	if (list_base) {
+		struct pspgl_buffer *buf;
+
+		list_pin++;
+
+		buf = list_base;
+		do {
+			if (is_edram_addr(buf->base)) {
+				evicted += __pspgl_vidmem_evict(buf);
+
+				if (evicted >= need)
+					break;
+			}
+			buf = buf->list_next;
+		} while(buf != list_base);
+
+		list_pin--;
+	}
+
+	/* Synchronize evictions to actually free the memory */
+	if (evicted > 0) {
+		__pspgl_moved_textures();
+		glFinish();
+	}
+}
+
 static GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
 				     GLsizeiptr size, GLenum usage)
 {
 	void *p = NULL;
+	int try_hard = 0;
 
 	size = ROUNDUP(size, CACHELINE_SIZE);
 
@@ -126,24 +183,34 @@ static GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
 	buf->size = size;
 
 	switch(usage) {
-	case GL_STATIC_DRAW_ARB:	/* nice to have in edram */
-	case GL_STATIC_READ_ARB:
-	case GL_DYNAMIC_READ_ARB:
-
 	case GL_STATIC_COPY_ARB:	/* must be in edram */
 	case GL_DYNAMIC_COPY_ARB:
 	case GL_STREAM_COPY_ARB:
+		/* We'll try hard to get vidmem, but it doesn't matter
+		   if we fail because the buffer will be moved into
+		   vidmem when needed. */
+		try_hard = 1;
+		/* FALLTHROUGH */
+
+	case GL_STATIC_DRAW_ARB:	/* nice to have in edram */
+	case GL_STATIC_READ_ARB:
+	case GL_DYNAMIC_READ_ARB:
 		if (__pspgl_vidmem_alloc(buf))
 			p = buf->base;
-		else if (__pspgl_vidmem_avail() >= size) {
-			/*
-			  Allocation failed, but there is enough
-			   actual space for the allocation.  Compact
-			   vidmem and try again.
-			*/
-			if (__pspgl_vidmem_compact(GL_TRUE)) {
+		else if (try_hard) {
+			/* Work hard to get the memory... */
+
+			/* If there just isn't enough space, evict some buffers */
+			if (__pspgl_vidmem_avail() < size)
+				evict_vidmem(size);
+
+			/* Try again after some evicitions */
+			if (__pspgl_vidmem_alloc(buf))
+				p = buf->base;
+			else if (__pspgl_vidmem_compact()) {
 				__pspgl_moved_textures();
 
+				/* and one last time before giving up */
 				if (__pspgl_vidmem_alloc(buf))
 					p = buf->base;
 			}
@@ -169,7 +236,7 @@ static GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
 	}
 
   	/* put cache into appropriate unmapped state */
- 	sceKernelDcacheWritebackInvalidateRange(p, size);
+	sceKernelDcacheWritebackInvalidateRange(p, size);
 
 	buf->refcount = 1;
 	buf->mapped = 0;
@@ -178,6 +245,9 @@ static GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
 
 	buf->pin_prevp = NULL;
 	buf->pin_next = NULL;
+
+	buf->list_prev = NULL;
+	buf->list_next = NULL;
 
 	buf->base = p;
 	buf->size = size;
@@ -219,6 +289,16 @@ void __pspgl_buffer_free(struct pspgl_buffer *data)
 	}
 	free(data);
 }
+
+void __pspgl_buffer_want_vidmem(struct pspgl_buffer *buf)
+{
+	/* Move buffer away from eviction end of the list */
+	if (!list_pin) {
+		buffer_remove(buf);
+		buffer_insert_tail(buf);
+	}
+}
+
 
 struct pspgl_bufferobj **__pspgl_bufferobj_for_target(GLenum target)
 {
@@ -275,6 +355,16 @@ void *__pspgl_buffer_map(struct pspgl_buffer *data, GLenum access)
 	default:
 		GLERROR(GL_INVALID_ENUM);
 		return NULL;
+	}
+
+	/* Buffers at the head are first to be moved into system
+	   memory.  Mapping means we want it in system memory if
+	   possible, so make it more likely.  XXX This is an overly
+	   simplistic policy, and there's no corresponding mechanism
+	   to move things into vidmem yet. */
+	if (!list_pin) {
+		buffer_remove(data);
+		buffer_insert_head(data);
 	}
 
 	data->mapped++;

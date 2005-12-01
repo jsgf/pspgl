@@ -75,6 +75,10 @@ void *__pspgl_buffer_map(struct pspgl_buffer *data, GLenum access);
    buffer_map(). */
 void  __pspgl_buffer_unmap(struct pspgl_buffer *data, GLenum access);
 
+/* Buffer wants to be in vidmem (a hint, not an absolute requirement) */
+void __pspgl_buffer_want_vidmem(struct pspgl_buffer *buf);
+
+/* Wait for hardware to finished with a buffer */
 void __pspgl_buffer_dlist_sync(struct pspgl_buffer *data);
 
 #endif	/* PSPGL_BUFFERS_H */

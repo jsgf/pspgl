@@ -50,7 +50,7 @@ static void set_mipmap_regs(unsigned level, struct pspgl_teximg *img)
 		sendCommandi(CMD_TEX_STRIDE0 + level, ((ptr >> 8) & 0xf0000) | img->stride);
 		sendCommandi(CMD_TEX_SIZE0 + level, (h_lg2 << 8) | w_lg2);
 	} else {
-		psp_log("set level %d image=NULL", level);
+		psp_log("set level %d image=NULL\n", level);
 
 		sendCommandi(CMD_TEX_MIPMAP0 + level, 0);
 		sendCommandi(CMD_TEX_STRIDE0 + level, 0);

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <GL/glut.h>
 
-#define LOGME 1
+#define LOGME 0
 
 #include "glchk.h"
 

@@ -219,8 +219,9 @@ extern struct pspgl_context *__pspgl_curctx;
 extern int   __pspgl_vidmem_alloc (struct pspgl_buffer *buf);
 extern void  __pspgl_vidmem_free (struct pspgl_buffer *buf);
 extern EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s);
-extern GLboolean __pspgl_vidmem_compact(GLboolean sync);
+extern GLboolean __pspgl_vidmem_compact(void);
 extern size_t __pspgl_vidmem_avail(void);
+extern size_t __pspgl_vidmem_evict(struct pspgl_buffer *buf);
 
 /* glLockArraysEXT.c */
 extern GLboolean __pspgl_cache_arrays(void);
@@ -230,6 +231,7 @@ extern void __pspgl_uncache_arrays(void);
 extern void __pspgl_copy_pixels(const void *srcbuf, int srcstride, int srcx, int srcy,
 				void *dstbuf, int dststride, int dstx, int dsty,
 				int width, int height, unsigned hwpixfmt);
+void __pspgl_copy_memory(const void *src, void *dst, size_t size);
 
 /* pspgl_stats.c */
 
