@@ -186,16 +186,16 @@ EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *
  * finish before returning.
  *
  */
-void __pspgl_vidmem_compact(GLboolean sync)
+GLboolean __pspgl_vidmem_compact(GLboolean sync)
 {
 	int i;
 	struct pspgl_buffer **bufs;
 	int nbufs = vidmem_map_len;
-	int needsync = 0;
+	GLboolean needsync = GL_FALSE;
 
 	bufs = malloc(sizeof(*bufs) * vidmem_map_len);
 	if (bufs == NULL)
-		return;
+		return GL_FALSE;
 
 	/* Make a working copy while we play with the real one */
 	memcpy(bufs, vidmem_map, vidmem_map_len * sizeof(*bufs));
@@ -204,7 +204,7 @@ void __pspgl_vidmem_compact(GLboolean sync)
 
 	for(i = 0; i < nbufs; i++) {
 		struct pspgl_buffer *b = bufs[i];
-		void *orig, *dest;
+		void *orig, *src, *dest;
 		unsigned size, xfersize;
 
 		psp_log("  %d: %p %d  (flags %x)\n", 
@@ -217,7 +217,7 @@ void __pspgl_vidmem_compact(GLboolean sync)
 		if ((b->flags & BF_PINNED_FIXED) || b->mapped)
 			continue;
 
-		orig = b->base;
+		orig = src = b->base;
 
 		/* Free chunk first... */
 		__pspgl_vidmem_free(b);
@@ -275,16 +275,16 @@ void __pspgl_vidmem_compact(GLboolean sync)
 			}
 
 			psp_log("  chunk %p->%p %dx%d\n",
-				orig, dest, w, h);
+				src, dest, w, h);
 
-			__pspgl_copy_pixels(orig, w, 0, 0,
+			__pspgl_copy_pixels(src, w, 0, 0,
 					    dest, w, 0, 0,
 					    w, h, GE_RGBA_8888);
 			__pspgl_dlist_pin_buffer(b, BF_PINNED);
 
 			needsync = 1;
 			size -= w * h;
-			orig += w * h;
+			src += w * h;
 			dest += w * h;
 		}
 	}
@@ -293,4 +293,6 @@ void __pspgl_vidmem_compact(GLboolean sync)
 
 	if (sync && needsync)
 		glFinish();
+
+	return needsync;
 }

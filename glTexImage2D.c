@@ -286,6 +286,20 @@ void __pspgl_update_mipmaps(void)
 	sendCommandi(CMD_PSM, fbformat);
 }
 
+/* If we've compacted the vidmem then we may have moved the currently
+   bound texture, so update the registers accordingly. */
+void __pspgl_moved_textures()
+{
+	int i;
+	struct pspgl_texobj *tobj = pspgl_curctx->texture.bound;
+
+	if (tobj == NULL)
+		return;
+
+	for(i = 0; i < MIPMAP_LEVELS; i++)
+		set_mipmap_regs(i, tobj->images[i]);
+}
+
 void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level,
 			       struct pspgl_teximg *timg)
 {

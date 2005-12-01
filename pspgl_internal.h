@@ -219,7 +219,7 @@ extern struct pspgl_context *__pspgl_curctx;
 extern int   __pspgl_vidmem_alloc (struct pspgl_buffer *buf);
 extern void  __pspgl_vidmem_free (struct pspgl_buffer *buf);
 extern EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s);
-extern void __pspgl_vidmem_compact(GLboolean sync);
+extern GLboolean __pspgl_vidmem_compact(GLboolean sync);
 extern size_t __pspgl_vidmem_avail(void);
 
 /* glLockArraysEXT.c */
@@ -282,6 +282,7 @@ extern void __pspgl_find_minmax_indices(GLenum idx_type, const void *indices, un
 struct pspgl_teximg;
 extern void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level, struct pspgl_teximg *timg);
 extern void __pspgl_update_mipmaps(void);
+extern void __pspgl_moved_textures(void);
 
 static inline unsigned ispow2(unsigned n)
 {

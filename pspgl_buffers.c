@@ -100,13 +100,13 @@ GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
 			  Allocation failed, but there is enough
 			   actual space for the allocation.  Compact
 			   vidmem and try again.
-
-			   XXX Need to update any hardware state
-			   (textures, cmaps)
 			*/
-			__pspgl_vidmem_compact(GL_TRUE);
-			if (__pspgl_vidmem_alloc(buf))
-				p = buf->base;
+			if (__pspgl_vidmem_compact(GL_TRUE)) {
+				__pspgl_moved_textures();
+
+				if (__pspgl_vidmem_alloc(buf))
+					p = buf->base;
+			}
 		}
 		break;
 
