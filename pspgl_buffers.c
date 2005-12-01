@@ -95,6 +95,19 @@ GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
 	case GL_STREAM_COPY_ARB:
 		if (__pspgl_vidmem_alloc(buf))
 			p = buf->base;
+		else if (__pspgl_vidmem_avail() >= size) {
+			/*
+			  Allocation failed, but there is enough
+			   actual space for the allocation.  Compact
+			   vidmem and try again.
+
+			   XXX Need to update any hardware state
+			   (textures, cmaps)
+			*/
+			__pspgl_vidmem_compact(GL_TRUE);
+			if (__pspgl_vidmem_alloc(buf))
+				p = buf->base;
+		}
 		break;
 
 	case GL_DYNAMIC_DRAW_ARB:	/* prefer in system memory */
@@ -156,7 +169,7 @@ void __pspgl_buffer_free(struct pspgl_buffer *data)
 
 	if (data->base) {
 		if (is_edram_addr(data->base))
-			__pspgl_vidmem_free(data->base);
+			__pspgl_vidmem_free(data);
 		else
 			free(data->base);
 	}

@@ -219,6 +219,8 @@ extern struct pspgl_context *__pspgl_curctx;
 extern int   __pspgl_vidmem_alloc (struct pspgl_buffer *buf);
 extern void  __pspgl_vidmem_free (struct pspgl_buffer *buf);
 extern EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s);
+extern void __pspgl_vidmem_compact(GLboolean sync);
+extern size_t __pspgl_vidmem_avail(void);
 
 /* glLockArraysEXT.c */
 extern GLboolean __pspgl_cache_arrays(void);

@@ -11,7 +11,8 @@ CFLAGS = -g -Wall -O2 -MD -MF $(DEPDIR)/$(basename $@).d -I.. -I$(PSPPATH)/inclu
 LDFLAGS = -g -Wall -L.. -L$(PSPPATH)/lib
 
 TESTS=bezier copytex depthtest eglcube glut idxtex spots \
-	tex texsubimage varray vertexblend mipmaps
+	tex texsubimage varray vertexblend mipmaps viewports \
+	thrashalloc
 
 BUILDDATE := $(shell date "+%Y/%m/%d %k:%M:%S")
 PSP_EBOOT_TITLE = $(TARGET) $(BUILDDATE)

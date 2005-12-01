@@ -11,7 +11,12 @@ struct pspgl_context *__pspgl_curctx = NULL;
 
 static struct pspgl_buffer **vidmem_map = NULL;
 static unsigned long vidmem_map_len = 0, vidmem_map_size = 0;
+static size_t vidmem_used = 0;
 
+size_t __pspgl_vidmem_avail(void)
+{
+	return sceGeEdramGetSize() - vidmem_used;
+}
 
 static int vidmem_map_insert_new (unsigned long idx, struct pspgl_buffer *buf)
 {
@@ -31,13 +36,14 @@ static int vidmem_map_insert_new (unsigned long idx, struct pspgl_buffer *buf)
 		vidmem_map = tmp;
 	}
 
-	psp_log("alloc vidmem %lu: adr 0x%08p - size 0x%08x\n",
+	psp_log("alloc vidmem %lu: adr %08p - size 0x%08x\n",
 		idx, buf->base, (unsigned int) buf->size);
 
 	memmove(&vidmem_map[idx+1], &vidmem_map[idx],
 		(vidmem_map_len-idx) * sizeof(vidmem_map[0]));
 	vidmem_map_len++;
 	vidmem_map[idx] = buf;
+	vidmem_used += buf->size;
 
 	return 1;
 }
@@ -50,7 +56,8 @@ int __pspgl_vidmem_alloc (struct pspgl_buffer *buf)
 	unsigned long i;
 	unsigned size;
 
-	size = ROUNDUP(buf->size, CACHELINE_SIZE); /* make sure eveything is usefully aligned */
+	/* make sure eveything is usefully aligned */
+	size = ROUNDUP(buf->size, CACHELINE_SIZE);
 
 	for(i = 0; i < vidmem_map_len; i++) {
 		void *new_adr = vidmem_map[i]->base;
@@ -64,8 +71,11 @@ int __pspgl_vidmem_alloc (struct pspgl_buffer *buf)
 		adr = new_adr + vidmem_map[i]->size;
 	}
 
-	if ((adr + size) > (start + sceGeEdramGetSize()))
+	if ((adr + size) > (start + sceGeEdramGetSize())) {
+		psp_log("vidmem alloc failed for %d bytes, %d avail\n",
+			size, __pspgl_vidmem_avail());
 		return 0;
+	}
 
 	buf->base = adr;
 	buf->size = size;
@@ -96,12 +106,15 @@ void  __pspgl_vidmem_free (struct pspgl_buffer *buf)
 		psp_log("free vidmem %d: adr 0x%08p - size 0x%08x\n", i,
 			buf->base, buf->size);
 			
-			vidmem_map_len--;
-			memmove(&vidmem_map[i], &vidmem_map[i+1],
-				(vidmem_map_len-i) * sizeof(vidmem_map[0]));
+		vidmem_map_len--;
+		memmove(&vidmem_map[i], &vidmem_map[i+1],
+			(vidmem_map_len-i) * sizeof(vidmem_map[0]));
+
+		assert((vidmem_used - buf->size) < vidmem_used);
+		vidmem_used -= buf->size;
 	} else
-		__pspgl_log("%s: didn't find chunk for pointer %p\n",
-			    __FUNCTION__, buf->base);
+		__pspgl_log("%s: didn't find chunk for buf=%p base=%p\n",
+			    __FUNCTION__, buf, buf->base);
 }
 
 
@@ -160,3 +173,124 @@ EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *
 	return EGL_TRUE;
 }
 
+/* 
+ * Compact video memory, to eliminate fragmentation.
+ * 
+ * This walks through all the allocated blocks freeing and
+ * reallocating each one, and emitting a GE copy command to transfer
+ * the data.  This assumes that vidmem_free/alloc is
+ * non-data-destructive.  It also assumes vidmem_alloc finds the
+ * lowest suitable address (ie, first fit).
+ *
+ * This function is synchronous for now: it waits for all copying to
+ * finish before returning.
+ *
+ */
+void __pspgl_vidmem_compact(GLboolean sync)
+{
+	int i;
+	struct pspgl_buffer **bufs;
+	int nbufs = vidmem_map_len;
+	int needsync = 0;
+
+	bufs = malloc(sizeof(*bufs) * vidmem_map_len);
+	if (bufs == NULL)
+		return;
+
+	/* Make a working copy while we play with the real one */
+	memcpy(bufs, vidmem_map, vidmem_map_len * sizeof(*bufs));
+
+	psp_log("compacting vidmem\n");
+
+	for(i = 0; i < nbufs; i++) {
+		struct pspgl_buffer *b = bufs[i];
+		void *orig, *dest;
+		unsigned size, xfersize;
+
+		psp_log("  %d: %p %d  (flags %x)\n", 
+			i, b->base, b->size, b->flags);
+
+		/* Can't move buffer if it is mapped or fixed-pinned.
+		   We don't really care if it's pinned for GE use,
+		   because the GE will be finished with it by the time
+		   it gets around to moving it. */
+		if ((b->flags & BF_PINNED_FIXED) || b->mapped)
+			continue;
+
+		orig = b->base;
+
+		/* Free chunk first... */
+		__pspgl_vidmem_free(b);
+
+		/* ...then find a new location for it */
+		if (!__pspgl_vidmem_alloc(b)) {
+			/* Should never happen, since we just freed a
+			   space big enough for this buffer. */
+			__pspgl_log("%s: lost buffer %p at %p\n",
+				    __FUNCTION__, b, orig);
+			break;
+		}
+
+		if (b->base == orig)
+			continue;
+
+		dest = b->base;
+
+		psp_log("copying buffer %p (%u bytes) from %p->%p\n",
+			b, b->size, orig, dest);
+
+		size = b->size;
+		size /= 4;	/* copy 32bpp "pixels" */
+		xfersize = size;
+
+		if ((dest < orig && dest+b->size > orig) ||
+		    (orig < dest && orig+b->size > dest)) {
+			if (dest < orig)
+				xfersize = orig - dest;
+			else
+				xfersize = dest - orig;
+			psp_log("   OVERLAPPING: xfersize=%u\n",
+				xfersize);
+		}
+
+		/* Use pixel-copying to move the data, on the
+		   assumption that since we're dealing with the GE's
+		   local memory, it will be the fastest thing to copy
+		   it.  Also, copying is synchronous with respect to
+		   other GE commands.  The xfersize is small enough to
+		   avoid overlapping copies. */
+		while(size > 0) {
+			unsigned w, h;
+			unsigned chunk = size;
+
+			if (chunk > xfersize)
+				chunk = xfersize;
+
+			if (chunk < 512) {
+				w = chunk;
+				h = 1;
+			} else {
+				w = 512;
+				h = chunk / 512;
+			}
+
+			psp_log("  chunk %p->%p %dx%d\n",
+				orig, dest, w, h);
+
+			__pspgl_copy_pixels(orig, w, 0, 0,
+					    dest, w, 0, 0,
+					    w, h, GE_RGBA_8888);
+			__pspgl_dlist_pin_buffer(b, BF_PINNED);
+
+			needsync = 1;
+			size -= w * h;
+			orig += w * h;
+			dest += w * h;
+		}
+	}
+
+	free(bufs);
+
+	if (sync && needsync)
+		glFinish();
+}

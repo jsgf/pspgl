@@ -399,7 +399,11 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 		if (timg->image == NULL)
 			goto out_of_memory;
 
-		src = __pspgl_bufferobj_map(buffer, GL_READ_ONLY_ARB, (void *)pixels);
+		psp_log("allocated %p->image=%p->base=%p\n", 
+			timg, timg->image, timg->image->base);
+
+		src = __pspgl_bufferobj_map(buffer, GL_READ_ONLY_ARB,
+					    (void *)pixels);
 
 		if (src != NULL) {
 			void *p;
@@ -436,6 +440,9 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 
 void __pspgl_teximg_free(struct pspgl_teximg *timg)
 {
+	psp_log("freeing %p->image=%p ->srcbuffer=%p\n",
+		timg, timg->image, timg->srcbuffer);
+
 	if (timg->image)
 		__pspgl_buffer_free(timg->image);
 	if (timg->srcbuffer)

@@ -11,7 +11,7 @@
 extern void __pspgl_log (const char *fmt, ...);
 
 /* disable verbose logging to "ms0:/pspgl.ge" */
-#if 0
+#if LOGME
 	#define psp_log(x...) __pspgl_log(x)
 #else
 	#define psp_log(x...) do {} while (0)
