@@ -31,11 +31,15 @@ void __pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd
 /**
  *  flush all pending, cached values, then clear register-touch mark words.
  */
-static void flush_pending_state_changes (struct pspgl_context *c)
+void __pspgl_context_flush_pending_state_changes (struct pspgl_context *c,
+						  unsigned first, unsigned last)
 {
 	unsigned i;
 
-	for(i = 0; i < 256; i += 32) {
+	first = first & ~31;
+	last = (last + 31 + 1) & ~31;
+
+	for(i = first; i < last; i += 32) {
 		uint32_t word = c->ge_reg_touched[i/32];
 		unsigned j;
 
@@ -186,7 +190,7 @@ void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt,
 
 	if ((vtxfmt & GE_TRANSFORM_SHIFT(1)) == GE_TRANSFORM_3D)
 		flush_pending_matrix_changes(c);
-	flush_pending_state_changes(c);
+	__pspgl_context_flush_pending_state_changes(c, 0, 255);
 
 	__pspgl_context_writereg_uncached(c, CMD_BASE, ((unsigned)vertex >> 8) & 0x000f0000);
 	__pspgl_context_writereg_uncached(c, CMD_VERTEXPTR, ((unsigned)vertex) & 0x00ffffff);

@@ -338,6 +338,9 @@ extern void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfm
 extern void __pspgl_context_render_prim(struct pspgl_context *c, unsigned prim, unsigned count, unsigned vtxfmt,
 					const void *vertex, const void *index);
 extern void __pspgl_context_pin_buffers(struct pspgl_context *c);
+extern void __pspgl_context_flush_pending_state_changes (struct pspgl_context *c,
+							 unsigned first,
+							 unsigned last);
 
 #define sendCommandi(cmd,argi)		__pspgl_context_writereg(pspgl_curctx, cmd, argi)
 #define sendCommandiUncached(cmd,argi)	__pspgl_context_writereg_uncached (pspgl_curctx, cmd, argi)
