@@ -11,8 +11,10 @@ struct pspgl_buffer {
 #define BF_PINNED_RD	(1<<0)	/* buffer is pinned for reading (by hardware) */
 #define BF_PINNED_WR	(1<<1)	/* buffer if pinned for writing (by hardware) */
 #define BF_PINNED (BF_PINNED_RD|BF_PINNED_WR)
-#define BF_UNMANAGED	(1<<2)	/* buffer is not allocated by us */
-#define BF_TRANSIENT	(1<<3)	/* buffer is in the transient pool */
+#define BF_PINNED_FIXED	(1<<2)	/* buffer is pinned permanently */
+#define BF_UNMANAGED	(1<<3)	/* buffer is not allocated by us */
+#define BF_TRANSIENT	(1<<4)	/* buffer is in the transient pool */
+#define BF_MIGRATING	(1<<5)	/* buffer is marked for migration (transient) */
 
 	/* Pointers for the pin list */
 	struct pspgl_buffer **pin_prevp;

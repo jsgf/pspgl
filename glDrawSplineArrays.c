@@ -74,7 +74,7 @@ void glDrawSplineArraysPSP(GLenum mode, GLuint u, GLuint v,
 	__pspgl_context_render_setup(c, vfmtp->hwformat, buf, NULL);
 	__pspgl_context_writereg_uncached(c, CMD_SPLINE,
 					  (v_flags << 18) | (u_flags << 16) | (v << 8) | u);
-	__pspgl_context_pin_textures(c);
+	__pspgl_context_pin_buffers(c);
 	__pspgl_dlist_pin_buffer(vbuf, BF_PINNED_RD);
 
 	__pspgl_buffer_free(vbuf);

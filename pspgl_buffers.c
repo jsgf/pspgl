@@ -82,6 +82,9 @@ GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
 
 	size = ROUNDUP(size, CACHELINE_SIZE);
 
+	buf->base = NULL;
+	buf->size = size;
+
 	switch(usage) {
 	case GL_STATIC_DRAW_ARB:	/* nice to have in edram */
 	case GL_STATIC_READ_ARB:
@@ -90,7 +93,8 @@ GLboolean __pspgl_buffer_init(struct pspgl_buffer *buf,
 	case GL_STATIC_COPY_ARB:	/* must be in edram */
 	case GL_DYNAMIC_COPY_ARB:
 	case GL_STREAM_COPY_ARB:
-		p = __pspgl_vidmem_alloc(size);
+		if (__pspgl_vidmem_alloc(buf))
+			p = buf->base;
 		break;
 
 	case GL_DYNAMIC_DRAW_ARB:	/* prefer in system memory */

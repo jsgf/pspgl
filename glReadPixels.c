@@ -116,8 +116,12 @@ void glReadPixels( GLint x, GLint y,
 	   textures, lower addresses are lower-left). */
 	y = read->height - y;
 
+	int current_back = (read->color_buffer[1] == NULL) ? 0 : (read->current_front ^ 1);
+	struct pspgl_buffer *framebuffer = read->color_buffer[current_back];
+
 	if (((unsigned)pixels & 0xf) != 0) {
 		/* Unaligned dest buffer; we can't use DMA */
+		const void *map;
 		const void *src;
 		void *dst;
 		unsigned src_stride;
@@ -125,23 +129,25 @@ void glReadPixels( GLint x, GLint y,
 		src_stride = read->pixelperline * fmt->hwsize;
 		dest_stride *= fmt->hwsize;
 
-		src = read->color_buffer[!read->current_front] +
-			(y * read->pixelperline + x) * fmt->hwsize;
+		__pspgl_buffer_dlist_sync(framebuffer);
+
+		map = __pspgl_buffer_map(framebuffer, GL_READ_ONLY_ARB);
+		src = map + (y * read->pixelperline + x) * fmt->hwsize;
 		dst = pixels + (dest_y * dest_stride + dest_y) * fmt->hwsize;
 
-		sceKernelDcacheInvalidateRange(src, height * src_stride);
-		
 		while(height--) {
 			memcpy(dst, src, width * fmt->hwsize);
 			dst += dest_stride;
 			src -= src_stride;
 		}
+
+		__pspgl_buffer_unmap(framebuffer, GL_READ_ONLY_ARB);
 	} else {
 		/* Make sure the cache has no aliased content before the DMA transfer.
 		   XXX Use a pspgl_buffer for this, with a pointer to an transient? */
 		sceKernelDcacheWritebackInvalidateRange(pixels, width*height*fmt->hwsize);
 
-		__pspgl_copy_pixels(read->color_buffer[!read->current_front], -read->pixelperline, x, y,
+		__pspgl_copy_pixels(framebuffer->base, -read->pixelperline, x, y,
 				    pixels, dest_stride, 0, 0,
 				    width, height, read->pixfmt);
 

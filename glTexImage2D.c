@@ -244,6 +244,7 @@ void __pspgl_update_mipmaps(void)
 					    GE_COLOR_8888 | GE_VERTEX_16BIT |
 					    GE_TEXTURE_16BIT | GE_TRANSFORM_2D,
 					    vertexbuf, NULL);
+		__pspgl_dlist_pin_buffer(mipmaps, BF_PINNED);
 
 		/* set mipmap0 to point to the mipmap we just generated */
 		w = tw;

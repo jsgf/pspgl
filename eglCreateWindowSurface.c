@@ -1,5 +1,8 @@
 #include <stdlib.h>
+#include <string.h>
+
 #include "pspgl_internal.h"
+#include "pspgl_buffers.h"
 
 static unsigned pow2(unsigned x)
 {
@@ -13,7 +16,8 @@ static unsigned pow2(unsigned x)
 
 #define MASK(bits)	((1 << (bits)) - 1)
 
-EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindowType window, const EGLint *attrib_list)
+EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindowType window,
+				   const EGLint *attrib_list)
 {
 	struct pspgl_surface *s;
 	unsigned long bytesperpixel;
@@ -25,6 +29,7 @@ EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindo
 	s = malloc(sizeof(struct pspgl_surface));
 	if (!s)
 		goto bad_alloc;
+	memset(s, 0, sizeof(*s));
 
 	if (pixconf->hwformat == GE_RGBA_8888)	
 		bytesperpixel = 4;
@@ -55,20 +60,23 @@ EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindo
 		s->alpha_mask, s->stencil_mask);
 
 	if (has_frontbuffer) {
-		if (!(s->color_buffer[0] = __pspgl_vidmem_alloc(bufferlen)))
+		if (!(s->color_buffer[0] = __pspgl_buffer_new(bufferlen, GL_STATIC_COPY_ARB)))
 			goto bad_alloc;
+		s->color_buffer[0]->flags |= BF_PINNED_FIXED;
 	}
 
 	if (has_backbuffer) {
-		if (!(s->color_buffer[1] = __pspgl_vidmem_alloc(bufferlen)))
+		if (!(s->color_buffer[1] = __pspgl_buffer_new(bufferlen, GL_STATIC_COPY_ARB)))
 			goto bad_alloc;
+		s->color_buffer[1]->flags |= BF_PINNED_FIXED;
 	}
 
 	bufferlen = s->height * s->pixelperline * 2;
 
 	if (has_depthbuffer) {
-		if (!(s->depth_buffer = __pspgl_vidmem_alloc(bufferlen)))
+		if (!(s->depth_buffer = __pspgl_buffer_new(bufferlen, GL_STATIC_COPY_ARB)))
 			goto bad_alloc;
+		s->depth_buffer->flags |= BF_PINNED_FIXED;
 	}
 
 	return (EGLSurface) s;

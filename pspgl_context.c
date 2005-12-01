@@ -112,9 +112,12 @@ static void flush_pending_matrix_changes (struct pspgl_context *c)
 		flush_matrix(c, CMD_MAT_BONE_TRIGGER, i, &c->bone_stacks[i]);
 }
 
-/* Pin colour map and texture images in memory while there's a pending
-   drawing primitive which refers to them */
-void __pspgl_context_pin_textures(struct pspgl_context *c)
+/* Pin various state buffers for a render operation.  These are:
+    - destination framebuffer
+    - texture images
+    - colour maps
+*/
+void __pspgl_context_pin_buffers(struct pspgl_context *c)
 {
 	struct pspgl_texobj *tobj;
 	struct pspgl_teximg *cmap;
@@ -142,6 +145,10 @@ void __pspgl_context_pin_textures(struct pspgl_context *c)
 		if (tobj->images[i] && tobj->images[i]->image)
 			__pspgl_dlist_pin_buffer(tobj->images[i]->image,
 						 BF_PINNED_RD);
+
+	__pspgl_dlist_pin_buffer(c->draw->color_buffer[!c->draw->current_front], BF_PINNED);
+	if ((c->ge_reg[CMD_ENA_DEPTH_TEST] & 0xff) && c->draw->depth_buffer)
+		__pspgl_dlist_pin_buffer(c->draw->depth_buffer, BF_PINNED);
 }
 
 void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt, 
@@ -205,5 +212,5 @@ void __pspgl_context_render_prim(struct pspgl_context *c,
 	   could cause the dlist to be submitted and subsequently
 	   unpin everything before the PRIM has actually been issued;
 	   it better to unpin too late than too early. */
-	__pspgl_context_pin_textures(c);
+	__pspgl_context_pin_buffers(c);
 }

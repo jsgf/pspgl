@@ -75,10 +75,15 @@ void glCopyTexImage2D(GLenum target,
 	*/
 	y = read->height - y;
 
-	__pspgl_copy_pixels(read->color_buffer[!read->current_front], -read->pixelperline, x, y,
+	int current_back = (read->color_buffer[1] == NULL) ? 0 : (read->current_front ^ 1);
+	struct pspgl_buffer *framebuffer = read->color_buffer[current_back];
+
+	__pspgl_copy_pixels(framebuffer->base, -read->pixelperline, x, y,
 			    timg->image->base + timg->offset, timg->width, dest_x, dest_y,
 			    width, height, read->pixfmt);
+
 	__pspgl_dlist_pin_buffer(timg->image, BF_PINNED_WR);
+	__pspgl_dlist_pin_buffer(framebuffer, BF_PINNED_RD);
 
 	sendCommandi(CMD_TEXCACHE_SYNC, getReg(CMD_TEXCACHE_SYNC)+1);
 	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);

@@ -195,8 +195,8 @@ struct pspgl_surface {
 	unsigned long width;
 	unsigned long height;
 	unsigned long pixelperline;
-	void *color_buffer [2];
-	void *depth_buffer;
+	struct pspgl_buffer *color_buffer[2];
+	struct pspgl_buffer *depth_buffer;
 	int current_front;
 	int displayed;
 
@@ -216,8 +216,8 @@ extern EGLint __pspgl_eglerror;
 extern struct pspgl_context *__pspgl_curctx;
 #define pspgl_curctx	__pspgl_curctx
 
-extern void* __pspgl_vidmem_alloc (unsigned long size);
-extern void  __pspgl_vidmem_free (void * ptr);
+extern int   __pspgl_vidmem_alloc (struct pspgl_buffer *buf);
+extern void  __pspgl_vidmem_free (struct pspgl_buffer *buf);
 extern EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s);
 
 /* glLockArraysEXT.c */
@@ -337,7 +337,7 @@ extern void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfm
 					 const void *vertex, const void *index);
 extern void __pspgl_context_render_prim(struct pspgl_context *c, unsigned prim, unsigned count, unsigned vtxfmt,
 					const void *vertex, const void *index);
-extern void __pspgl_context_pin_textures(struct pspgl_context *c);
+extern void __pspgl_context_pin_buffers(struct pspgl_context *c);
 
 #define sendCommandi(cmd,argi)		__pspgl_context_writereg(pspgl_curctx, cmd, argi)
 #define sendCommandiUncached(cmd,argi)	__pspgl_context_writereg_uncached (pspgl_curctx, cmd, argi)
