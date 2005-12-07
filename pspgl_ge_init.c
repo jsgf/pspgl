@@ -94,7 +94,7 @@ void __pspgl_ge_init (struct pspgl_context *c)
 
 	for (i=0; i<sizeof(ge_init_state)/sizeof(ge_init_state[0]); i++) {
 		unsigned long cmd = ge_init_state[i];
-		c->ge_reg[cmd >> 24] = cmd;
+		__pspgl_dlist_enqueue_cmd(c->dlist_current, cmd);
 	}
 
 	glScissor(0, 0, c->draw->width, c->draw->height);
