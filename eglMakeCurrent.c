@@ -6,18 +6,7 @@
  * mask out trigger action registers, or the GE might run amok on context changes...
  * This bitfield is generated from ge_init_state[] with all non-action fields enabled.
  */
-static const
-uint32_t ge_reg_touch_mask [] = {
-	0x6000b7ff,
-	0xffbff380,
-	0x3ffcdf9f,
-	0xffffffff,
-	0xffffffff,
-	0xfffffcff,
-	0xffffbfff,
-	0xffdaffc0
-};
-
+uint32_t __pspgl_context_register[256 / 32];
 
 EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGLContext ctx)
 {
@@ -48,7 +37,7 @@ EGLBoolean eglMakeCurrent (EGLDisplay dpy, EGLSurface draw, EGLSurface read, EGL
 
 	/* mark all registers and matrices as dirty, we need to rewrite them at init and after context restore... */
 	for (i=0; i<sizeof(c->ge_reg_touched)/sizeof(c->ge_reg_touched[0]); i++)
-		c->ge_reg_touched[i] |= ge_reg_touch_mask[i];
+		c->ge_reg_touched[i] |= __pspgl_context_register[i];
 	
 	c->projection_stack.flags |= MF_DIRTY;
 	c->modelview_stack.flags |= MF_DIRTY;

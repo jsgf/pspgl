@@ -208,6 +208,7 @@ struct pspgl_surface {
 
 
 /* pspgl_ge_init.c */
+extern uint32_t __pspgl_context_register[];
 extern void __pspgl_ge_init (struct pspgl_context *c);
 
 
