@@ -146,7 +146,7 @@ void __pspgl_ge_init (struct pspgl_context *c)
 		unsigned long val = ge_init_state[i];
 
 		if (val & 0xff000000) {
-			__pspgl_context_writereg(c, i, val);
+			__pspgl_context_writereg_uncached(c, i, val);
 			__pspgl_context_register[i / 32] |= 1 << (1 % 32);
 		}
 	}
