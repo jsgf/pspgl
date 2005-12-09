@@ -74,6 +74,12 @@ void glGetIntegerv (GLenum pname, GLint *params)
 	case GL_STENCIL_CLEAR_VALUE:
 		params[0] = pspgl_curctx->clear.stencil;
 		break;
+	case GL_MAX_ATTRIB_STACK_DEPTH:
+		params[0] = MAX_ATTRIB_STACK;
+		break;
+	case GL_ATTRIB_STACK_DEPTH:
+		params[0] = pspgl_curctx->attribstackdepth;
+		break;
 	default:
 		GLERROR(GL_INVALID_ENUM);
 	}

@@ -16,17 +16,17 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 	struct pspgl_context *c = pspgl_curctx;
 	struct t2f_c4ub_n3f_v3f *vbuf;
 
-	if (c->current.vertex_count == 0)
-		c->current.vbuf_adr = __pspgl_dlist_insert_space(c->dlist_current, BUFSZ * sizeof(struct t2f_c4ub_n3f_v3f));
+	if (c->beginend.vertex_count == 0)
+		c->beginend.vbuf_adr = __pspgl_dlist_insert_space(c->dlist_current, BUFSZ * sizeof(struct t2f_c4ub_n3f_v3f));
 
-	vbuf = (struct t2f_c4ub_n3f_v3f *) c->current.vbuf_adr;
+	vbuf = (struct t2f_c4ub_n3f_v3f *) c->beginend.vbuf_adr;
 
 	if (!vbuf) {
 		GLERROR(GL_OUT_OF_MEMORY);
 		return;
 	}
 
-	vbuf += c->current.vertex_count;
+	vbuf += c->beginend.vertex_count;
 
 	vbuf->texcoord[0] = c->current.texcoord[0];
 	vbuf->texcoord[1] = c->current.texcoord[1];
@@ -38,26 +38,26 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 	vbuf->vertex[1] = y;
 	vbuf->vertex[2] = z;
 
-	if (++c->current.vertex_count == BUFSZ) {
+	if (++c->beginend.vertex_count == BUFSZ) {
 		static const char overhang [] = { 0, 0, 1, 1, 0, 2, 2, 3, 3, 2 };
-		GLenum prim = c->current.primitive;
+		GLenum prim = c->beginend.primitive;
 
 		/* vertex buffer full, render + restart */
 		glEnd();
 
 		/* copy overhang */
-		c->current.vertex_count = overhang[prim];
+		c->beginend.vertex_count = overhang[prim];
 
 		if (overhang[prim]) {
 			struct t2f_c4ub_n3f_v3f *vbuf_start, *prev;
 
-			prev = c->current.vbuf_adr;
-			c->current.vbuf_adr = __pspgl_dlist_insert_space(c->dlist_current, BUFSZ * sizeof(struct t2f_c4ub_n3f_v3f));
-			vbuf_start = c->current.vbuf_adr;
+			prev = c->beginend.vbuf_adr;
+			c->beginend.vbuf_adr = __pspgl_dlist_insert_space(c->dlist_current, BUFSZ * sizeof(struct t2f_c4ub_n3f_v3f));
+			vbuf_start = c->beginend.vbuf_adr;
 
 			if (prim == GL_TRIANGLE_FAN || prim == GL_POLYGON) {
 				memcpy(vbuf_start, prev, sizeof(vbuf_start[0]));
-				c->current.vertex_count++;
+				c->beginend.vertex_count++;
 				vbuf_start++;
 			}
 
@@ -66,7 +66,7 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 		}
  
 		/* reset primitive type, was cleared by glEnd() */
-		c->current.primitive = prim;
+		c->beginend.primitive = prim;
 	}
 }
 

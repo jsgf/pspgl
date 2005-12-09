@@ -18,7 +18,7 @@ void glDepthRangef (GLclampf zNear, GLclampf zFar)
 	   factor flips Z around to match what the rest of GL expects.
 	 */
 	sendCommandf(CMD_VIEWPORT_SZ, mid - zFar);
-	sendCommandf(CMD_VIEWPORT_TZ, mid + pspgl_curctx->depth_offset);
+	sendCommandf(CMD_VIEWPORT_TZ, mid + pspgl_curctx->viewport.depth_offset);
 
 	if (zNear > zFar) {
 		GLfloat temp = zNear;

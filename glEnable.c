@@ -1,6 +1,6 @@
 #include "pspgl_internal.h"
 
-static void enable_state (GLenum cap, int enable)
+void __pspgl_enable_state (GLenum cap, GLboolean enable)
 {
 	int i;
 	unsigned char opcode = 0;
@@ -71,6 +71,7 @@ static void enable_state (GLenum cap, int enable)
 		/* There's no specific enable flag for vertex
 		   blending, but disabling the matricies (=identity)
 		   should have the same effect. */
+		pspgl_curctx->vertexblend.enabled = enable;
 		for(i = 0; i < NBONES; i++) {
 			struct pspgl_matrix_stack *m = &pspgl_curctx->bone_stacks[i];
 
@@ -110,12 +111,12 @@ static void enable_state (GLenum cap, int enable)
 
 void glEnable (GLenum cap)
 {
-	enable_state(cap, 1);
+	__pspgl_enable_state(cap, 1);
 }
 
 
 void glDisable (GLenum cap)
 {
-	enable_state(cap, 0);
+	__pspgl_enable_state(cap, 0);
 }
 

@@ -99,6 +99,7 @@ libGL.a_OBJS = \
 	glOrtho.o \
 	glOrthof.o \
 	glPixelStore.o \
+	glPushAttrib.o \
 	glPopMatrix.o \
 	glPushMatrix.o \
 	glPolygonMode.o \

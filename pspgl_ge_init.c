@@ -155,7 +155,7 @@ void __pspgl_ge_init (struct pspgl_context *c)
 	glViewport(0, 0, c->draw->width, c->draw->height);
 	glDepthRange(0.0, 1.0);
 	c->clear.depth = 0;	/* = 1.0f in OpenGL coord system */
-	c->depth_offset = 0.0;
+	c->viewport.depth_offset = 0.0;
 	c->swap_interval = 1;
 
 	/* Material ambient and current color share the same hardware

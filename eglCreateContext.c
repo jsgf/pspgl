@@ -40,6 +40,7 @@ EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_
 	init_matrix_stack(&ctx->view_stack, 8, 0);
 	for(i = 0; i < NBONES; i++)
 		init_matrix_stack(&ctx->bone_stacks[i], 1, MF_DISABLED);
+	ctx->vertexblend.enabled = GL_FALSE;
 
 	ctx->current_matrix_stack = &ctx->modelview_stack;
 	ctx->current_matrix = &ctx->modelview_stack.stack[0];
@@ -50,6 +51,8 @@ EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_
 	} else {
 		ctx->shared = ((struct pspgl_context *) share_context)->shared;
 	}
+
+	ctx->attribstackdepth = 0;
 
 	ctx->shared->refcount++;
 

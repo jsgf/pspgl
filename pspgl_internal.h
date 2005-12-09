@@ -15,6 +15,8 @@
 
 #define NUM_CMDLISTS	8
 
+#define MAX_ATTRIB_STACK	16
+
 struct pspgl_vertex_array {
 	GLenum enabled;
 	GLint size;
@@ -84,6 +86,8 @@ struct pspgl_context {
 		GLenum primitive;
 		unsigned long vertex_count;
 		void *vbuf_adr;
+	} beginend;
+	struct current {
 		GLfloat texcoord [4];
 		unsigned long color;
 		GLfloat normal [3];
@@ -111,36 +115,36 @@ struct pspgl_context {
 		struct pspgl_bufferobj *indexbuffer;
 	} vertex_array;
 
-	struct {
+	struct clear {
 		uint32_t color;
 		GLint stencil;
 		unsigned short depth;
 	} clear;
 
-	struct {
+	struct scissor_test {
 		GLenum enabled;
 		GLint x, y, width, height;
 	} scissor_test;
 
-	struct {
+	struct write_mask {
 		unsigned char alpha;
 		unsigned char stencil;
 	} write_mask;
 
-	struct {
+	struct lights {
 		GLboolean positional[4];	/* set by glLight(N, GL_POSITION, ) */
 		GLboolean spotlight[4];	/* set by glLight(N, GL_SPOT_CUTOFF, ) */
 	} lights;
 
-	struct {
+	struct material {
 		unsigned long ambient;
 	} material;
 
-	GLfloat depth_offset;
-
 	/* cull_face = (front_cw ^ cull_front) ? ccw : cw */
-	unsigned char front_cw;
-	unsigned char cull_front;
+	struct polygon {
+		unsigned char front_cw;
+		unsigned char cull_front;
+	} polygon;
 
 	struct pspgl_matrix_stack projection_stack;
 	struct pspgl_matrix_stack modelview_stack;
@@ -161,25 +165,30 @@ struct pspgl_context {
 	struct pspgl_dlist *dlist_current;
 	int dlist_idx;
 
+	struct pspgl_saved_attrib *attribstack[MAX_ATTRIB_STACK];
+	unsigned attribstackdepth;
+
 	GLenum glerror;
 	unsigned int swap_interval;
 	int initialized;
 	int refcount;
 
-	/* XXX IMPROVE Do we really need to store anything below? these are hardware states, stored in ge_reg[]... */
-	struct {
+	struct viewport {
 		GLint x, y, width, height;
+		GLfloat depth_offset;
 	} viewport;
-	struct {
+	struct fog {
 		GLfloat near, far;
 	} fog;
- 	struct {
+ 	struct texture {
 		struct pspgl_texobj	*bound;	/* currently bound texture */
 
 		struct pspgl_bufferobj	*unpackbuffer;
 		struct pspgl_bufferobj	*packbuffer;
  	} texture;
-
+	struct vertexblend {
+		GLboolean enabled;
+	} vertexblend;
 	struct {
 		GLboolean	enabled;
 
@@ -206,6 +215,8 @@ struct pspgl_surface {
 	unsigned long long	flip_start, flip_end, prev_end;
 };
 
+/* glEnable */
+void __pspgl_enable_state(GLenum, GLboolean);
 
 /* pspgl_ge_init.c */
 extern uint32_t __pspgl_context_register[];
