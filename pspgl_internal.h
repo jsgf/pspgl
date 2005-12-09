@@ -168,6 +168,9 @@ struct pspgl_context {
 	struct pspgl_saved_attrib *attribstack[MAX_ATTRIB_STACK];
 	unsigned attribstackdepth;
 
+	struct pspgl_saved_clattrib *clattribstack[MAX_ATTRIB_STACK];
+	unsigned clattribstackdepth;
+
 	GLenum glerror;
 	unsigned int swap_interval;
 	int initialized;
