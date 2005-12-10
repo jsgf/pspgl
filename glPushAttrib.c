@@ -315,11 +315,6 @@ void glPushAttrib( GLbitfield mask )
 			CMD_SET_CLUT,
 			CMD_SET_CLUT_MSB,
 
-			CMD_COPY_SRC,
-			CMD_COPY_SRC_STRIDE,
-			CMD_COPY_DST,
-			CMD_COPY_DST_STRIDE,
-
 			CMD_TEX_SIZE0,
 			CMD_TEX_SIZE1,
 			CMD_TEX_SIZE2,
