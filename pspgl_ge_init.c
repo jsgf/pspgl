@@ -185,9 +185,10 @@ uint32_t ge_init_state[256] =
 void __pspgl_ge_init (struct pspgl_context *c)
 {
 	int i;
+	int id;
 
-	sceGeListEnQueue(_PHYSADDR(ge_init_list), NULL, 0, NULL);
-	sceGeListSync(0, PSP_GE_LIST_DONE); 
+	id = sceGeListEnQueue(_PHYSADDR(ge_init_list), NULL, 0, NULL);
+	sceGeListSync(id, PSP_GE_LIST_DONE); 
 
 	for (i=0; i<sizeof(ge_init_state)/sizeof(ge_init_state[0]); i++) {
 		unsigned long val = ge_init_state[i];
