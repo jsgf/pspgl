@@ -184,7 +184,7 @@ void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt,
 			   samples/gu/blend.c uses it, and it seems to be
 			   necessary to get a non-black output... */
 			sendCommandi(CMD_CLUT_MODE, cmap->texfmt->hwformat | (0xff << 8));
-			sendCommandi(CMD_CLUT_BLKS, cmap->width / 8);
+			sendCommandiUncached(CMD_CLUT_BLKS, cmap->width / 8);
 		}
 	}
 

@@ -440,6 +440,10 @@ void glPopAttrib( void )
 		/* make sure texture cache is flushed */
 		__pspgl_context_writereg(c, CMD_TEXCACHE_FLUSH,
 					 c->ge_reg[CMD_TEXCACHE_FLUSH]+1);
+
+		/* make sure CLUT is up to date */
+		__pspgl_context_writereg_uncached(c, CMD_CLUT_BLKS,
+						  c->ge_reg[CMD_CLUT_BLKS]);
 	}
 
 	if (mask & GL_TRANSFORM_BIT) {
