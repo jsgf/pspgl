@@ -205,6 +205,9 @@
 #define CMD_TEX_SIZE6		190
 #define CMD_TEX_SIZE7		191
 
+#define CMD_TEXMAPMODE		192
+#define CMD_TEXENVMAPMAT	193
+
 #define CMD_TEXMODE		194
 #define CMD_TEXFMT		195
 
