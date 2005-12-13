@@ -65,6 +65,8 @@ void __pspgl_context_writereg_uncached (struct pspgl_context *c, unsigned long c
 {
 	unsigned long val = ((cmd) << 24) | ((argi) & 0xffffff);
 
+	c->ge_reg[cmd] = val;	/* still need to record value */
+
 	__pspgl_dlist_enqueue_cmd(c->dlist_current, val);
 }
 
