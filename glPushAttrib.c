@@ -86,11 +86,18 @@ void glPushAttrib( GLbitfield mask )
 			CMD_ENA_DITHER,
 			CMD_ENA_LOGIC,
 			CMD_LOGICOP,
+			CMD_RGB_MASK,
+			CMD_ALPHA_MASK,
+			CMD_DRAWBUF,
+			CMD_DRAWBUFWIDTH,
+			CMD_PSM,
+
 			0
 		};
 
 		save_regs(c, a, col_regs);
-		a->clear = c->clear;
+		a->clear.color = c->clear.color;
+		a->write_mask.alpha = c->write_mask.alpha;
 	}
 
 	if (mask & GL_CURRENT_BIT)
@@ -101,6 +108,8 @@ void glPushAttrib( GLbitfield mask )
 			CMD_ENA_DEPTH_TEST,
 			CMD_DEPTH_FUNC,
 			CMD_DEPTH_MASK,
+			CMD_DEPTHBUF,
+			CMD_DEPTHBUFWIDTH,
 			0
 		};
 
@@ -324,6 +333,8 @@ void glPushAttrib( GLbitfield mask )
 			CMD_TEX_SIZE6,
 			CMD_TEX_SIZE7,
 
+			CMD_TEXMAPMODE,
+			CMD_TEXENVMAPMAT,
 			CMD_TEXMODE,
 			CMD_TEXFMT,
 
@@ -333,6 +344,10 @@ void glPushAttrib( GLbitfield mask )
 			CMD_TEXFILT,
 			CMD_TEXWRAP,
 			CMD_TEXBIAS,
+
+			CMD_TEXENV_FUNC,
+			CMD_TEXENV_COL,
+			CMD_TEXSLOPE,
 
 			0
 		};
@@ -390,8 +405,10 @@ void glPopAttrib( void )
 
 	mask = a->attrmask;
 
-	if (mask & GL_COLOR_BUFFER_BIT)
-		c->clear = a->clear;
+	if (mask & GL_COLOR_BUFFER_BIT) {
+		c->clear.color = a->clear.color;
+		c->write_mask.alpha = a->write_mask.alpha;
+	}
 
 	if (mask & GL_CURRENT_BIT)
 		c->current = a->current;
@@ -407,7 +424,7 @@ void glPopAttrib( void )
 		__pspgl_enable_state(GL_LIGHTING,
 				     a->regs[CMD_ENA_LIGHTING] & 0xff);
 
-		c->scissor_test.enabled = a->scissor_test.enabled;
+		__pspgl_enable_state(GL_SCISSOR_TEST, a->scissor_test.enabled);
 		__pspgl_enable_state(GL_VERTEX_BLEND_PSP, a->vertexblend.enabled);
 	}
 
@@ -439,11 +456,11 @@ void glPopAttrib( void )
 
 		/* make sure texture cache is flushed */
 		__pspgl_context_writereg(c, CMD_TEXCACHE_FLUSH,
-					 c->ge_reg[CMD_TEXCACHE_FLUSH]+1);
+					 a->regs[CMD_TEXCACHE_FLUSH]+1);
 
 		/* make sure CLUT is up to date */
 		__pspgl_context_writereg_uncached(c, CMD_CLUT_BLKS,
-						  c->ge_reg[CMD_CLUT_BLKS]);
+						  a->regs[CMD_CLUT_BLKS]);
 	}
 
 	if (mask & GL_TRANSFORM_BIT) {
