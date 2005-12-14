@@ -78,6 +78,13 @@ struct vertex_format
 	} attribs[MAX_ATTRIB];
 };
 
+struct t2f_c4ub_n3f_v3f {
+	GLfloat texcoord [2];
+	unsigned long color;
+	GLfloat normal [3];
+	GLfloat vertex [3];
+};
+
 struct pspgl_context {
 	uint32_t ge_reg [256];
 	uint32_t ge_reg_touched [256/32];
@@ -86,6 +93,7 @@ struct pspgl_context {
 		GLenum primitive;
 		unsigned long vertex_count;
 		void *vbuf_adr;
+		struct t2f_c4ub_n3f_v3f line_loop_start;
 	} beginend;
 	struct current {
 		GLfloat texcoord [4];

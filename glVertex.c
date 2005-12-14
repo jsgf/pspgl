@@ -1,14 +1,6 @@
 #include <string.h>
 #include "pspgl_internal.h"
 
-
-struct t2f_c4ub_n3f_v3f {
-	GLfloat texcoord [2];
-	unsigned long color;
-	GLfloat normal [3];
-	GLfloat vertex [3];
-};
-
 #define BUFSZ	12		/* must be a multiple of 2,3 and 4 */
 
 void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
@@ -37,6 +29,11 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 	vbuf->vertex[0] = x;
 	vbuf->vertex[1] = y;
 	vbuf->vertex[2] = z;
+
+	/* If it's a line loop, save the first vertex so that we can close the loop in glEnd(). */
+	if (c->beginend.primitive == GL_LINE_LOOP && c->beginend.vertex_count == 0) {
+		memcpy(&c->beginend.line_loop_start, vbuf, sizeof(*vbuf));
+	}
 
 	if (++c->beginend.vertex_count == BUFSZ) {
 		static const char overhang_count [] = { 0, 0, 1, 1, 0, 2, 2, 3, 3, 2 };
