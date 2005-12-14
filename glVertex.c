@@ -39,34 +39,33 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 	vbuf->vertex[2] = z;
 
 	if (++c->beginend.vertex_count == BUFSZ) {
-		static const char overhang [] = { 0, 0, 1, 1, 0, 2, 2, 3, 3, 2 };
-		GLenum prim = c->beginend.primitive;
+		static const char overhang_count [] = { 0, 0, 1, 1, 0, 2, 2, 3, 3, 2 };
+		char overhang = overhang_count[c->beginend.primitive];
+		long prim = __pspgl_glprim2geprim(c->beginend.primitive);
 
 		/* vertex buffer full, render + restart */
-		glEnd();
+		__pspgl_context_render_prim(c, prim, c->beginend.vertex_count,
+					    GE_TEXTURE_32BITF | GE_COLOR_8888 | GE_NORMAL_32BITF | GE_VERTEX_32BITF,
+					    c->beginend.vbuf_adr, NULL);
 
 		/* copy overhang */
-		c->beginend.vertex_count = overhang[prim];
+		c->beginend.vertex_count = overhang;
 
-		if (overhang[prim]) {
+		if (overhang) {
 			struct t2f_c4ub_n3f_v3f *vbuf_start, *prev;
 
 			prev = c->beginend.vbuf_adr;
 			c->beginend.vbuf_adr = __pspgl_dlist_insert_space(c->dlist_current, BUFSZ * sizeof(struct t2f_c4ub_n3f_v3f));
 			vbuf_start = c->beginend.vbuf_adr;
 
-			if (prim == GL_TRIANGLE_FAN || prim == GL_POLYGON) {
+			if (c->beginend.primitive == GL_TRIANGLE_FAN || c->beginend.primitive == GL_POLYGON) {
 				memcpy(vbuf_start, prev, sizeof(vbuf_start[0]));
 				c->beginend.vertex_count++;
 				vbuf_start++;
 			}
 
-			memcpy(vbuf_start, vbuf - overhang[prim] + 1, 
-			       overhang[prim] * sizeof(vbuf[0]));
+			memcpy(vbuf_start, vbuf - overhang + 1, overhang * sizeof(vbuf[0]));
 		}
- 
-		/* reset primitive type, was cleared by glEnd() */
-		c->beginend.primitive = prim;
 	}
 }
 
