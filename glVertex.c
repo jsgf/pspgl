@@ -32,6 +32,9 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 
 	/* If it's a line loop, save the first vertex so that we can close the loop in glEnd(). */
 	if (c->beginend.primitive == GL_LINE_LOOP && c->beginend.vertex_count == 0) {
+		/* Note: If a vertex buffer is split (see below), the vertex_count of the new buffer
+		   will be 1 because of the overhang copied from the previous buffer.  If there were
+		   no overhang for line loops, we wouldn't be able to get away with this. */
 		memcpy(&c->beginend.line_loop_start, vbuf, sizeof(*vbuf));
 	}
 
