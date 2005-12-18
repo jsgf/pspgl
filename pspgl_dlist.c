@@ -42,6 +42,7 @@ void __pspgl_dlist_finalize(struct pspgl_dlist *d)
 
 	if (pspgl_curctx->stats.enabled)
 		pspgl_curctx->stats.buffer_issues++;
+	psp_log("queueing %d commands", d->len);
 	d->qid = sceGeListEnQueue(d->cmd_buf, &d->cmd_buf[d->len-1], 0, NULL);
 }
 

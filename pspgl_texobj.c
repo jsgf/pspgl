@@ -10,7 +10,7 @@
   RRRRRGGGGGGBBBBB	<- GL
   BBBBBGGGGGGRRRRR	<- PSP
  */
-static inline unsigned short swizzle_565(unsigned short in)
+static inline unsigned short swap_565(unsigned short in)
 {
 	unsigned short r = (in & 0xf800) >> 11;
 	unsigned short g = (in & 0x07e0);
@@ -23,7 +23,7 @@ static inline unsigned short swizzle_565(unsigned short in)
   RRRRRGGGGGBBBBBA	<- GL
   ABBBBBGGGGGRRRRR	<- PSP
  */
-static inline unsigned short swizzle_5551(unsigned short in)
+static inline unsigned short swap_5551(unsigned short in)
 {
 	unsigned short r = (in & 0xf800) >> 11;
 	unsigned short g = (in & 0x07c0) >> 1;
@@ -37,7 +37,7 @@ static inline unsigned short swizzle_5551(unsigned short in)
   RRRRGGGGBBBBAAAA	<- GL
   AAAABBBBGGGGRRRR	<- PSP
  */
-static inline unsigned short swizzle_4444(unsigned short in)
+static inline unsigned short swap_4444(unsigned short in)
 {
 	unsigned short r = (in & 0xf000) >> 12;
 	unsigned short g = (in & 0x0f00) >> 4;
@@ -58,7 +58,7 @@ static void copy_565(const struct pspgl_texfmt *fmt, void *to, const void *from,
 	const unsigned short *src = from;
 
 	while(width--)
-		*dest++ = swizzle_565(*src++);
+		*dest++ = swap_565(*src++);
 }
 
 static void copy_5551(const struct pspgl_texfmt *fmt, void *to, const void *from, unsigned width)
@@ -67,7 +67,7 @@ static void copy_5551(const struct pspgl_texfmt *fmt, void *to, const void *from
 	const unsigned short *src = from;
 
 	while(width--)
-		*dest++ = swizzle_5551(*src++);
+		*dest++ = swap_5551(*src++);
 }
 
 static void copy_4444(const struct pspgl_texfmt *fmt, void *to, const void *from, unsigned width)
@@ -76,7 +76,7 @@ static void copy_4444(const struct pspgl_texfmt *fmt, void *to, const void *from
 	const unsigned short *src = from;
 
 	while(width--)
-		*dest++ = swizzle_4444(*src++);
+		*dest++ = swap_4444(*src++);
 }
 
 static void copy_888_alpha(const struct pspgl_texfmt *fmt, void *to, const void *from, unsigned width)
@@ -297,6 +297,96 @@ static void convert_image(const void *pixels, unsigned width, unsigned height,
 	}
 }
 
+static
+unsigned long lg2 (unsigned long x)
+{
+	long i;
+
+	for (i=12; i>=0; i--) {
+		if ((1 << i) <= x)
+			break;
+	}
+
+	return i;
+}
+
+/*
+   Given an offset in a texture 2^log2_w bytes wide, return the byte
+   offset in swizzledom.
+
+   Variables are:
+   bx,by: coords of 16x8 block within the texture
+   mx,my: offsets within the block
+
+   The swizzle function is essentially a 3-bit left-rotate of bits
+   4-(log2(width)+7) within the offset.  The by and mx fields are
+   unchanged after the operation.
+
+   Unswizzle is a 3-bit right-rotate of the same bitfield.
+
+                              v lg2(width)+3          v
+   ...|19|18|17|16|15|14|13|12|11|10| 9| 8| 7| 6| 5| 4| 3| 2| 1| 0|
+             ...by by by by by my my my bx bx bx bx bx mx mx mx mx
+
+                               --<--<--<--<--<--<--<-- <rotate
+
+             ...by by by by by bx bx bx bx bx my my my mx mx mx mx
+   ...|19|18|17|16|15|14|13|12|11|10| 9| 8| 7| 6| 5| 4| 3| 2| 1| 0|
+                              ^lg2(width)+3  ^        ^
+
+                               -->-->-->-->-->-->-->-- >rotate
+
+   ...|19|18|17|16|15|14|13|12|11|10| 9| 8| 7| 6| 5| 4| 3| 2| 1| 0|
+             ...by by by by by my my my bx bx bx bx bx mx mx mx mx
+
+ */
+static inline unsigned swizzle(unsigned offset, unsigned log2_w)
+{
+	unsigned fixed = offset & ((~7 << log2_w) | 0xf);
+	unsigned w_mask = (1 << log2_w) - 1;
+	unsigned bx = offset & w_mask & ~0xf;
+	unsigned my = offset & (7 << log2_w);
+
+	return fixed | (bx << 3) | (my >> (log2_w - 4));
+}
+
+static inline unsigned unswizzle(unsigned offset, unsigned log2_w)
+{
+	unsigned w_mask = (1 << log2_w) - 1;
+	unsigned fixed = offset & ((~7 << log2_w) | 0xf);
+	unsigned bx = offset & ((w_mask & 0xf) << 7);
+	unsigned my = offset & 0x70;
+
+	return fixed | (bx >> 3) | (my << (log2_w - 4));
+}
+
+static void convert_swizzle_image(const void *pixels, unsigned width, unsigned height,
+				  void *to, const struct pspgl_texfmt *texfmt)
+{
+	unsigned dst_bytewidth = width * texfmt->hwsize;
+	unsigned lg2_w = lg2(dst_bytewidth);
+	unsigned dst_chunk = 16;
+	unsigned pix_per_chunk = dst_chunk / texfmt->hwsize;
+	unsigned src_chunk = pix_per_chunk * texfmt->pixsize;
+	unsigned src_size = width * height * texfmt->pixsize;
+	unsigned src_off, dst_off;
+
+	psp_log("convert_swizzle: %dx%d, hwfmt=%d pixsize=%d hwsize=%d size_src=%d pix_per_chunk=%d chunk_src=%d, lg2(%d)=%d\n",
+		width, height, texfmt->hwformat, texfmt->pixsize, texfmt->hwsize, 
+		src_size, pix_per_chunk, src_chunk, dst_bytewidth, lg2_w);
+
+	for(src_off = 0, dst_off = 0;
+	    src_off < src_size;
+	    src_off += src_chunk, dst_off += dst_chunk) {
+		unsigned swizoff = swizzle(dst_off, lg2_w);
+
+		//psp_log("  %d: swiz(%u, %d) -> %u\n", src_off, dst_off, lg2_w, swizoff);
+		(*texfmt->convert)(texfmt,
+				   to + swizoff,
+				   pixels + src_off, 
+				   pix_per_chunk);
+	}
+}
 
 static void tobj_setstate(struct pspgl_texobj *tobj, unsigned reg, unsigned setting)
 {
@@ -314,6 +404,7 @@ struct pspgl_texobj *__pspgl_texobj_new(GLuint id, GLenum target)
 
 	tobj->refcount = 1;
 	tobj->target = target;
+	tobj->flags = TOF_SWIZZLED; /* start by swizzling */
 
 	for(i = TEXSTATE_START; i <= TEXSTATE_END; i++)
 		tobj_setstate(tobj, i, 0);
@@ -322,6 +413,25 @@ struct pspgl_texobj *__pspgl_texobj_new(GLuint id, GLenum target)
 	tobj_setstate(tobj, CMD_TEXWRAP, (GE_TEX_WRAP_REPEAT << 8) | GE_TEX_WRAP_REPEAT);
 
 	return tobj;
+}
+
+void __pspgl_texobj_unswizzle(struct pspgl_texobj *tobj)
+{
+	int i;
+
+	if (tobj == NULL || (tobj->flags & TOF_SWIZZLED) == 0)
+		return;
+
+	tobj->flags &= ~TOF_SWIZZLED;
+
+	for(i = 0; i < MIPMAP_LEVELS; i++) {
+		struct pspgl_teximg *timg = tobj->images[i];
+
+		if (timg == NULL || timg->image)
+			continue;
+
+		/* XXX actually unswizzle here */
+	}
 }
 
 void __pspgl_texobj_free(struct pspgl_texobj *tobj)
@@ -345,7 +455,7 @@ void __pspgl_texobj_free(struct pspgl_texobj *tobj)
 
 struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_bufferobj *buffer,
 					unsigned width, unsigned height, unsigned size,
-					const struct pspgl_texfmt *texfmt)
+					GLboolean swizzled, const struct pspgl_texfmt *texfmt)
 {
 	struct pspgl_teximg *timg;
 	unsigned srcsize;
@@ -414,6 +524,8 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 			if (texfmt->hwformat >= GE_DXT1)
 				convert_compressed_image(src, width, height, size, 
 							 p, texfmt);
+			else if (swizzled && (width*texfmt->hwsize > 16) && (height >= 8))
+				convert_swizzle_image(src, width, height, p, texfmt);
 			else
 				convert_image(src, width, height, p, texfmt);
 

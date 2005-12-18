@@ -87,7 +87,10 @@ void glCompressedTexImage2D(GLenum target, GLint level,
 	if (tobj == NULL)
 		goto out_of_memory;
 
-	timg = __pspgl_teximg_new(data, pspgl_curctx->texture.unpackbuffer, width, height, imageSize, texfmt);
+	__pspgl_texobj_unswizzle(tobj);
+
+	timg = __pspgl_teximg_new(data, pspgl_curctx->texture.unpackbuffer,
+				  width, height, imageSize, GL_FALSE, texfmt);
 	if (timg == NULL)
 		goto out_of_memory;
 

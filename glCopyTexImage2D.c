@@ -38,6 +38,8 @@ void glCopyTexImage2D(GLenum target,
 	tobj = pspgl_curctx->texture.bound;
 	timg = tobj->images[level];
 
+	__pspgl_texobj_unswizzle(tobj);
+
 	assert(timg->texfmt->hwformat == read->pixfmt);
 	assert(width == timg->width);
 	assert(height == timg->height);

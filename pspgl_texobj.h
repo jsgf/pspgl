@@ -35,6 +35,7 @@ struct pspgl_texobj {
 	unsigned	flags;
 #define TOF_GENERATE_MIPMAPS		(1<<0)
 #define TOF_GENERATE_MIPMAP_DEBUG	(1<<1)
+#define TOF_SWIZZLED			(1<<2)
 
 #define TEXOBJ_NTEXREG	(TEXSTATE_END - TEXSTATE_START + 1)
 	uint32_t	ge_texreg[TEXOBJ_NTEXREG];
@@ -63,10 +64,11 @@ extern const struct pspgl_texfmt __pspgl_texformats[];
 
 extern struct pspgl_texobj* __pspgl_texobj_new (GLuint id, GLenum target);
 extern void __pspgl_texobj_free (struct pspgl_texobj *t);
+extern void __pspgl_texobj_unswizzle(struct pspgl_texobj *tobj);
 
 extern struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_bufferobj *buffer,
 					       unsigned width, unsigned height, unsigned size,
-					       const struct pspgl_texfmt *texfmt);
+					       GLboolean swizzle, const struct pspgl_texfmt *texfmt);
 extern void __pspgl_teximg_free(struct pspgl_teximg *timg);
 
 extern void __pspgl_update_texenv(struct pspgl_texobj *tobj);

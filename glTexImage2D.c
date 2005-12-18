@@ -77,6 +77,8 @@ void __pspgl_update_mipmaps(void)
 	    tobj->texfmt->hwformat > GE_RGBA_8888)
 		return;
 
+	__pspgl_texobj_unswizzle(tobj);
+
 	timg = tobj->images[0];
 
 	/* 
@@ -187,7 +189,7 @@ void __pspgl_update_mipmaps(void)
 		/* allocate teximg if necessary */
 		if (tobj->images[level] == NULL)
 			tobj->images[level] = __pspgl_teximg_new(NULL, NULL,
-								 0, 0, 0, texfmt);
+								 0, 0, 0, GL_FALSE, texfmt);
 
 		timg = tobj->images[level];
 
@@ -319,10 +321,11 @@ void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level,
 
 	if (timg && (level == 0)) {
 		int maxlvl = max_mipmap(timg->width, timg->height);
+		int swizzled = (tobj->flags & TOF_SWIZZLED) != 0;
 
-		psp_log("setting %dx%d maxlevel to %d\n", 
-			timg->width, timg->height, maxlvl);
-		sendCommandi(CMD_TEXMODE, (maxlvl << 16) | (0 << 8) | 0);
+		psp_log("setting %dx%d maxlevel to %d; swizzled=%d\n", 
+			timg->width, timg->height, maxlvl, swizzled);
+		sendCommandi(CMD_TEXMODE, (maxlvl << 16) | (0 << 8) | swizzled);
 	}
 
 	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);
@@ -428,7 +431,8 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 	if (texfmt->hwformat >= GE_DXT1)
 		goto invalid_enum;
 
-	psp_log("selected texfmt %d for fmt=%x type=%x\n", texfmt->hwformat, internalformat, type);
+	psp_log("selected texfmt %d for fmt=%x type=%x\n",
+		texfmt->hwformat, internalformat, type);
 
 	if (!pspgl_curctx->texture.bound)
 		glBindTexture(target, 0);
@@ -437,7 +441,8 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 	if (tobj == NULL)
 		goto out_of_memory;
 
-	timg = __pspgl_teximg_new(texels, pspgl_curctx->texture.unpackbuffer, width, height, 0, texfmt);
+	timg = __pspgl_teximg_new(texels, pspgl_curctx->texture.unpackbuffer,
+				  width, height, 0, (tobj->flags & TOF_SWIZZLED) != 0, texfmt);
 	if (timg == NULL)
 		goto out_of_memory;
 
