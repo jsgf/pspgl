@@ -65,6 +65,7 @@ extern const struct pspgl_texfmt __pspgl_texformats[];
 extern struct pspgl_texobj* __pspgl_texobj_new (GLuint id, GLenum target);
 extern void __pspgl_texobj_free (struct pspgl_texobj *t);
 extern void __pspgl_texobj_unswizzle(struct pspgl_texobj *tobj);
+extern struct pspgl_teximg *__pspgl_texobj_cmap(const struct pspgl_texobj *t);
 
 extern struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_bufferobj *buffer,
 					       unsigned width, unsigned height, unsigned size,

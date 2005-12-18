@@ -453,6 +453,20 @@ void __pspgl_texobj_free(struct pspgl_texobj *tobj)
 	free(tobj);
 }
 
+struct pspgl_teximg *__pspgl_texobj_cmap(const struct pspgl_texobj *tobj)
+{
+	struct pspgl_teximg *ret = NULL;
+
+	if (tobj != NULL) {
+		if (tobj->texfmt)
+			ret = tobj->texfmt->cmap;
+		if (ret == NULL)
+			ret = tobj->cmap;
+	}
+
+	return ret;
+}
+
 struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_bufferobj *buffer,
 					unsigned width, unsigned height, unsigned size,
 					GLboolean swizzled, const struct pspgl_texfmt *texfmt)

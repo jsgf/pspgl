@@ -9,9 +9,9 @@ void __pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd,
 {
 	unsigned long new = ((cmd) << 24) | ((argi) & 0xffffff);
 
-	if (new != c->ge_reg[cmd]) {
-		c->ge_reg[cmd] = new;
-		c->ge_reg_touched[cmd/32] |= (1 << (cmd % 32));
+	if (new != c->hw.ge_reg[cmd]) {
+		c->hw.ge_reg[cmd] = new;
+		c->hw.ge_reg_touched[cmd/32] |= (1 << (cmd % 32));
 	}
 }
 
@@ -19,11 +19,11 @@ void __pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd,
 void __pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd,
 				      unsigned long argi, unsigned long mask)
 {
-	unsigned long new = (cmd << 24) | (c->ge_reg[cmd] & ~mask) | (argi & mask & 0xffffff);
+	unsigned long new = (cmd << 24) | (c->hw.ge_reg[cmd] & ~mask) | (argi & mask & 0xffffff);
 
-	if (new != c->ge_reg[cmd]) {
-		c->ge_reg[cmd] = new;
-		c->ge_reg_touched[cmd/32] |= (1 << (cmd % 32));
+	if (new != c->hw.ge_reg[cmd]) {
+		c->hw.ge_reg[cmd] = new;
+		c->hw.ge_reg_touched[cmd/32] |= (1 << (cmd % 32));
 	}
 }
 
@@ -40,19 +40,19 @@ void __pspgl_context_flush_pending_state_changes (struct pspgl_context *c,
 	last = (last + 31 + 1) & ~31;
 
 	for(i = first; i < last; i += 32) {
-		uint32_t word = c->ge_reg_touched[i/32];
+		uint32_t word = c->hw.ge_reg_touched[i/32];
 		unsigned j;
 
-		c->ge_reg_touched[i/32] = 0;
+		c->hw.ge_reg_touched[i/32] = 0;
 
 		if (word && 0)
 			psp_log("setting i %d word %08x dlist=%p\n",
 				i, word, c->dlist_current);
 
 		for(j = i; word != 0; j++, word >>= 1) {
-			if ((word & 1) && (c->ge_reg[j] >> 24) == j)
+			if ((word & 1) && (c->hw.ge_reg[j] >> 24) == j)
 				__pspgl_dlist_enqueue_cmd(c->dlist_current,
-							  c->ge_reg[j]);
+							  c->hw.ge_reg[j]);
 		}
 	}
 }
@@ -65,8 +65,8 @@ void __pspgl_context_writereg_uncached (struct pspgl_context *c, unsigned long c
 {
 	unsigned long val = ((cmd) << 24) | ((argi) & 0xffffff);
 
-	c->ge_reg[cmd] = val;	/* still need to record value */
-	c->ge_reg_touched[cmd/32] &= ~(1 << (cmd % 32));
+	c->hw.ge_reg[cmd] = val;	/* still need to record value */
+	c->hw.ge_reg_touched[cmd/32] &= ~(1 << (cmd % 32)); /* not dirty */
 
 	__pspgl_dlist_enqueue_cmd(c->dlist_current, val);
 }
@@ -134,15 +134,11 @@ void __pspgl_context_pin_buffers(struct pspgl_context *c)
 
 	/* do nothing if there's no texture or texturing is disabled */
 	if ((tobj == NULL) ||
-	    (c->ge_reg[CMD_ENA_TEXTURE] & 1) == 0)
+	    (c->hw.ge_reg[CMD_ENA_TEXTURE] & 1) == 0)
 		return;
 
 	/* find the effective cmap, if any */
-	cmap = NULL;
-	if (tobj->texfmt)
-		cmap = tobj->texfmt->cmap;
-	if (cmap == NULL)
-		cmap = tobj->cmap;
+	cmap = __pspgl_texobj_cmap(tobj);
 	if (cmap)
 		__pspgl_dlist_pin_buffer(cmap->image, BF_PINNED_RD);
 
@@ -154,7 +150,7 @@ void __pspgl_context_pin_buffers(struct pspgl_context *c)
 						 BF_PINNED_RD);
 
 	__pspgl_dlist_pin_buffer(c->draw->color_buffer[!c->draw->current_front], BF_PINNED);
-	if ((c->ge_reg[CMD_ENA_DEPTH_TEST] & 0xff) && c->draw->depth_buffer)
+	if ((c->hw.ge_reg[CMD_ENA_DEPTH_TEST] & 0xff) && c->draw->depth_buffer)
 		__pspgl_dlist_pin_buffer(c->draw->depth_buffer, BF_PINNED);
 }
 
@@ -162,29 +158,28 @@ void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt,
 				  const void *vertex, const void *index)
 {
 	struct pspgl_texobj *tobj;
-	struct pspgl_teximg *cmap = NULL;
+	int clut_load = 0;
 
 	tobj = c->texture.bound;	
 
-	/* set up cmap state; if the texture format has an inherent
+	/* Set up cmap state; if the texture format has an inherent
 	   cmap, use that, otherwise set up the texture object's cmap
-	   (if any) */
+	   (if any).  Only bother if texturing is enabled and someone
+	   said they changed the CLUT state.  */
 	if ((tobj != NULL) &&
-	    (c->ge_reg[CMD_ENA_TEXTURE] & 1)) {
+	    (c->hw.ge_reg[CMD_ENA_TEXTURE] & 1) &&
+	    (c->hw.dirty & HWD_CLUT)) {
+		struct pspgl_teximg *cmap = __pspgl_texobj_cmap(tobj);
 
-		if (tobj->texfmt)
-			cmap = tobj->texfmt->cmap;
-		if (cmap == NULL)
-			cmap = tobj->cmap;
 		if (cmap) {
 			unsigned long p = (unsigned long)cmap->image->base + cmap->offset;
 
-			sendCommandi(CMD_SET_CLUT, p);
-			sendCommandi(CMD_SET_CLUT_MSB, (p >> 8) & 0xf0000);
-			/* Not sure what the 0xff << 8 is about, but
-			   samples/gu/blend.c uses it, and it seems to be
-			   necessary to get a non-black output... */
-			sendCommandi(CMD_CLUT_MODE, cmap->texfmt->hwformat | (0xff << 8));
+			c->hw.dirty &= ~HWD_CLUT;
+
+			__pspgl_context_writereg(c, CMD_SET_CLUT, p);
+			__pspgl_context_writereg(c, CMD_SET_CLUT_MSB, (p >> 8) & 0xf0000);
+			__pspgl_context_writereg(c, CMD_CLUT_MODE, cmap->texfmt->hwformat | (0xff << 8));
+			clut_load = cmap->width / 8;
 		}
 	}
 
@@ -192,11 +187,11 @@ void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt,
 
 	if ((vtxfmt & GE_TRANSFORM_SHIFT(1)) == GE_TRANSFORM_3D)
 		flush_pending_matrix_changes(c);
+
 	__pspgl_context_flush_pending_state_changes(c, 0, 255);
 
-	/* XXX need only be loaded when the cmap actually changes... */
-	if (cmap)
-		sendCommandiUncached(CMD_CLUT_LOAD, cmap->width / 8);
+	if (clut_load != 0)
+		__pspgl_context_writereg_uncached(c, CMD_CLUT_LOAD, clut_load);
 
 	__pspgl_context_writereg_uncached(c, CMD_BASE, ((unsigned)vertex >> 8) & 0x000f0000);
 	__pspgl_context_writereg_uncached(c, CMD_VERTEXPTR, ((unsigned)vertex) & 0x00ffffff);

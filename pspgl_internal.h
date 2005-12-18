@@ -86,8 +86,13 @@ struct t2f_c4ub_n3f_v3f {
 };
 
 struct pspgl_context {
-	uint32_t ge_reg [256];
-	uint32_t ge_reg_touched [256/32];
+	struct hwstate {
+		unsigned dirty;
+#define HWD_CLUT	(1 << 0)
+
+		uint32_t ge_reg [256];
+		uint32_t ge_reg_touched [256/32];
+	} hw;
 
 	struct {
 		GLenum primitive;
@@ -381,7 +386,7 @@ do {									\
 
 static inline uint32_t getReg(reg)
 {
-	return pspgl_curctx->ge_reg[reg];
+	return pspgl_curctx->hw.ge_reg[reg];
 }
 
 

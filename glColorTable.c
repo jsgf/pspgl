@@ -38,6 +38,7 @@ void glColorTable(GLenum target, GLenum internalformat,
 		__pspgl_teximg_free(tobj->cmap);
 	}
 	tobj->cmap = cmap;
+	pspgl_curctx->hw.dirty |= HWD_CLUT;
 
 	__pspgl_update_texenv(tobj);
 

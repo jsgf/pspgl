@@ -19,7 +19,7 @@ void glColorMask (GLboolean red, GLboolean green, GLboolean blue, GLboolean alph
 	 * Alpha Channel and Stencil are shared. Only update Alpha mask register
 	 * if stencil test is disabled.
 	 */
-	if ((pspgl_curctx->ge_reg[CMD_ENA_STENCIL_TEST] & 1) == 0)
+	if ((pspgl_curctx->hw.ge_reg[CMD_ENA_STENCIL_TEST] & 1) == 0)
 	        sendCommandi(CMD_ALPHA_MASK, ~pspgl_curctx->write_mask.alpha);
 }
 

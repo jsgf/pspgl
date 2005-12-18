@@ -448,6 +448,9 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 
 	__pspgl_set_texture_image(tobj, level, timg);
 
+	if (__pspgl_texobj_cmap(tobj) != NULL)
+		pspgl_curctx->hw.dirty |= HWD_CLUT;
+
 	__pspgl_update_texenv(tobj);
 
 	if (level == 0)

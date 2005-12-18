@@ -55,6 +55,9 @@ void glBindTexture(GLenum target, GLuint id)
 		if (i != CMD_CLUT_LOAD)
 			sendCommandi(i, tobj->ge_texreg[i - TEXSTATE_START]);
 
+	if (__pspgl_texobj_cmap(tobj) != NULL)
+		pspgl_curctx->hw.dirty |= HWD_CLUT;
+
 	__pspgl_update_texenv(tobj);
 	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);
 }

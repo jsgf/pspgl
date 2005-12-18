@@ -33,7 +33,7 @@ static void save_regs(const struct pspgl_context *c,
 	psp_log("saving regs:\n");
 	while((reg = *regs++)) {
 		psp_log("  save_regs: %02x %3d = %08x\n", reg, reg, c->ge_reg[reg]);
-		a->regs[reg] = c->ge_reg[reg];
+		a->regs[reg] = c->hw.ge_reg[reg];
 		a->regmask[reg / 32] |= 1 << (reg % 32);
 	}
 }
@@ -461,6 +461,8 @@ void glPopAttrib( void )
 		/* make sure texture cache is flushed */
 		__pspgl_context_writereg(c, CMD_TEXCACHE_FLUSH,
 					 a->regs[CMD_TEXCACHE_FLUSH]+1);
+
+		c->hw.dirty |= HWD_CLUT;
 	}
 
 	if (mask & GL_TRANSFORM_BIT) {
