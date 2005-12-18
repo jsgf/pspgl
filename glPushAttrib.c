@@ -28,16 +28,18 @@ static void save_regs(const struct pspgl_context *c,
 		      struct pspgl_saved_attrib *a, 
 		      const unsigned char *regs)
 {
-	for(; *regs; regs++) {
-		unsigned char reg = *regs;
+	unsigned char reg;
 
+	psp_log("saving regs:\n");
+	while((reg = *regs++)) {
+		psp_log("  save_regs: %02x %3d = %08x\n", reg, reg, c->ge_reg[reg]);
 		a->regs[reg] = c->ge_reg[reg];
 		a->regmask[reg / 32] |= 1 << (reg % 32);
 	}
 }
 
 static void restore_regs(struct pspgl_context *c,
-			 struct pspgl_saved_attrib *a)
+			 const struct pspgl_saved_attrib *a)
 {
 	unsigned i;
 
@@ -46,8 +48,11 @@ static void restore_regs(struct pspgl_context *c,
 		unsigned j;
 
 		for(j = i; word != 0; j++, word >>= 1) {
-			if (word & 1)
+			if (word & 1) {
+				psp_log("restoring reg %02x %3d = %06x\n",
+					    j, j, a->regs[j]);
 				__pspgl_context_writereg(c, j, a->regs[j]);
+			}
 		}
 	}
 }

@@ -68,6 +68,7 @@ void __pspgl_update_mipmaps(void)
 	unsigned levels, level;
 	struct pspgl_buffer *mipmaps;
 	struct pspgl_texobj *tobj = pspgl_curctx->texture.bound;
+	GLenum saved_err;
 
 	if (tobj == NULL ||
 	    (tobj->flags & TOF_GENERATE_MIPMAPS) == 0 ||
@@ -91,27 +92,19 @@ void __pspgl_update_mipmaps(void)
 
 	   restore state
 
-	   XXX TODO implement glPush/PopAttrib
+	   XXX May fail if attribute stack overflows
 	 */
+	psp_log("%s: about to pushattrib\n", __FUNCTION__);
+	saved_err = pspgl_curctx->glerror;
+	pspgl_curctx->glerror = GL_NO_ERROR;
+	glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT);
+	if (pspgl_curctx->glerror != GL_NO_ERROR)
+		return;
+	pspgl_curctx->glerror = saved_err;
+	psp_log("%s: pushattrib done\n", __FUNCTION__);
 
-	GLuint texture = getReg(CMD_ENA_TEXTURE);
-	GLuint lighting = getReg(CMD_ENA_LIGHTING);
-	GLuint alpha = getReg(CMD_ENA_ALPHA_TEST);
-	GLuint depth = getReg(CMD_ENA_DEPTH_TEST);
-	GLuint stencil = getReg(CMD_ENA_STENCIL_TEST);
-	GLuint blending = getReg(CMD_ENA_BLEND);
-	GLuint logic = getReg(CMD_ENA_LOGIC);
-	GLuint rgbmask = getReg(CMD_RGB_MASK);
-	GLuint alphamask = getReg(CMD_ALPHA_MASK);
+	/* Just save the shademodel rather than the complete lighting state */
 	GLuint shademodel = getReg(CMD_SHADEMODEL);
-	GLuint filter = getReg(CMD_TEXFILT);
-	GLuint wrap = getReg(CMD_TEXWRAP);
-	GLuint drawptr = getReg(CMD_DRAWBUF);
-	GLuint drawwidth = getReg(CMD_DRAWBUFWIDTH);
-	GLuint texenv = getReg(CMD_TEXENV_FUNC);
-	GLuint texmode = getReg(CMD_TEXMODE);
-	GLuint fbformat = getReg(CMD_PSM);
-	GLboolean scissor = pspgl_curctx->scissor_test.enabled;
 
 	glDisable(GL_SCISSOR_TEST);
 
@@ -256,34 +249,18 @@ void __pspgl_update_mipmaps(void)
 	/* all the appropriate texture images have a reference now */
 	__pspgl_buffer_free(mipmaps);
 
-	/* restore all mipmaps to their proper places */
+	/* restore GL state */
+	psp_log("%s: about to popattrib\n", __FUNCTION__);
+	glPopAttrib();
+
+	psp_log("%s: popattrib done\n", __FUNCTION__);
+	sendCommandi(CMD_SHADEMODEL, shademodel);
+
+	/* restore all mipmaps to their proper places - do this after
+	   glPopAttrib, so that we don't get stuck with old mipmap
+	   values */
 	for(level = 0; level <= levels; level++)
 		set_mipmap_regs(level, tobj->images[level]);
-
-	/* restore GL state */
-	if (scissor)
-		glEnable(GL_SCISSOR_TEST);
-	else
-		glDisable(GL_SCISSOR_TEST);
-
-	sendCommandi(CMD_ENA_TEXTURE, texture);
-	sendCommandi(CMD_ENA_LIGHTING, lighting);
-	sendCommandi(CMD_ENA_ALPHA_TEST, alpha);
-	sendCommandi(CMD_ENA_DEPTH_TEST, depth);
-	sendCommandi(CMD_ENA_STENCIL_TEST, stencil);
-	sendCommandi(CMD_ENA_BLEND, blending);
-	sendCommandi(CMD_ENA_LOGIC, logic);
-	sendCommandi(CMD_RGB_MASK, rgbmask);
-	sendCommandi(CMD_ALPHA_MASK, alphamask);
-	sendCommandi(CMD_SHADEMODEL, shademodel);
-	sendCommandi(CMD_TEXFILT, filter);
-	sendCommandi(CMD_TEXWRAP, wrap);
-	sendCommandi(CMD_TEXENV_FUNC, texenv);
-	sendCommandi(CMD_TEXMODE, texmode);
-
-	sendCommandi(CMD_DRAWBUF, drawptr);
-	sendCommandi(CMD_DRAWBUFWIDTH, drawwidth);
-	sendCommandi(CMD_PSM, fbformat);
 }
 
 /* If we've compacted the vidmem then we may have moved the currently
