@@ -52,7 +52,8 @@ void glBindTexture(GLenum target, GLuint id)
 	/* restore texture state */
 	psp_log("updating register state\n");
 	for(i = TEXSTATE_START; i <= TEXSTATE_END; i++)
-		sendCommandi(i, tobj->ge_texreg[i - TEXSTATE_START]);
+		if (i != CMD_CLUT_LOAD)
+			sendCommandi(i, tobj->ge_texreg[i - TEXSTATE_START]);
 
 	__pspgl_update_texenv(tobj);
 	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);

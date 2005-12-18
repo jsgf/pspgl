@@ -233,7 +233,8 @@ static void make_cmap_luminance(unsigned *ptr)
 	}
 }
 
-static void init_internal_cmap(struct pspgl_teximg *cmap, const struct pspgl_texfmt *fmt, void (*make_cmap)(unsigned *))
+static void init_internal_cmap(struct pspgl_teximg *cmap, const struct pspgl_texfmt *fmt,
+			       void (*make_cmap)(unsigned *))
 {
 	struct pspgl_buffer *b;
 	void *map;

@@ -66,6 +66,7 @@ void __pspgl_context_writereg_uncached (struct pspgl_context *c, unsigned long c
 	unsigned long val = ((cmd) << 24) | ((argi) & 0xffffff);
 
 	c->ge_reg[cmd] = val;	/* still need to record value */
+	c->ge_reg_touched[cmd/32] &= ~(1 << (cmd % 32));
 
 	__pspgl_dlist_enqueue_cmd(c->dlist_current, val);
 }
@@ -161,6 +162,7 @@ void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt,
 				  const void *vertex, const void *index)
 {
 	struct pspgl_texobj *tobj;
+	struct pspgl_teximg *cmap = NULL;
 
 	tobj = c->texture.bound;	
 
@@ -169,7 +171,6 @@ void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt,
 	   (if any) */
 	if ((tobj != NULL) &&
 	    (c->ge_reg[CMD_ENA_TEXTURE] & 1)) {
-		struct pspgl_teximg *cmap = NULL;
 
 		if (tobj->texfmt)
 			cmap = tobj->texfmt->cmap;
@@ -184,7 +185,6 @@ void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt,
 			   samples/gu/blend.c uses it, and it seems to be
 			   necessary to get a non-black output... */
 			sendCommandi(CMD_CLUT_MODE, cmap->texfmt->hwformat | (0xff << 8));
-			sendCommandiUncached(CMD_CLUT_BLKS, cmap->width / 8);
 		}
 	}
 
@@ -193,6 +193,10 @@ void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt,
 	if ((vtxfmt & GE_TRANSFORM_SHIFT(1)) == GE_TRANSFORM_3D)
 		flush_pending_matrix_changes(c);
 	__pspgl_context_flush_pending_state_changes(c, 0, 255);
+
+	/* XXX need only be loaded when the cmap actually changes... */
+	if (cmap)
+		sendCommandiUncached(CMD_CLUT_LOAD, cmap->width / 8);
 
 	__pspgl_context_writereg_uncached(c, CMD_BASE, ((unsigned)vertex >> 8) & 0x000f0000);
 	__pspgl_context_writereg_uncached(c, CMD_VERTEXPTR, ((unsigned)vertex) & 0x00ffffff);

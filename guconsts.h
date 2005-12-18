@@ -211,7 +211,7 @@
 #define CMD_TEXMODE		194
 #define CMD_TEXFMT		195
 
-#define CMD_CLUT_BLKS		196
+#define CMD_CLUT_LOAD		196
 #define CMD_CLUT_MODE		197
 
 #define CMD_TEXFILT		198

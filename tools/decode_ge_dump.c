@@ -601,9 +601,6 @@ unsigned process_insn (uint32_t insn)
 	case 0xb8 ... 0xbf:
 		DUMP("(Mipmap Level %d) Texture Width 2^%d, Height 2^%d", opcode - 0xb8, arg & 0xff, arg >> 8);
 		break;
-	case 0xc4:
-		DUMP("CLUT size %d", arg);
-		break;
 	case 0xc2:
 		DUMP("Texture mode: maxlevels=%d ?=%d swizzle=%d",
 		     (arg >> 16) & 0xff, (arg >> 8) & 0xff, arg & 0xff);
@@ -622,8 +619,11 @@ unsigned process_insn (uint32_t insn)
 		     arg == 9 ? "DXT3" :
 		     arg == 10 ? "DXT5" : "???");
 		break;
-	case 0xc7:
-		DUMP("Texture Wrap Mode S %d (%s), T %d (%s)", arg & 0xff, (arg & 0xff) ? "clamp" : "repeat", arg >> 8, (arg >> 8) ? "clamp" : "repeat");
+	case 0xc4:
+		DUMP("CLUT load size %d", arg);
+		break;
+	case 0xc5:
+		DUMP("CLUT mode %06x: format %d, mask %02x", arg, arg & 0x3, (arg >> 8) & 0xff);
 		break;
 	case 0xc6: {
 		static const char *filt[] = { "nearest", "linear",
@@ -636,6 +636,9 @@ unsigned process_insn (uint32_t insn)
 		     filt[(arg >> 8) & 0x7], filt[arg & 0x7]);
 		break;
 	}
+	case 0xc7:
+		DUMP("Texture Wrap Mode S %d (%s), T %d (%s)", arg & 0xff, (arg & 0xff) ? "clamp" : "repeat", arg >> 8, (arg >> 8) ? "clamp" : "repeat");
+		break;
 	case 0xc8:
 		DUMP("Mipmap bias: %d", (arg << 8) >> 8);
 		break;

@@ -343,7 +343,6 @@ void glPushAttrib( GLbitfield mask )
 			CMD_TEXMODE,
 			CMD_TEXFMT,
 
-			CMD_CLUT_BLKS,
 			CMD_CLUT_MODE,
 
 			CMD_TEXFILT,
@@ -462,10 +461,6 @@ void glPopAttrib( void )
 		/* make sure texture cache is flushed */
 		__pspgl_context_writereg(c, CMD_TEXCACHE_FLUSH,
 					 a->regs[CMD_TEXCACHE_FLUSH]+1);
-
-		/* make sure CLUT is up to date */
-		__pspgl_context_writereg_uncached(c, CMD_CLUT_BLKS,
-						  a->regs[CMD_CLUT_BLKS]);
 	}
 
 	if (mask & GL_TRANSFORM_BIT) {
