@@ -1,6 +1,8 @@
 #ifndef __pspgl_misc_h__
 #define __pspgl_misc_h__
 
+typedef unsigned uint32_t;
+
 
 /* Return a pointer to uncached address space.  The pointer and size
    must both be a multiple CACHELINE_SIZE.  */
@@ -11,9 +13,62 @@ void *__pspgl_uncached(void *p, size_t size);
    times. */
 #define ROUNDUP(x, a)  (((x)+((a)-1)) & ~((a)-1))
 
-extern void __pspgl_log (const char *fmt, ...);
+/* log-base-2 function.  For non-power-of-2 inputs, it returns the result of pow2(lg2(x)) */
+static inline uint32_t lg2(uint32_t x)
+{
+	uint32_t ret;
 
-typedef unsigned uint32_t;
+	if (__builtin_constant_p(x))
+		switch(x) {
+		case 1:		return 0;
+		case 2:		return 1;
+		case 4:		return 2;
+		case 8:		return 3;
+		case 16:	return 4;
+		case 32:	return 5;
+		case 64:	return 6;
+		case 128:	return 7;
+		case 256:	return 8;
+		case 512:	return 9;
+		case 1024:	return 10;
+		case 2048:	return 11;
+		case 4096:	return 12;
+		case 8192:	return 13;
+		case 16384:	return 14;
+		case 32768:	return 15;
+		case 65536:	return 16;
+		}
+
+	ret = -1;
+	do {
+		ret++;
+		x >>= 1;
+	} while(x);
+
+	return ret;
+}
+
+/* returns true if x is a power of 2 */
+static inline int ispow2(uint32_t x)
+{
+	return (x & (x - 1)) == 0;
+}
+
+/* Return the next power of 2 >= x */
+static inline uint32_t pow2(uint32_t x)
+{
+	uint32_t ret;
+
+	if (__builtin_constant_p(x) && ispow2(x))
+		return x;
+
+	for(ret = 1; ret < x; ret <<= 1)
+		;
+
+	return ret;
+}
+
+extern void __pspgl_log (const char *fmt, ...);
 
 enum pspgl_dump_tag {
 	PSPGL_GE_DUMP_MATRIX    = 1,

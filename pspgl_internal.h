@@ -314,11 +314,6 @@ extern void __pspgl_set_texture_image(struct pspgl_texobj *tobj, unsigned level,
 extern void __pspgl_update_mipmaps(void);
 extern void __pspgl_moved_textures(void);
 
-static inline unsigned ispow2(unsigned n)
-{
-	return (n & (n-1)) == 0;
-}
-
 /* glScissor.c */
 extern void __pspgl_set_scissor(void);
 

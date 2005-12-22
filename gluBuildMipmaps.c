@@ -4,31 +4,7 @@
 #include <string.h>
 
 #include "pspglu.h"
-
-static unsigned pow2(unsigned x)
-{
-	unsigned ret = 1;
-
-	while(x > ret)
-		ret <<= 1;
-
-	return ret;
-}
-
-static int lg2(int x)
-{
-	int ret = -1;
-
-	if (x == 0 || ((x-1) & x))
-		return -1;
-
-	while(x) {
-		x >>= 1;
-		ret++;
-	}
-
-	return ret;
-}
+#include "pspgl_misc.h"
 
 GLint gluBuild2DMipmaps( GLenum target,
 			 GLint internalFormat,

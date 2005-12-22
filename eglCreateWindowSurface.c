@@ -4,16 +4,6 @@
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
 
-static unsigned pow2(unsigned x)
-{
-	unsigned ret = 1;
-
-	while(x > ret)
-		ret <<= 1;
-
-	return ret;
-}
-
 #define MASK(bits)	((1 << (bits)) - 1)
 
 EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindowType window,

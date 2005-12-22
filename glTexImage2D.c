@@ -4,24 +4,6 @@
 #include "pspgl_internal.h"
 #include "pspgl_texobj.h"
 
-static
-unsigned long lg2 (unsigned long x)
-{
-	long i;
-
-	for (i=9; i>=0; i--) {
-		if ((1 << i) <= x)
-			break;
-	}
-
-	return i;
-}
-
-static inline unsigned ispow2(unsigned n)
-{
-	return (n & (n-1)) == 0;
-}
-
 static unsigned max_mipmap(unsigned width, unsigned height)
 {
 	int maxlvl;
