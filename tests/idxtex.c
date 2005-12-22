@@ -4,6 +4,7 @@
 #include "glchk.h"
 
 #include "textab.h"
+#include "perfmeter.h"
 
 #define NDXT	(sizeof(dxt)/sizeof(*dxt))
 
@@ -39,6 +40,8 @@ void display (void)
 	unsigned char cmap[256 * 4];
 
 	angle += delta;
+
+	pm_framestart();
 
 	GLCHK(glShadeModel(GL_SMOOTH));
 
@@ -105,6 +108,9 @@ void display (void)
 #if SYS
 	usleep(100000);
 #endif
+
+	pm_frameend();
+
 	glutSwapBuffers();
 	glutPostRedisplay();
 }
