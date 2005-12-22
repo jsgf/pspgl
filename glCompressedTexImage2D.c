@@ -13,12 +13,30 @@
    bits, and encodes the color in RGB 565 format */
 static void copy_dxt1(const struct pspgl_texfmt *fmt, void *to, const void *from, unsigned size)
 {
-	const unsigned short *src = from;
-	unsigned short *dest = to;
+	const unsigned long *src = from;
+	unsigned long *dest = to;
 
 	for(; size >= 8; size -= 8) {
-		dest[0] = src[2];
-		dest[1] = src[3];
+		dest[0] = src[1];
+		dest[1] = src[0];
+
+		dest += 2;
+		src += 2;
+	}
+}
+
+/* PSP DXT3 format reverses the alpha and color parts of each block,
+   and reverse the color and per-pixel terms in the color part. */
+static void copy_dxt3(const struct pspgl_texfmt *fmt, void *to, const void *from, unsigned size)
+{
+	const unsigned long *src = from;
+	unsigned long *dest = to;
+
+	for(; size >= 16; size -= 16) {
+		/* colour */
+		dest[0] = src[3];
+		dest[1] = src[2];
+		/* alpha */
 		dest[2] = src[0];
 		dest[3] = src[1];
 
@@ -27,21 +45,25 @@ static void copy_dxt1(const struct pspgl_texfmt *fmt, void *to, const void *from
 	}
 }
 
-/* PSP DXT3 and 5 formats reverse the alpha and color parts of each
-   block, and reverse the color and per-pixel terms in the color part. */
-static void copy_dxt35(const struct pspgl_texfmt *fmt, void *to, const void *from, unsigned size)
+/* PSP DXT5 format reverses the alpha and color parts of each block,
+   and reverse the color and per-pixel terms in the color part.  In
+   the alpha part, the 2 reference alpha values are swapped with the
+   alpha interpolation values. */
+static void copy_dxt5(const struct pspgl_texfmt *fmt, void *to, const void *from, unsigned size)
 {
 	const unsigned short *src = from;
 	unsigned short *dest = to;
 
 	for(; size >= 16; size -= 16) {
-		/* copy alpha */
-		memcpy(&dest[4], &src[0], 8);
+		/* colour */
+		((unsigned long *)dest)[0] = ((unsigned long *)src)[3];
+		((unsigned long *)dest)[1] = ((unsigned long *)src)[2];
 
-		dest[0] = src[6];
-		dest[1] = src[7];
-		dest[2] = src[4];
-		dest[3] = src[5];
+		/* alpha */
+		dest[4] = src[1];
+		dest[5] = src[2];
+		dest[6] = src[3];
+		dest[7] = src[0];
 
 		dest += 8;
 		src += 8;
@@ -52,8 +74,8 @@ static const struct pspgl_texfmt comptexformats[] = {
 	/* Compressed textures */
 	{ GL_COMPRESSED_RGB_S3TC_DXT1_EXT,	GL_UNSIGNED_BYTE,	1, GE_DXT1,	1,	copy_dxt1,	0  },
 	{ GL_COMPRESSED_RGBA_S3TC_DXT1_EXT,	GL_UNSIGNED_BYTE,	1, GE_DXT1,	1,	copy_dxt1,	TF_ALPHA },
-	{ GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,	GL_UNSIGNED_BYTE,	1, GE_DXT3,	1,	copy_dxt35,	TF_ALPHA },
-	{ GL_COMPRESSED_RGBA_S3TC_DXT5_EXT,	GL_UNSIGNED_BYTE,	1, GE_DXT5,	1,	copy_dxt35,	TF_ALPHA },
+	{ GL_COMPRESSED_RGBA_S3TC_DXT3_EXT,	GL_UNSIGNED_BYTE,	1, GE_DXT3,	1,	copy_dxt3,	TF_ALPHA },
+	{ GL_COMPRESSED_RGBA_S3TC_DXT5_EXT,	GL_UNSIGNED_BYTE,	1, GE_DXT5,	1,	copy_dxt5,	TF_ALPHA },
 
 	{ 0, 0 }
 };
