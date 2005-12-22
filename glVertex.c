@@ -39,7 +39,19 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 	}
 
 	if (++c->beginend.vertex_count == BUFSZ) {
-		static const char overhang_count [] = { 0, 0, 1, 1, 0, 2, 2, 3, 3, 2 };
+		static const char overhang_count [] = {
+			0,	/* GL_POINTS */
+			0,	/* GL_LINES */
+			1,	/* GL_LINE_LOOP */
+			1,	/* GL_LINE_STRIP */
+			0,	/* GL_TRIANGLES */
+			2,	/* GL_TRIANGLE_STRIP */
+			2,	/* GL_TRIANGLE_FAN */
+			1,	/* GL_QUADS (really trifan) */
+			1,	/* GL_QUAD_STRIP (really trifan) */
+			1,	/* GL_POLYGON (really trifan) */
+			0	/* GL_SPRITES_PSP */
+		};
 		char overhang = overhang_count[c->beginend.primitive];
 		long prim = __pspgl_glprim2geprim(c->beginend.primitive);
 

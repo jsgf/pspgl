@@ -404,9 +404,17 @@ int __pspgl_gen_varray(const struct vertex_format *vfmt, int first, int count,
 long __pspgl_glprim2geprim (GLenum glprim)
 {
 	static const char geprim_tab [] = {
-		GE_POINTS, GE_LINES, GE_LINE_STRIP, GE_LINE_STRIP,
-		GE_TRIANGLES, GE_TRIANGLE_STRIP, GE_TRIANGLE_FAN, 
-		GE_TRIANGLE_FAN, GE_TRIANGLE_STRIP, GE_TRIANGLE_FAN
+		GE_POINTS,		/* GL_POINTS */
+		GE_LINES,		/* GL_LINES */
+		GE_LINE_STRIP,		/* GL_LINE_LOOP */
+		GE_LINE_STRIP,		/* GL_LINE_STRIP */
+		GE_TRIANGLES,		/* GL_TRIANGLES */
+		GE_TRIANGLE_STRIP,	/* GL_TRIANGLE_STRIP */
+		GE_TRIANGLE_FAN,	/* GL_TRIANGLE_FAN */
+		GE_TRIANGLE_FAN,	/* GL_QUADS */
+		GE_TRIANGLE_STRIP,	/* GL_QUAD_STRIP */
+		GE_TRIANGLE_FAN,	/* GL_POLYGON */
+		GE_SPRITES,		/* GL_SPRITES_PSP */
 	};
 
 	if ((unsigned) glprim > sizeof(geprim_tab)/sizeof(geprim_tab[0]))

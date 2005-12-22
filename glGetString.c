@@ -25,6 +25,7 @@ char *gl_strings [] = {
 	"GL_PSP_bezier_patch "
 	"GL_PSP_vertex_blend "
 	"GL_PSP_view_matrix "
+	"GL_PSP_sprites "
 };
 
 
