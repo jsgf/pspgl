@@ -4,20 +4,64 @@
 #include "pspgl_internal.h"
 #include "pspgl_texobj.h"
 
-static void convert_subimage(struct pspgl_teximg *img, const void *pixels, 
+static void convert_subimage(struct pspgl_teximg *img, void *to, const void *pixels, 
 			     int xoffset, int yoffset, unsigned width, unsigned height)
 {
 	const unsigned pixsz = img->texfmt->hwsize;
-	unsigned char *to = img->image->base + (yoffset * img->width + xoffset) * pixsz;
 	unsigned tostride = img->width * pixsz;
 	unsigned fromstride = width * pixsz;
 	void (*convert)(const struct pspgl_texfmt *, void *to, const void *from, unsigned width);
 	convert = img->texfmt->convert;
 
+	to += (yoffset * img->width + xoffset) * pixsz;
+
 	while(height--) {
 		(*convert)(img->texfmt, to, pixels, width);
 		to += tostride;
 		pixels += fromstride;
+	}
+}
+
+static void convert_subimage_swizzled(struct pspgl_teximg *img, void *to, const void *pixels,
+				      int xoffset, int yoffset,
+				      unsigned width, unsigned height)
+{
+	const int lg2_hwsize = lg2(img->texfmt->hwsize);
+	const int lg2_pixsize = lg2(img->texfmt->pixsize);
+	const unsigned lg2_w = lg2(img->width << lg2_hwsize);
+	const unsigned chunkpix = 16 >> lg2_hwsize;
+	unsigned y, src, dst, srcstride, dststride;
+	void (*convert)(const struct pspgl_texfmt *, void *to, const void *from, unsigned width);
+	convert = img->texfmt->convert;
+
+	src = 0;
+	srcstride = 0;		/* = (width-stride) * pixsize, where width==stride */
+
+	dst = (yoffset * img->width + xoffset) << lg2_hwsize;
+	dststride = (img->width - width) << lg2_hwsize;
+
+	for(y = 0; y < height; y++, src += srcstride, dst += dststride) {
+		unsigned x, remains;
+
+		x = xoffset;
+		remains = width;
+
+		while(remains) {
+			unsigned dstswiz = swizzle(dst, lg2_w);
+			unsigned span;
+
+			span = chunkpix - (x & (chunkpix - 1));
+			if (span > remains)
+				span = remains;
+
+			(*convert)(img->texfmt, to + dstswiz, pixels + src, span);
+
+			remains -= span;
+			x += span;
+
+			dst += span << lg2_hwsize;
+			src += span << lg2_pixsize;
+		}
 	}
 }
 
@@ -30,6 +74,7 @@ void glTexSubImage2D( GLenum target, GLint level,
 	struct pspgl_texobj *tobj;
 	struct pspgl_teximg *timg;
 	const struct pspgl_texfmt *texfmt;
+	void *p;
 
 	if (!pspgl_curctx->texture.bound)
 		glBindTexture(target, 0);
@@ -69,13 +114,16 @@ void glTexSubImage2D( GLenum target, GLint level,
 	assert(timg->image->refcount > 0);
 
 	__pspgl_buffer_dlist_sync(timg->image);
-	__pspgl_buffer_map(timg->image, GL_WRITE_ONLY_ARB);
+	p = __pspgl_buffer_map(timg->image, GL_WRITE_ONLY_ARB) + timg->offset;
 
-	convert_subimage(timg, pixels, xoffset, yoffset, width, height);
+	if (tobj->flags & TOF_SWIZZLED)
+		convert_subimage_swizzled(timg, p, pixels, xoffset, yoffset, width, height);
+	else
+		convert_subimage(timg, p, pixels, xoffset, yoffset, width, height);
 
 	__pspgl_buffer_unmap(timg->image, GL_WRITE_ONLY_ARB);
 
-	if (level == 0)
+	if (level == 0 && (tobj->flags & TOF_GENERATE_MIPMAPS))
 		__pspgl_update_mipmaps();
 
 	return;

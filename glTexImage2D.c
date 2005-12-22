@@ -435,7 +435,7 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 
 	__pspgl_update_texenv(tobj);
 
-	if (level == 0)
+	if (level == 0 && (tobj->flags & TOF_GENERATE_MIPMAPS))
 		__pspgl_update_mipmaps();
 	return;
 

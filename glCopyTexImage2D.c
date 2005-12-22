@@ -90,7 +90,7 @@ void glCopyTexImage2D(GLenum target,
 	sendCommandi(CMD_TEXCACHE_SYNC, getReg(CMD_TEXCACHE_SYNC)+1);
 	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);
 
-	if (level == 0)
+	if (level == 0 && (tobj->flags & TOF_GENERATE_MIPMAPS))
 		__pspgl_update_mipmaps();
 
 	return;
