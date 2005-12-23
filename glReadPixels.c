@@ -9,23 +9,55 @@ void glReadPixels( GLint x, GLint y,
 		   GLenum format, GLenum type,
 		   GLvoid *pixels )
 {
-	const struct pspgl_texfmt *fmt;	
 	struct pspgl_surface *read;
+	struct pspgl_buffer *framebuffer;
+	unsigned fb_offset;
+	unsigned hwsize;
+	unsigned pixfmt;
 	int dest_x, dest_y;
 	GLsizei dest_stride;
 
 	read = pspgl_curctx->read;
 
-	fmt = __pspgl_hardware_format(__pspgl_texformats, format, type);
+	if (format != GL_DEPTH_COMPONENT) {
+		const struct pspgl_texfmt *fmt;	
 
-	if (fmt->hwformat != read->pixfmt) {
-		GLERROR(GL_INVALID_ENUM);
-		return;
-	}
+		fmt = __pspgl_hardware_format(__pspgl_texformats, format, type);
 
-	if ((fmt->flags & TF_NATIVE) == 0) {
-		GLERROR(GL_INVALID_OPERATION);
-		return;
+		if (fmt->hwformat != read->pixfmt) {
+			GLERROR(GL_INVALID_ENUM);
+			return;
+		}
+
+		if ((fmt->flags & TF_NATIVE) == 0) {
+			GLERROR(GL_INVALID_OPERATION);
+			return;
+		}
+
+		int current_back = (read->color_buffer[1] == NULL) ? 
+			0 : (read->current_front ^ 1);
+		framebuffer = read->color_buffer[current_back];
+		fb_offset = 0;
+
+		hwsize = fmt->hwsize;
+		pixfmt = read->pixfmt;
+	} else {
+		if (read->depth_buffer == NULL) {
+			GLERROR(GL_INVALID_OPERATION);
+			return;
+		}
+		if (type != GL_UNSIGNED_SHORT) {
+			GLERROR(GL_INVALID_ENUM);
+			return;
+		}
+
+		/* The PSP provides a window into VRAM which makes the
+		   depth buffer look properly linearized. */
+		framebuffer = read->depth_buffer;
+		fb_offset = sceGeEdramGetSize() * 3;
+
+		hwsize = 2;
+		pixfmt = GE_RGBA_4444; /* any 16-bit sized format */
 	}
 
 	dest_x = 0;
@@ -61,9 +93,6 @@ void glReadPixels( GLint x, GLint y,
 	   textures, lower addresses are lower-left). */
 	y = read->height - y;
 
-	int current_back = (read->color_buffer[1] == NULL) ? 0 : (read->current_front ^ 1);
-	struct pspgl_buffer *framebuffer = read->color_buffer[current_back];
-
 	if (((unsigned)pixels & 0xf) != 0) {
 		/* Unaligned dest buffer; we can't use DMA */
 		const void *map;
@@ -71,17 +100,17 @@ void glReadPixels( GLint x, GLint y,
 		void *dst;
 		unsigned src_stride;
 
-		src_stride = read->pixelperline * fmt->hwsize;
-		dest_stride *= fmt->hwsize;
+		src_stride = read->pixelperline * hwsize;
+		dest_stride *= hwsize;
 
 		__pspgl_buffer_dlist_sync(framebuffer);
 
 		map = __pspgl_buffer_map(framebuffer, GL_READ_ONLY_ARB);
-		src = map + (y * read->pixelperline + x) * fmt->hwsize;
-		dst = pixels + (dest_y * dest_stride + dest_y) * fmt->hwsize;
+		src = map + fb_offset + (y * read->pixelperline + x) * hwsize;
+		dst = pixels + (dest_y * dest_stride + dest_y) * hwsize;
 
 		while(height--) {
-			memcpy(dst, src, width * fmt->hwsize);
+			memcpy(dst, src, width * hwsize);
 			dst += dest_stride;
 			src -= src_stride;
 		}
@@ -90,11 +119,11 @@ void glReadPixels( GLint x, GLint y,
 	} else {
 		/* Make sure the cache has no aliased content before the DMA transfer.
 		   XXX Use a pspgl_buffer for this, with a pointer to an transient? */
-		sceKernelDcacheWritebackInvalidateRange(pixels, width*height*fmt->hwsize);
+		sceKernelDcacheWritebackInvalidateRange(pixels, width*height*hwsize);
 
-		__pspgl_copy_pixels(framebuffer->base, -read->pixelperline, x, y,
+		__pspgl_copy_pixels(framebuffer->base + fb_offset, -read->pixelperline, x, y,
 				    pixels, dest_stride, 0, 0,
-				    width, height, read->pixfmt);
+				    width, height, pixfmt);
 
 		/* Sync with copy.  XXX check for use of a PBO to make this unnecessary. */
 		glFinish();

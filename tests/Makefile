@@ -12,7 +12,7 @@ LDFLAGS = -g -Wall -L.. -L$(PSPPATH)/lib
 
 TESTS=bezier copytex depthtest eglcube glut spots \
 	tex texsubimage varray vertexblend mipmaps viewports \
-	thrashalloc
+	thrashalloc readdepth
 #TESTS+=idxtex
 
 BUILDDATE := $(shell date "+%Y/%m/%d %k:%M:%S")
