@@ -59,8 +59,29 @@ static inline uint32_t pow2(uint32_t x)
 {
 	uint32_t ret;
 
-	if (__builtin_constant_p(x) && ispow2(x))
-		return x;
+	if (__builtin_constant_p(x)) {
+		if (ispow2(x))
+			return x;
+		switch(x) {
+#define POW2(x)	case ((x) / 2)+1 ... (x)-1: return (x)
+			POW2(4);
+			POW2(8);
+			POW2(16);
+			POW2(32);
+			POW2(64);
+			POW2(128);
+			POW2(256);
+			POW2(512);
+			POW2(1024);
+			POW2(2048);
+			POW2(4096);
+			POW2(8192);
+			POW2(16384);
+			POW2(32768);
+			POW2(65536);
+#undef POW2
+		}
+	}
 
 	for(ret = 1; ret < x; ret <<= 1)
 		;
