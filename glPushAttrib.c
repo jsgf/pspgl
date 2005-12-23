@@ -32,7 +32,7 @@ static void save_regs(const struct pspgl_context *c,
 
 	psp_log("saving regs:\n");
 	while((reg = *regs++)) {
-		psp_log("  save_regs: %02x %3d = %08x\n", reg, reg, c->ge_reg[reg]);
+		psp_log("  save_regs: %02x %3d = %08x\n", reg, reg, c->hw.ge_reg[reg]);
 		a->regs[reg] = c->hw.ge_reg[reg];
 		a->regmask[reg / 32] |= 1 << (reg % 32);
 	}

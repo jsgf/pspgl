@@ -6,7 +6,7 @@
 #include <stdarg.h>
 
 #include "pspgl_internal.h"
-
+#include "pspgl_buffers.h"
 
 void *__pspgl_uncached(void *p, size_t size)
 {
@@ -98,18 +98,52 @@ void __pspgl_dlist_dump (unsigned long *cmd_buf, unsigned long len)
 void __pspgl_vram_dump (void)
 {
 	unsigned long vram_start = (unsigned long) sceGeEdramGetAddr();
-	unsigned long vram_size = (unsigned long) sceGeEdramGetSize();
+	unsigned long vram_size = (unsigned long) sceGeEdramGetSize() * 4;
 	unsigned long header [4];
 	unsigned char vram_copy [0x10000];
 	int fd;
 	int i;
+
+	fd = sceIoOpen(PSPGL_GE_DUMPFILE, PSP_O_CREAT | PSP_O_APPEND | PSP_O_WRONLY, 0644);
+
+	if (pspgl_curctx) {
+		struct pspgl_surface *s = pspgl_curctx->draw;
+		struct pspgl_dump_surfaces surf;
+
+		header[0] = PSPGL_GE_DUMP_SURFACES;
+		header[1] = sizeof(header) + sizeof(surf);
+		header[2] = 0;
+		header[3] = 0;
+
+		memset(&surf, 0, sizeof(surf));
+
+		surf.pixfmt = s->pixfmt;
+		surf.alpha_mask = s->alpha_mask;
+		surf.stencil_mask = s->stencil_mask;
+
+		surf.front.start = s->color_buffer[s->current_front]->base - sceGeEdramGetAddr();
+		surf.front.size = s->height * s->pixelperline * (s->pixfmt == GE_RGBA_8888 ? 4 : 2);
+		surf.front.stride = s->pixelperline;
+
+		surf.back.start = s->color_buffer[!s->current_front]->base - sceGeEdramGetAddr();
+		surf.back.size = s->height * s->pixelperline * (s->pixfmt == GE_RGBA_8888 ? 4 : 2);
+		surf.back.stride = s->pixelperline;
+
+		if (s->depth_buffer) {
+			surf.depth.start = s->depth_buffer->base - sceGeEdramGetAddr();
+			surf.depth.size = s->height * s->pixelperline * 2;
+			surf.depth.stride = s->pixelperline;
+		}
+
+		sceIoWrite(fd, header, sizeof(header));
+		sceIoWrite(fd, &surf, sizeof(surf));
+	}
 
 	header[0] = PSPGL_GE_DUMP_VRAM;
 	header[1] = sizeof(header) + vram_size;
 	header[2] = vram_start;
 	header[3] = vram_size;
 
-	fd = sceIoOpen(PSPGL_GE_DUMPFILE, PSP_O_CREAT | PSP_O_APPEND | PSP_O_WRONLY, 0644);
 	sceIoWrite(fd, header, sizeof(header));
 
 	/* copy in blocks, direct writes from VRAM to file don't seem to work... */

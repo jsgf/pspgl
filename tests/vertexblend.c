@@ -282,6 +282,11 @@ void display (void)
 		screenshot("vertexblend");
 	}
 
+#if 0
+	glFinish();
+	__pspgl_vram_dump();
+#endif
+
 	glutSwapBuffers();
 	glutPostRedisplay();
 }

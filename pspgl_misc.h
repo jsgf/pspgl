@@ -95,7 +95,17 @@ enum pspgl_dump_tag {
 	PSPGL_GE_DUMP_MATRIX    = 1,
 	PSPGL_GE_DUMP_REGISTERS = 2,
 	PSPGL_GE_DUMP_DLIST     = 3,
-	PSPGL_GE_DUMP_VRAM      = 4
+	PSPGL_GE_DUMP_VRAM      = 4,
+	PSPGL_GE_DUMP_SURFACES	= 5,
+};
+
+struct pspgl_dump_surfaces {
+	uint32_t pixfmt;
+	uint32_t alpha_mask, stencil_mask;
+
+	struct pspgl_dump_surf {
+		uint32_t start, size, stride;
+	} front, back, depth;
 };
 
 extern void __pspgl_ge_register_dump (void);
