@@ -11,8 +11,7 @@ LFLAGS = -g -Wall -O2 -G0 -L$(PSPPATH)/lib
 
 DEPDIR = .deps
 
-
-libGL.a_OBJS = \
+API_OBJS = \
 	eglChooseConfig.o \
 	eglCreateContext.o \
 	eglCreateWindowSurface.o \
@@ -145,6 +144,10 @@ libGL.a_OBJS = \
 	pspgl_varray_draw_range_elts.o \
 	pspgl_vidmem.o
 
+libGL.a_OBJS = \
+	$(API_OBJS) \
+	eglGetProcAddress.o
+
 #	glGenLists.o
 #	glIsList.o
 
@@ -170,6 +173,16 @@ all: $(DEPDIR) $(libGL.a_OBJS) $(libGLU.a_OBJS) $(libglut.a_OBJS) libGL.a libGLU
 	@$(ARCH)nm -o -fp -g --defined-only $@ | \
 		awk '$$2~/^(gl|egl|glut|__pspgl)/ { next } { if (!bad) print "Bad symbols:"; print "\t", $$1, $$2; bad++ } END { if (bad) { print bad," bad symbol(s)"; exit(1) } else { print "Namespace OK" } }'
 
+
+eglGetProcAddress.o: eglGetProcAddress.c pspgl_proctable.h
+
+# Extract all the public GL and EGL API symbols which are extensions (ends with PSP, ARB or EXT)
+pspgl_proctable.h: $(API_OBJS) Makefile
+	$(ARCH)nm -fp -g --defined-only $(API_OBJS) | sort +0 | \
+		awk '$$2=="T" && $$1 ~ /^(gl|egl)[A-Z][a-zA-Z]+(PSP|ARB|EXT)/ \
+			{ print "\t{ \"" $$1 "\", (void (*)())"$$1 " }," }' > $@ \
+			|| rm -f $@
+
 $(DEPDIR):
 	mkdir $(DEPDIR)
 
@@ -183,7 +196,7 @@ tar: clean
 	( cd .. && tar cvfz pspgl-`date "+%Y-%m-%d"`.tar.gz pspgl --exclude "*.DS_Store" && cd - )
 
 clean:
-	$(RM) -rf *.o *.a $(DEPDIR)
+	$(RM) -rf *.o *.a $(DEPDIR) pspgl_proctable.h
 	make -C tools clean
 	make -C tests clean
 	make -C test-q3 clean

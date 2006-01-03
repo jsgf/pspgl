@@ -6495,8 +6495,11 @@ GLAPI void APIENTRY glEnableStatsPSP (GLenum);
 GLAPI void APIENTRY glDisableStatsPSP (GLenum);
 GLAPI void APIENTRY glResetStatsPSP (GLenum);
 GLAPI void APIENTRY glGetStatisticsuivPSP (GLenum, GLuint *);
-
 #endif /* GL_GLEXT_PROTOTYPES */
+typedef void (APIENTRYP PFNGLENABLESTATSPSPPROC) (GLenum);
+typedef void (APIENTRYP PFNGLDISABLESTATSPSPPROC) (GLenum);
+typedef void (APIENTRYP PFNGLRESETSTATSPSPPROC) (GLenum);
+typedef void (APIENTRYP PFNGLGETSTATISTICSUIVPSPPROC) (GLenum, GLuint *);
 
 #define GL_STATS_TIMING_PSP		0x11000
 #define GL_STATS_FRAMETIME_PSP		0x11001
@@ -6530,8 +6533,26 @@ GLAPI void APIENTRY glDrawSplineRangeElementsPSP(GLenum mode,
 						 GLenum idx_type, const GLvoid *indices);
 
 GLAPI void APIENTRY glPatchSubdivisionPSP(GLuint u, GLuint v);
-
 #endif	/* GL_GLEXT_PROTOTYPES */
+
+typedef void (APIENTRYP PFNGLDRAWBEZIERARRAYSPSPPROC)(GLenum mode, GLuint u, GLuint v, GLint first);
+typedef void (APIENTRYP PFNGLDRAWBEZIERELEMENTSPSPPROC)(GLenum mode, GLuint u, GLuint v,
+							GLenum idx_type, const GLvoid *indices);
+typedef void (APIENTRYP PFNGLDRAWBEZIERRANGEELEMENTSPSPPROC)(GLenum mode,
+							     GLuint start, GLuint end,
+							     GLuint u, GLuint v,
+							     GLenum idx_type, const GLvoid *indices);
+typedef void (APIENTRYP PFNGLDRAWSPLINEARRAYSPSPPROC)(GLenum mode, GLuint u, GLuint v,
+						      GLenum uflags, GLenum vflags,
+						      GLint first);
+typedef void (APIENTRYP PFNGLDRAWSPLINEELEMENTSPSPPROC)(GLenum mode, GLuint u, GLuint v,
+							GLenum uflags, GLenum vflags,
+							GLenum idx_type, const GLvoid *indices);
+typedef void (APIENTRYP PFNGLDRAWSPLINERANGEELEMENTSPSPPROC)(GLenum mode,
+							     GLuint start, GLuint end,
+							     GLuint u, GLuint v,
+							     GLenum uflags, GLenum vflags,
+							     GLenum idx_type, const GLvoid *indices);
 
 /* An "inner" spline patch edge is intended to be mated with the edge
    of another patch, and the rendered primitive does use the last row
@@ -6555,6 +6576,9 @@ GLAPI void APIENTRY glPatchSubdivisionPSP(GLuint u, GLuint v);
 GLAPI void APIENTRY glWeightPointerPSP(GLint size, GLenum type, GLsizei stride,
 				       const GLvoid *array);
 #endif /* GL_GLEXT_PROTOTYPES */
+
+typedef void (APIENTRYP PFNGLWEIGHTPOINTERPSPPROC)(GLint size, GLenum type, GLsizei stride,
+						   const GLvoid *array);
 
 #define GL_BONE0_PSP	0x11200
 #define GL_BONE1_PSP	0x11201
