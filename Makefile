@@ -2,7 +2,7 @@ PSPPATH := $(shell psp-config --psp-prefix)
 PSPSDK := $(shell psp-config --pspsdk-path)
 ARCH = psp-
 
-CC = $(ARCH)gcc
+CC = $(ARCH)gcc -std=gnu99
 AR = $(ARCH)ar
 RANLIB = $(ARCH)ranlib
 RM = rm -f

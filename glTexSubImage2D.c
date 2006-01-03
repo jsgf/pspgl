@@ -4,13 +4,17 @@
 #include "pspgl_internal.h"
 #include "pspgl_texobj.h"
 
-static void convert_subimage(struct pspgl_teximg *img, void *to, const void *pixels, 
+static void convert_subimage(struct pspgl_teximg * restrict img,
+			     void * restrict to,
+			     const void * restrict pixels, 
 			     int xoffset, int yoffset, unsigned width, unsigned height)
 {
 	const unsigned pixsz = img->texfmt->hwsize;
 	unsigned tostride = img->width * pixsz;
 	unsigned fromstride = width * pixsz;
-	void (*convert)(const struct pspgl_texfmt *, void *to, const void *from, unsigned width);
+	void (*convert)(const struct pspgl_texfmt * restrict texfmt,
+			void * restrict to, const void *restrict from,
+			unsigned width);
 	convert = img->texfmt->convert;
 
 	to += (yoffset * img->width + xoffset) * pixsz;
@@ -22,15 +26,17 @@ static void convert_subimage(struct pspgl_teximg *img, void *to, const void *pix
 	}
 }
 
-static void convert_subimage_swizzled(struct pspgl_teximg *img, void *to, const void *pixels,
+static void convert_subimage_swizzled(struct pspgl_teximg * restrict img, 
+				      void * restrict to,
+				      const void * restrict pixels,
 				      int xoffset, int yoffset,
 				      unsigned width, unsigned height)
 {
 	const int lg2_hwsize = lg2(img->texfmt->hwsize);
 	const int lg2_pixsize = lg2(img->texfmt->pixsize);
-	const unsigned lg2_w = lg2(img->width << lg2_hwsize);
+	const unsigned lg2_w = lg2(img->width) + lg2_hwsize;
 	const unsigned chunkpix = 16 >> lg2_hwsize;
-	unsigned y, src, dst, srcstride, dststride;
+	unsigned src, dst, srcstride, dststride;
 	void (*convert)(const struct pspgl_texfmt *, void *to, const void *from, unsigned width);
 	convert = img->texfmt->convert;
 
@@ -40,7 +46,7 @@ static void convert_subimage_swizzled(struct pspgl_teximg *img, void *to, const 
 	dst = (yoffset * img->width + xoffset) << lg2_hwsize;
 	dststride = (img->width - width) << lg2_hwsize;
 
-	for(y = 0; y < height; y++, src += srcstride, dst += dststride) {
+	for(unsigned y = 0; y < height; y++, src += srcstride, dst += dststride) {
 		unsigned x, remains;
 
 		x = xoffset;
@@ -69,12 +75,12 @@ void glTexSubImage2D( GLenum target, GLint level,
 		      GLint xoffset, GLint yoffset,
 		      GLsizei width, GLsizei height,
 		      GLenum format, GLenum type,
-		      const GLvoid *pixels )
+		      const GLvoid * restrict pixels )
 {
 	struct pspgl_texobj *tobj;
 	struct pspgl_teximg *timg;
 	const struct pspgl_texfmt *texfmt;
-	void *p;
+	void * restrict p;
 
 	if (!pspgl_curctx->texture.bound)
 		glBindTexture(target, 0);

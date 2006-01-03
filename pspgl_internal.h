@@ -379,7 +379,7 @@ do {									\
 	sendCommandi(cmd, arg.i >> 8);					\
 } while (0)
 
-static inline uint32_t getReg(reg)
+static inline uint32_t getReg(int reg)
 {
 	return pspgl_curctx->hw.ge_reg[reg];
 }
