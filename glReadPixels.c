@@ -1,5 +1,6 @@
 #include <string.h>
 #include <psputils.h>
+#include <pspge.h>
 
 #include "pspgl_internal.h"
 #include "pspgl_texobj.h"
