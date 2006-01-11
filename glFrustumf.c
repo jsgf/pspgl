@@ -1,3 +1,5 @@
+#include <GLES/gl.h>
+
 #include "pspgl_internal.h"
 
 

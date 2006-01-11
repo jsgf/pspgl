@@ -1,5 +1,5 @@
 #include "pspgl_internal.h"
-
+#include <GL/glu.h>
 
 extern
 void gluLookAtf (GLfloat eyeX, GLfloat eyeY, GLfloat eyeZ,

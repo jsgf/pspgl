@@ -61,6 +61,7 @@ API_OBJS = \
 	glDepthFunc.o \
 	glDepthMask.o \
 	glDepthRange.o \
+	glDepthRangef.o \
 	glDrawArrays.o \
 	glDrawBuffer.o \
 	glDrawElements.o \

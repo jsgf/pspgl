@@ -4,6 +4,7 @@
 #include <pspge.h>
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
+#include "pspgl_dlist.h"
 
 GLint __pspgl_eglerror = EGL_SUCCESS;
 struct pspgl_context *__pspgl_curctx = NULL;

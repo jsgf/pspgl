@@ -1,6 +1,8 @@
 #ifndef __pspgl_misc_h__
 #define __pspgl_misc_h__
 
+#include <sys/types.h>
+
 typedef unsigned uint32_t;
 
 

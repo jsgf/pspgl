@@ -96,6 +96,7 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 		return;
 
 	vbuf = NULL;
+	vbuf_offset = 0;
 	idx_base = 0;
 	vfmtp = &vfmt;
 

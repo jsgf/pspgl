@@ -1,3 +1,4 @@
+#include <GLES/gl.h>
 #include "pspgl_internal.h"
 
 void glClearDepthf (GLclampf depth)

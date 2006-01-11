@@ -1,5 +1,5 @@
 #include "pspgl_internal.h"
-
+#include <GL/glu.h>
 
 void gluPerspectivef (GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar);
 

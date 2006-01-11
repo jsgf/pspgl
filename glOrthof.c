@@ -1,5 +1,5 @@
+#include <GLES/gl.h>
 #include "pspgl_internal.h"
-
 
 void glOrthof (GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat near, GLfloat far)
 {
