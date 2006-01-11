@@ -46,7 +46,7 @@ EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindo
 	s->height = 272;
 	s->pixelperline = pow2(s->width);
 	s->current_front = 0;
-	s->displayed = 1;
+	s->flags = SURF_DISPLAYED;
 	s->pixfmt = pixconf->hwformat;
 
 	s->alpha_mask	= MASK(pixconf->alpha_bits);

@@ -216,7 +216,10 @@ struct pspgl_surface {
 	unsigned short height;
 	unsigned short pixelperline;
 	unsigned char current_front;
-	unsigned char displayed;
+	unsigned char flags;
+#define SURF_DISPLAYED	(1<<0)	/* displayed surface */
+#define SURF_TEXTURE	(1<<1)	/* surface suitable for texture */
+#define SURF_USEALPHA	(1<<2)	/* use surface alpha in texture */
 
 	struct pspgl_buffer *color_buffer[2];
 	struct pspgl_buffer *depth_buffer;

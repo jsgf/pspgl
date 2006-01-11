@@ -28,7 +28,7 @@ EGLBoolean eglChooseConfig (EGLDisplay dpy, const EGLint *attrib_list,
 	int nconfig;
 	int i;
 
-	while (attrib_list[0] != EGL_NONE) {
+	while (attrib_list && attrib_list[0] != EGL_NONE) {
 		switch (*attrib_list) {
 		case EGL_ALPHA_SIZE:	alpha_size = attrib_list[1]; break;
 		case EGL_BLUE_SIZE:	blue_size = attrib_list[1]; break;

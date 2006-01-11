@@ -148,7 +148,7 @@ EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *
 		sendCommandi(CMD_DEPTHBUFWIDTH, ((adr & 0xff000000) >> 8) | s->pixelperline);
 	}
 
-	if (s->displayed) {
+	if (s->flags & SURF_DISPLAYED) {
 		/* wait for completion of pending render operations before display */
 		__pspgl_buffer_dlist_sync(s->color_buffer[s->current_front]);
 
