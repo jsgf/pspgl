@@ -11,6 +11,7 @@ struct pspgl_proc {
 static const struct pspgl_proc proctable[] = {
 #include "pspgl_proctable.h"
 };
+#define NPROC	(sizeof(proctable)/sizeof(proctable[0]))
 
 static int cmp_procname(const void *a, const void *b)
 {
@@ -22,12 +23,14 @@ static int cmp_procname(const void *a, const void *b)
 
 GLAPI void (* APIENTRY eglGetProcAddress (const char *procname))()
 {
-	struct pspgl_proc *p;
+	struct pspgl_proc *entry;
 
-	p = bsearch(procname, proctable, sizeof(proctable)/sizeof(*proctable), sizeof(proctable[0]),
-		    cmp_procname);
-	if (p != NULL)
-		return p->proc;
+	entry = bsearch(procname, proctable, NPROC, sizeof(struct pspgl_proc),
+			cmp_procname);
+
+	if (entry != NULL)
+		return entry->proc;
+
 	return NULL;
 }
 
