@@ -78,14 +78,14 @@ void __pspgl_update_mipmaps(void)
 
 	   XXX May fail if attribute stack overflows
 	 */
-	psp_log("%s: about to pushattrib\n", __FUNCTION__);
 	saved_err = pspgl_curctx->glerror;
 	pspgl_curctx->glerror = GL_NO_ERROR;
+
 	glPushAttrib(GL_ENABLE_BIT | GL_TEXTURE_BIT | GL_COLOR_BUFFER_BIT);
 	if (pspgl_curctx->glerror != GL_NO_ERROR)
 		return;
+
 	pspgl_curctx->glerror = saved_err;
-	psp_log("%s: pushattrib done\n", __FUNCTION__);
 
 	/* Just save the shademodel rather than the complete lighting state */
 	GLuint shademodel = getReg(CMD_SHADEMODEL);
@@ -168,24 +168,14 @@ void __pspgl_update_mipmaps(void)
 		if (th > 1)
 			th /= 2;
 
-		/* allocate teximg if necessary */
-		if (tobj->images[level] == NULL)
-			tobj->images[level] = __pspgl_teximg_new(NULL, NULL,
-								 0, 0, 0, GL_FALSE, texfmt);
+		/* free old teximg if necessary */
+		if (tobj->images[level] != NULL) {
+			__pspgl_teximg_free(tobj->images[level]);
+			tobj->images[level] = NULL;
+		}
 
-		timg = tobj->images[level];
-
-		/* replace buffer with pointer to our generated mipmap buffer */
-		if (timg->image)
-			__pspgl_buffer_free(timg->image);
-		timg->width = tw;
-		timg->stride = tw;
-		timg->height = tw;
-
-		timg->image = mipmaps;
-		mipmaps->refcount++;
-		timg->offset = mipmapoff;
-		timg->texfmt = texfmt;
+		timg = __pspgl_teximg_from_buffer(mipmaps, mipmapoff, tw, th, tw, texfmt);
+		tobj->images[level] = timg;
 
 		psp_log("level %d has mipmap at offset %d (ptr %p); %dx%d->%dx%d\n",
 			level, mipmapoff, mipmaps->base+mipmapoff,
@@ -234,10 +224,7 @@ void __pspgl_update_mipmaps(void)
 	__pspgl_buffer_free(mipmaps);
 
 	/* restore GL state */
-	psp_log("%s: about to popattrib\n", __FUNCTION__);
 	glPopAttrib();
-
-	psp_log("%s: popattrib done\n", __FUNCTION__);
 	sendCommandi(CMD_SHADEMODEL, shademodel);
 
 	/* restore all mipmaps to their proper places - do this after
