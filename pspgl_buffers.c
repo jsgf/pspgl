@@ -6,6 +6,7 @@
 
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
+#include "pspgl_dlist.h"
 
 static int list_pin;		/* if != 0, prevent buffer list rearrangements */
 
@@ -400,6 +401,13 @@ void __pspgl_buffer_unmap(struct pspgl_buffer *data, GLenum access)
 		data->generation++;
 }
 
+static int buffer_synced(void *p)
+{
+	struct pspgl_buffer *buf = (struct pspgl_buffer *)p;
+
+	return (buf->flags & BF_PINNED) == 0;
+}
+
 /* Wait until the last hardware use of a databuffer has happened. If
    the caller wants to use the buffer after this call, it must
    increment the refcount to prevent it from being (potentially)
@@ -408,10 +416,10 @@ void __pspgl_buffer_dlist_sync(struct pspgl_buffer *data)
 {
 	data->refcount++;	/* prevent freeing */
 
-	/* XXX This is overkill; we can wait for each dlist until this
-	   buffer stops being pinned. */
-	if (data->flags & BF_PINNED)
-		glFinish();
+	if (data->flags & BF_PINNED) {
+		__pspgl_dlist_submit();
+		__pspgl_dlist_await_completion(buffer_synced, data);
+	}
 
 	assert((data->flags & BF_PINNED) == 0);
 

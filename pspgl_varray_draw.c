@@ -1,5 +1,6 @@
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
+#include "pspgl_dlist.h"
 
 void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 {
@@ -59,8 +60,7 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 	__pspgl_dlist_pin_buffer(vbuf, BF_PINNED_RD);
 
 	if (mode == GL_LINE_LOOP) {
-		GLushort *idx = __pspgl_dlist_insert_space(pspgl_curctx->dlist_current,
-							   sizeof(GLushort) * 2);
+		GLushort *idx = __pspgl_dlist_insert_space(sizeof(GLushort) * 2);
 
 		assert(idx != NULL);
 

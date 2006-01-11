@@ -2,6 +2,7 @@
 
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
+#include "pspgl_dlist.h"
 
 void glDrawSplineArraysPSP(GLenum mode, GLuint u, GLuint v,
 			   GLenum u_flags, GLenum v_flags,

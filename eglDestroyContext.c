@@ -15,12 +15,6 @@ EGLBoolean eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 	if (--c->refcount)
 		return EGL_TRUE;
 
-	if (c == __pspgl_curctx)
-		__pspgl_dlist_cancel();
-
-	__pspgl_dlist_free(c->dlist[0]);
-	__pspgl_dlist_free(c->dlist[1]);
-
 	c->shared->refcount--;
 
 	if (c->shared->refcount == 0) {

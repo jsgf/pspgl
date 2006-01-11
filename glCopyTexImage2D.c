@@ -3,6 +3,7 @@
 
 #include "pspgl_internal.h"
 #include "pspgl_texobj.h"
+#include "pspgl_dlist.h"
 
 static const struct {
 	GLenum format, type;

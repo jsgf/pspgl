@@ -3,7 +3,7 @@
 
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
-
+#include "pspgl_dlist.h"
 
 /* Find the min and max indices in an element array.  Expects indices
    to be a mapped pointer. */
@@ -162,8 +162,7 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 	/* If we're drawing a line-loop, add an extra edge to close
 	   the loop */
 	if (mode == GL_LINE_LOOP) {
-		GLushort *idx = __pspgl_dlist_insert_space(pspgl_curctx->dlist_current,
-							   sizeof(GLushort) * 2);
+		GLushort *idx = __pspgl_dlist_insert_space(sizeof(GLushort) * 2);
 		const void *idxmap;
 
 		assert(idx != NULL);

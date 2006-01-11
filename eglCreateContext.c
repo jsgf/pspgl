@@ -28,11 +28,6 @@ EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_
 	memset(ctx, 0, sizeof(*ctx));
 
 	ctx->refcount = 1;
-	for(i = 0; i < NUM_CMDLISTS; i++)
-		ctx->dlist[i] = __pspgl_dlist_create(1, __pspgl_dlist_swap);
-
-	ctx->dlist_current = ctx->dlist[0];
-	ctx->dlist_idx = 0;
 
 	/* OpenGL/ES stack size limits; we could probably afford to be more generous */
 	init_matrix_stack(&ctx->projection_stack, 2, 0);

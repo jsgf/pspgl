@@ -3,6 +3,7 @@
 
 #include "pspgl_internal.h"
 #include "pspgl_texobj.h"
+#include "pspgl_dlist.h"
 
 static unsigned max_mipmap(unsigned width, unsigned height)
 {
@@ -190,8 +191,7 @@ void __pspgl_update_mipmaps(void)
 		sendCommandi(CMD_SCISSOR1, (0 << 10) | 0);
 		sendCommandi(CMD_SCISSOR2, ((th-1) << 10) | (tw-1));
 
-		vertexbuf = __pspgl_dlist_insert_space(pspgl_curctx->dlist_current,
-						       sizeof(*vertexbuf) * 2);
+		vertexbuf = __pspgl_dlist_insert_space(sizeof(*vertexbuf) * 2);
 
 		vertexbuf[0].s = 0;
 		vertexbuf[0].t = 0;

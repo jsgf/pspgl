@@ -1,5 +1,6 @@
 #include "pspgl_internal.h"
 #include "pspgl_texobj.h"
+#include "pspgl_dlist.h"
 
 /**
  *  cached register write, save value and mark as touched...
@@ -51,8 +52,7 @@ void __pspgl_context_flush_pending_state_changes (struct pspgl_context *c,
 
 		for(j = i; word != 0; j++, word >>= 1) {
 			if ((word & 1) && (c->hw.ge_reg[j] >> 24) == j)
-				__pspgl_dlist_enqueue_cmd(c->dlist_current,
-							  c->hw.ge_reg[j]);
+				__pspgl_dlist_enqueue_cmd(c->hw.ge_reg[j]);
 		}
 	}
 }
@@ -68,7 +68,7 @@ void __pspgl_context_writereg_uncached (struct pspgl_context *c, unsigned long c
 	c->hw.ge_reg[cmd] = val;	/* still need to record value */
 	c->hw.ge_reg_touched[cmd/32] &= ~(1 << (cmd % 32)); /* not dirty */
 
-	__pspgl_dlist_enqueue_cmd(c->dlist_current, val);
+	__pspgl_dlist_enqueue_cmd(val);
 }
 
 
@@ -78,7 +78,7 @@ void pspgl_context_writereg_mtx (struct pspgl_context *c, int cmd, GLfloat argf)
 {
 	union { float f; unsigned int i; } arg = { .f = argf };
 	unsigned long val = (cmd << 24) | (arg.i >> 8);
-	__pspgl_dlist_enqueue_cmd(c->dlist_current, val);
+	__pspgl_dlist_enqueue_cmd(val);
 }
 
 

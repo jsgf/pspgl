@@ -1,5 +1,6 @@
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
+#include "pspgl_dlist.h"
 
 void glDrawSplineRangeElementsPSP(GLenum mode, GLuint start, GLuint end,
 				  GLuint u, GLuint v,

@@ -8,12 +8,9 @@
 
 #include "guconsts.h"
 
-#include "pspgl_dlist.h"
 #include "pspgl_hash.h"
 #include "pspgl_misc.h"
 
-
-#define NUM_CMDLISTS	8
 
 #define MAX_ATTRIB_STACK	16
 
@@ -174,10 +171,6 @@ struct pspgl_context {
 	struct pspgl_surface *read;
 	struct pspgl_surface *draw;
 	
-	struct pspgl_dlist *dlist[NUM_CMDLISTS];
-	struct pspgl_dlist *dlist_current;
-	int dlist_idx;
-
 	struct pspgl_saved_attrib *attribstack[MAX_ATTRIB_STACK];
 	unsigned attribstackdepth;
 

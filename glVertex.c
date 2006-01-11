@@ -1,5 +1,6 @@
 #include <string.h>
 #include "pspgl_internal.h"
+#include "pspgl_dlist.h"
 
 #define BUFSZ	12		/* must be a multiple of 2,3 and 4 */
 
@@ -9,7 +10,7 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 	struct t2f_c4ub_n3f_v3f *vbuf;
 
 	if (c->beginend.vertex_count == 0)
-		c->beginend.vbuf_adr = __pspgl_dlist_insert_space(c->dlist_current, BUFSZ * sizeof(struct t2f_c4ub_n3f_v3f));
+		c->beginend.vbuf_adr = __pspgl_dlist_insert_space(BUFSZ * sizeof(struct t2f_c4ub_n3f_v3f));
 
 	vbuf = (struct t2f_c4ub_n3f_v3f *) c->beginend.vbuf_adr;
 
@@ -67,7 +68,7 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 			struct t2f_c4ub_n3f_v3f *vbuf_start, *prev;
 
 			prev = c->beginend.vbuf_adr;
-			c->beginend.vbuf_adr = __pspgl_dlist_insert_space(c->dlist_current, BUFSZ * sizeof(struct t2f_c4ub_n3f_v3f));
+			c->beginend.vbuf_adr = __pspgl_dlist_insert_space(BUFSZ * sizeof(struct t2f_c4ub_n3f_v3f));
 			vbuf_start = c->beginend.vbuf_adr;
 
 			if (c->beginend.primitive == GL_TRIANGLE_FAN || c->beginend.primitive == GL_POLYGON) {

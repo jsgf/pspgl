@@ -55,7 +55,6 @@ API_OBJS = \
 	glCopyTexImage2D.o \
 	glCullFace.o \
 	glDeleteBuffersARB.o \
-	glDeleteLists.o \
 	glDeleteTextures.o \
 	glDepthFunc.o \
 	glDepthMask.o \
@@ -150,6 +149,7 @@ libGL.a_OBJS = \
 
 #	glGenLists.o
 #	glIsList.o
+#	glDeleteLists.o
 
 libGLU.a_OBJS = \
 	gluBuildMipmaps.o \

@@ -1,5 +1,5 @@
 #include "pspgl_internal.h"
-
+#include "pspgl_dlist.h"
 
 struct clear_vertex {
 	unsigned long color;
@@ -10,7 +10,6 @@ struct clear_vertex {
 
 void glClear (GLbitfield mask)
 {
-	struct pspgl_dlist *dlist = pspgl_curctx->dlist_current;
 	struct clear_vertex *vbuf;
 	struct pspgl_surface *s = pspgl_curctx->draw;
 	unsigned long clearmask = pspgl_curctx->clear.color;
@@ -22,7 +21,7 @@ void glClear (GLbitfield mask)
 	}
 
 	/* make room for 2 embedded vertices in cmd_buf, aligned to 16byte boundary */
-	vbuf = __pspgl_dlist_insert_space(dlist, 2 * sizeof(struct clear_vertex));
+	vbuf = __pspgl_dlist_insert_space(2 * sizeof(struct clear_vertex));
 
 	if (!vbuf) {
 		GLERROR(GL_OUT_OF_MEMORY);
