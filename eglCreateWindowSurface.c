@@ -12,9 +12,10 @@ EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindo
 	struct pspgl_surface *s;
 	unsigned long bytesperpixel;
 	unsigned long bufferlen;
-	int pixidx = EGLCFG_PIXIDX(config);
-	const struct pspgl_pixconfig *pixconf = &__pspgl_pixconfigs[pixidx];
+	const struct pspgl_pixconfig *pixconf;
 	int has_depthbuffer = EGLCFG_HASDEPTH(config);
+
+	pixconf = &__pspgl_pixconfigs[EGLCFG_PIXIDX(config)];
 
 	s = malloc(sizeof(struct pspgl_surface));
 	if (!s)
@@ -26,9 +27,19 @@ EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindo
 	else
 		bytesperpixel = 2;
 
-	/* shouldn't this get passed through the attribute list? spec?!? */
-	int has_frontbuffer = 1;
-	int has_backbuffer = 1;
+	int has_frontbuffer = 1; /* always */
+	int has_backbuffer = 1;	/* caller can request no backbuffer */
+
+	for(; attrib_list && attrib_list[0] != EGL_NONE; attrib_list += 2) {
+		switch(attrib_list[0]) {
+#ifdef EGL_RENDER_BUFFER
+		/* EGL_RENDER_BUFFER is EGL 1.2; we need a header update */
+		case EGL_RENDER_BUFFER:
+			has_backbuffer = (attrib_list[1] == EGL_BACK_BUFFER);
+			break;
+#endif
+		}
+	}
 
 	s->width = 480;
 	s->height = 272;
@@ -59,6 +70,13 @@ EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindo
 		if (!(s->color_buffer[1] = __pspgl_buffer_new(bufferlen, GL_STATIC_COPY_ARB)))
 			goto bad_alloc;
 		s->color_buffer[1]->flags |= BF_PINNED_FIXED;
+	} else {
+		/* If we're single buffered, set back buffer == front
+		   buffer; this way all the other code can assume
+		   double-buffering without needing to check, but we
+		   still get single-buffered behaviour. */
+		s->color_buffer[1] = s->color_buffer[0];
+		s->color_buffer[1]->refcount++;
 	}
 
 	bufferlen = s->height * s->pixelperline * 2;
@@ -74,6 +92,6 @@ EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindo
 bad_alloc:
 	eglDestroySurface(dpy, s);
 	EGLERROR(EGL_BAD_ALLOC);
-	return NULL;
+	return EGL_NO_SURFACE;
 }
 

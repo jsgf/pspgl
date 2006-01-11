@@ -216,14 +216,15 @@ struct pspgl_context {
 
 
 struct pspgl_surface {
-	int pixfmt;
-	unsigned long width;
-	unsigned long height;
-	unsigned long pixelperline;
+	unsigned pixfmt;
+	unsigned short width;
+	unsigned short height;
+	unsigned short pixelperline;
+	unsigned char current_front;
+	unsigned char displayed;
+
 	struct pspgl_buffer *color_buffer[2];
 	struct pspgl_buffer *depth_buffer;
-	int current_front;
-	int displayed;
 
 	unsigned alpha_mask, stencil_mask;
 

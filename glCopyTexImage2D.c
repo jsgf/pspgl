@@ -77,7 +77,7 @@ void glCopyTexImage2D(GLenum target,
 	*/
 	y = read->height - y;
 
-	int current_back = (read->color_buffer[1] == NULL) ? 0 : (read->current_front ^ 1);
+	int current_back = read->current_front ^ 1;
 	struct pspgl_buffer *framebuffer = read->color_buffer[current_back];
 
 	__pspgl_copy_pixels(framebuffer->base, -read->pixelperline, x, y,

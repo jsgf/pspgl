@@ -120,7 +120,7 @@ void  __pspgl_vidmem_free (struct pspgl_buffer *buf)
 
 EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s)
 {
-	int current_back = (s->color_buffer[1] == NULL) ? 0 : (s->current_front ^ 1);
+	int current_back = s->current_front ^ 1;
 	unsigned long adr;
 
 	s->flip_start = now();

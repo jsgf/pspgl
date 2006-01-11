@@ -9,12 +9,9 @@ EGLBoolean eglDestroySurface (EGLDisplay dpy, EGLSurface surface)
 	if (!s)
 		return EGL_FALSE;
 
-	/* XXX FIXME: these checks are bogus, video buffer pointers can be NULL!!! */
-	if (s->color_buffer[0])
-		__pspgl_buffer_free(s->color_buffer[0]);
-
-	if (s->color_buffer[1])
-		__pspgl_buffer_free(s->color_buffer[1]);
+	/* Even if single-buffered, both front and back are initialized */
+	__pspgl_buffer_free(s->color_buffer[0]);
+	__pspgl_buffer_free(s->color_buffer[1]);
 
 	if (s->depth_buffer)
 		__pspgl_buffer_free(s->depth_buffer);

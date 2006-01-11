@@ -16,7 +16,7 @@ const struct pspgl_pixconfig __pspgl_pixconfigs[] = {
 	{ 8, 8, 8,  8, 0,  GE_RGBA_8888 },
 	{ 8, 8, 8,  0, 8,  GE_RGBA_8888 },
 
-	{ 0, 0, 0,  0, 0,  -1 },
+	{ 0, 0, 0,  0, 0,  -1 }
 };
 
 
@@ -28,7 +28,7 @@ EGLBoolean eglChooseConfig (EGLDisplay dpy, const EGLint *attrib_list,
 	int nconfig;
 	int i;
 
-	while (*attrib_list != EGL_NONE) {
+	while (attrib_list[0] != EGL_NONE) {
 		switch (*attrib_list) {
 		case EGL_ALPHA_SIZE:	alpha_size = attrib_list[1]; break;
 		case EGL_BLUE_SIZE:	blue_size = attrib_list[1]; break;

@@ -35,8 +35,7 @@ void glReadPixels( GLint x, GLint y,
 			return;
 		}
 
-		int current_back = (read->color_buffer[1] == NULL) ? 
-			0 : (read->current_front ^ 1);
+		int current_back = read->current_front ^ 1;
 		framebuffer = read->color_buffer[current_back];
 		fb_offset = 0;
 
