@@ -8,9 +8,9 @@
 #include "pspgl_buffers.h"
 #include "pspgl_dlist.h"
 
-#define NUM_CMDLISTS	8u
+#define NUM_CMDLISTS	16u
 
-#define DLIST_SIZE	1024	/* command words (32bit) */
+#define DLIST_SIZE	512	/* command words (32bit) */
 #define DLIST_EXTRA	4	/* 4 commands of overhead at the end */
 
 #define DLIST_CACHED	0	/* put command list in cached memory */

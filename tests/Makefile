@@ -7,12 +7,13 @@ RM = rm -f
 
 PSPPATH := $(shell psp-config --pspsdk-path)
 PSPGL_LFLAGS = -lglut -lGLU -lGL -lm -lc -lpsputility -lpspdebug -lpspge -lpspdisplay -lpspctrl -lpspsdk -lpsplibc -lpspuser -lpspkernel -lpsprtc
-CFLAGS = -g -Wall -O2 -MD -MF $(DEPDIR)/$(basename $@).d -I.. -I$(PSPPATH)/include
+CFLAGS = -std=gnu99 -fsingle-precision-constant -g -Wall -O2 \
+	-MD -MF $(DEPDIR)/$(basename $@).d -I.. -I$(PSPPATH)/include
 LDFLAGS = -g -Wall -L.. -L$(PSPPATH)/lib
 
 TESTS=bezier copytex depthtest eglcube glut spots \
 	tex texsubimage varray vertexblend mipmaps viewports \
-	thrashalloc readdepth
+	thrashalloc readdepth eglpbuffers
 #TESTS+=idxtex
 
 BUILDDATE := $(shell date "+%Y/%m/%d %k:%M:%S")
