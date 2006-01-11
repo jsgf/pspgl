@@ -13,7 +13,7 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 
 	vbuf = (struct t2f_c4ub_n3f_v3f *) c->beginend.vbuf_adr;
 
-	if (!vbuf) {
+	if (unlikely(!vbuf)) {
 		GLERROR(GL_OUT_OF_MEMORY);
 		return;
 	}
@@ -38,7 +38,7 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 		memcpy(&c->beginend.line_loop_start, vbuf, sizeof(*vbuf));
 	}
 
-	if (++c->beginend.vertex_count == BUFSZ) {
+	if (unlikely(++c->beginend.vertex_count == BUFSZ)) {
 		static const char overhang_count [] = {
 			0,	/* GL_POINTS */
 			0,	/* GL_LINES */

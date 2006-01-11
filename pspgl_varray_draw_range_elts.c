@@ -87,16 +87,17 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 
 	prim = __pspgl_glprim2geprim(mode);
 
-	if (prim < 0) {
+	if (unlikely(prim < 0)) {
 		GLERROR(GL_INVALID_ENUM);
 		return;
 	}
 
-	if (count == 0)
+	if (unlikely(count == 0))
 		return;
 
 	vbuf = NULL;
 	idx_base = 0;
+	vfmtp = &vfmt;
 
 	if (__pspgl_cache_arrays()) {
 		/* FAST: directly usable locked arrays */
@@ -110,9 +111,8 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 		vbuf->refcount++;
 	}
 
-	if (vbuf == NULL) {
+	if (unlikely(vbuf == NULL)) {
 		/* SLOW: convert us some arrays */
-		vfmtp = &vfmt;
 		__pspgl_ge_vertex_fmt(pspgl_curctx, &vfmt);
 
 		if (vfmt.hwformat == 0)
@@ -136,7 +136,7 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 		vbuf_offset = 0;
 		idx_base = minidx;
 
-		if (vbuf == NULL) {
+		if (unlikely(vbuf == NULL)) {
 			GLERROR(GL_OUT_OF_MEMORY);
 			return;
 		}
@@ -146,7 +146,7 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 
 	ibuf = __pspgl_varray_convert_indices(idx_type, indices, idx_base, count,
 					      &ibuf_offset, &hwformat);
-	if (ibuf == NULL) {
+	if (unlikely(ibuf == NULL)) {
 		GLERROR(GL_OUT_OF_MEMORY);
 		__pspgl_buffer_free(vbuf);
 		return;

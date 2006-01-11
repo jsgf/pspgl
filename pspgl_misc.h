@@ -89,6 +89,10 @@ static inline uint32_t pow2(uint32_t x)
 	return ret;
 }
 
+/* Branch probabilities */
+#define likely(x)	__builtin_expect((x) != 0, 1)
+#define unlikely(x)	__builtin_expect((x) != 0, 0)
+
 extern void __pspgl_log (const char *fmt, ...);
 
 enum pspgl_dump_tag {
@@ -143,7 +147,7 @@ extern void __pspgl_assert_fail(const char *expr, const void *retaddr,
 #if 1
 #define assert(x)							\
 	do {								\
-		if (__builtin_expect(!(x), 0))				\
+		if (unlikely(!(x)))					\
 			__pspgl_assert_fail(#x, __builtin_return_address(0), \
 				__FUNCTION__, __FILE__, __LINE__);	\
 	} while(0)

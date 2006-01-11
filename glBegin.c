@@ -3,7 +3,7 @@
 
 void glBegin (GLenum mode)
 {
-	if (mode >= GL_POINTS && mode <= GL_SPRITES_PSP) {
+	if (likely(mode >= GL_POINTS && mode <= GL_SPRITES_PSP)) {
 		pspgl_curctx->beginend.primitive = mode;
 		pspgl_curctx->beginend.vertex_count = 0;
 	} else {

@@ -5,17 +5,17 @@ void glWeightPointerPSP(GLint size, GLenum type, GLsizei stride, const GLvoid *p
 {
 	struct pspgl_vertex_array *va = &pspgl_curctx->vertex_array.weight;
 
-	if (size < 1 || size > NBONES) {
+	if (unlikely(size < 1 || size > NBONES)) {
 		GLERROR(GL_INVALID_VALUE);
 		return;
 	}
 
-	if (type != GL_BYTE && type != GL_SHORT && type != GL_FLOAT) {
+	if (unlikely(type != GL_BYTE && type != GL_SHORT && type != GL_FLOAT)) {
 		GLERROR(GL_INVALID_ENUM);
 		return;
 	}
 
-	if (stride < 0) {
+	if (unlikely(stride < 0)) {
 		GLERROR(GL_INVALID_VALUE);
 		return;
 	}

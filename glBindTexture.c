@@ -11,10 +11,10 @@ void glBindTexture(GLenum target, GLuint id)
 	bound = pspgl_curctx->texture.bound;
 	tobj = __pspgl_hash_lookup(hash, id);
 
-	if (tobj != NULL) {
-		if (tobj->target == 0)
+	if (likely(tobj != NULL)) {
+		if (unlikely(tobj->target == 0))
 			tobj->target = target;
-		else if (tobj->target != target) {
+		else if (unlikely(tobj->target != target)) {
 			GLERROR(GL_INVALID_OPERATION);
 			return;
 		}

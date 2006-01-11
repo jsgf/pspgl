@@ -5,12 +5,12 @@ void glNormalPointer (GLenum type, GLsizei stride, const GLvoid *pointer)
 {
 	struct pspgl_vertex_array *va = &pspgl_curctx->vertex_array.normal;
 
-	if (type != GL_BYTE && type != GL_SHORT && type != GL_FLOAT) {
+	if (unlikely(type != GL_BYTE && type != GL_SHORT && type != GL_FLOAT)) {
 		GLERROR(GL_INVALID_ENUM);
 		return;
 	}
 
-	if (stride < 0) {
+	if (unlikely(stride < 0)) {
 		GLERROR(GL_INVALID_VALUE);
 		return;
 	}

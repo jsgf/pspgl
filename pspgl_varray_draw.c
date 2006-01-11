@@ -20,6 +20,7 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 
 	vbuf = NULL;
 	vbuf_offset = 0;
+	vfmtp = &vfmt;
 
 	/* Check to see if we can use the locked array fast path */
 	if (__pspgl_cache_arrays()) {
@@ -34,18 +35,18 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 		vbuf->refcount++;
 	}
 
-	if (vbuf == NULL) {
+	if (unlikely(vbuf == NULL)) {
 		/* SLOW: convert us some arrays */
 		vfmtp = &vfmt;
 		__pspgl_ge_vertex_fmt(pspgl_curctx, &vfmt);
 
-		if (vfmt.hwformat == 0)
+		if (unlikely(vfmt.hwformat == 0))
 			return;
 
 		vbuf = __pspgl_varray_convert(&vfmt, first, count);
 		vbuf_offset = 0;
 
-		if (vbuf == NULL) {
+		if (unlikely(vbuf == NULL)) {
 			GLERROR(GL_OUT_OF_MEMORY);
 			return;
 		}

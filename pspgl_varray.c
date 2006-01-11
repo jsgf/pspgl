@@ -430,7 +430,7 @@ long __pspgl_glprim2geprim (GLenum glprim)
 void __pspgl_varray_bind_buffer(struct pspgl_vertex_array *va,
 				struct pspgl_bufferobj *buf)
 {
-	if (buf && buf->mapped) {
+	if (unlikely(buf && buf->mapped)) {
 		GLERROR(GL_INVALID_OPERATION);
 		return;
 	}
@@ -468,18 +468,18 @@ struct pspgl_buffer *__pspgl_varray_convert(const struct vertex_format *vfmt,
 	struct pspgl_buffer *buf;
 	void *bufp;
 
-	if (size == 0)
+	if (unlikely(size == 0))
 		return NULL;
 
 	buf = __pspgl_buffer_new(size, GL_STREAM_DRAW_ARB); /* used once */
-	if (buf == NULL) {
+	if (unlikely(buf == NULL)) {
 		GLERROR(GL_OUT_OF_MEMORY);
 		return NULL;
 	}
 
 	bufp = __pspgl_buffer_map(buf, GL_WRITE_ONLY_ARB);
 	
-	if (__pspgl_gen_varray(vfmt, first, count, bufp, size) != count) {
+	if (unlikely(__pspgl_gen_varray(vfmt, first, count, bufp, size) != count)) {
 		__pspgl_buffer_free(buf);
 		buf = NULL;
 	} else
@@ -556,7 +556,7 @@ struct pspgl_buffer *__pspgl_varray_convert_indices(GLenum idxtype, const void *
 	*buffer_offset = 0;
 
 	if (idxbuf) {
-		if (idxbuf->mapped) {
+		if (unlikely(idxbuf->mapped)) {
 			GLERROR(GL_INVALID_OPERATION);
 			return NULL;
 		}
@@ -582,7 +582,7 @@ struct pspgl_buffer *__pspgl_varray_convert_indices(GLenum idxtype, const void *
 		   or no index buffer object */
 		ret = __pspgl_buffer_new(idx_sizeof(idxtype) * count, 
 					 GL_STREAM_DRAW_ARB);
-		if (ret == NULL)
+		if (unlikely(ret == NULL))
 			return NULL;
 
 		/* map buffers appropriately for conversion */

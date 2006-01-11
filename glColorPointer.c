@@ -6,17 +6,17 @@ void glColorPointer (GLint size, GLenum type, GLsizei stride, const GLvoid *poin
 	struct pspgl_vertex_array *va = &pspgl_curctx->vertex_array.color;
 	GLboolean native;
 
-	if (size != 3 && size != 4) {
+	if (unlikely(size != 3 && size != 4)) {
 		GLERROR(GL_INVALID_VALUE);
 		return;
 	}
 
-	if (type != GL_FLOAT && type != GL_UNSIGNED_BYTE) {
+	if (unlikely(type != GL_FLOAT && type != GL_UNSIGNED_BYTE)) {
 		GLERROR(GL_INVALID_ENUM);
 		return;
 	}
 
-	if (stride < 0) {
+	if (unlikely(stride < 0)) {
 		GLERROR(GL_INVALID_VALUE);
 		return;
 	}
