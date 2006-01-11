@@ -627,6 +627,9 @@ GL_API void GL_APIENTRY glColorTableEXT (GLenum target, GLenum internalformat, G
 #define GL_BUFFER_SIZE                    0x8764
 #define GL_BUFFER_USAGE                   0x8765
 #define GL_BUFFER_ACCESS                  0x88BB
+#define GL_READ_ONLY                      0x88B8
+#define GL_WRITE_ONLY                     0x88B9
+#define GL_READ_WRITE                     0x88BA
 
 
 /* Texture combine + dot3 */
@@ -774,6 +777,7 @@ GL_API void GL_APIENTRY glDisable (GLenum cap);
 GL_API void GL_APIENTRY glDisableClientState (GLenum array);
 GL_API void GL_APIENTRY glDrawArrays (GLenum mode, GLint first, GLsizei count);
 GL_API void GL_APIENTRY glDrawElements (GLenum mode, GLsizei count, GLenum type, const GLvoid *indices);
+GL_API void GL_APIENTRY glDrawRangeElements (GLenum mode, GLuint start, GLuint end, GLsizei count, GLenum type, const GLvoid *indices);
 GL_API void GL_APIENTRY glEnable (GLenum cap);
 GL_API void GL_APIENTRY glEnableClientState (GLenum array);
 GL_API void GL_APIENTRY glFinish (void);
@@ -810,6 +814,7 @@ GL_API void GL_APIENTRY glLineWidthx (GLfixed width);
 GL_API void GL_APIENTRY glLoadIdentity (void);
 GL_API void GL_APIENTRY glLoadMatrixx (const GLfixed *m);
 GL_API void GL_APIENTRY glLogicOp (GLenum opcode);
+GL_API GLvoid* GL_APIENTRY glMapBuffer (GLenum, GLenum);
 GL_API void GL_APIENTRY glMaterialx (GLenum face, GLenum pname, GLfixed param);
 GL_API void GL_APIENTRY glMaterialxv (GLenum face, GLenum pname, const GLfixed *params);
 GL_API void GL_APIENTRY glMatrixMode (GLenum mode);
@@ -847,6 +852,7 @@ GL_API void GL_APIENTRY glTexParameteriv (GLenum target, GLenum pname, const GLi
 GL_API void GL_APIENTRY glTexParameterxv (GLenum target, GLenum pname, const GLfixed *params);
 GL_API void GL_APIENTRY glTexSubImage2D (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels);
 GL_API void GL_APIENTRY glTranslatex (GLfixed x, GLfixed y, GLfixed z);
+GL_API GLboolean GL_APIENTRY glUnmapBuffer (GLenum);
 GL_API void GL_APIENTRY glVertexPointer (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 GL_API void GL_APIENTRY glViewport (GLint x, GLint y, GLsizei width, GLsizei height);
 
@@ -893,6 +899,7 @@ GLAPI void GL_APIENTRY glEnd (void);
 GLAPI void GL_APIENTRY glVertex2i (GLint x, GLint y);
 GLAPI void GL_APIENTRY glVertex3i (GLint x, GLint y, GLint z);
 
+GLAPI void GL_APIENTRY glVertex2f (GLfloat x, GLfloat y);
 GLAPI void GL_APIENTRY glVertex3f (GLfloat x, GLfloat y, GLfloat z);
 GLAPI void GL_APIENTRY glColor4fv (const GLfloat *v);
 GLAPI void GL_APIENTRY glColor3f (GLfloat red, GLfloat green, GLfloat blue);
@@ -957,6 +964,47 @@ GLAPI void GL_APIENTRY gluLookAtf (GLfloat eyeX, GLfloat eyeY, GLfloat eyeZ,
 				   GLfloat centerX, GLfloat centerY, GLfloat centerZ,
 				   GLfloat upX, GLfloat upY, GLfloat upZ);
 
+#endif
+
+#ifndef GL_PSP_vertex_blend
+#define GL_PSP_vertex_blend 1
+
+#ifdef GL_GLEXT_PROTOTYPES
+GLAPI void GL_APIENTRY glWeightPointerPSP(GLint size, GLenum type, GLsizei stride,
+					  const GLvoid *array);
+#endif /* GL_GLEXT_PROTOTYPES */
+
+typedef void (PFNGLWEIGHTPOINTERPSPPROC)(GLint size, GLenum type, GLsizei stride,
+					 const GLvoid *array);
+
+#define GL_BONE0_PSP	0x11200
+#define GL_BONE1_PSP	0x11201
+#define GL_BONE2_PSP	0x11202
+#define GL_BONE3_PSP	0x11203
+#define GL_BONE4_PSP	0x11204
+#define GL_BONE5_PSP	0x11205
+#define GL_BONE6_PSP	0x11206
+#define GL_BONE7_PSP	0x11207
+#define GL_VERTEX_BLEND_PSP	0x86A7 /* reuse enum */
+#define GL_WEIGHT_ARRAY_PSP	0x86AD /* reuse enum */
+
+#endif
+
+#ifndef GL_PSP_mipmap_debug
+#define GL_PSP_mipmap_debug 1
+
+#define GL_GENERATE_MIPMAP_DEBUG_PSP	0x11301
+
+#endif
+
+#ifndef GL_EXT_compiled_vertex_array
+#define GL_EXT_compiled_vertex_array 1
+#ifdef GL_GLEXT_PROTOTYPES
+GLAPI void GL_APIENTRY glLockArraysEXT (GLint, GLsizei);
+GLAPI void GL_APIENTRY glUnlockArraysEXT (void);
+#endif /* GL_GLEXT_PROTOTYPES */
+typedef void (PFNGLLOCKARRAYSEXTPROC) (GLint first, GLsizei count);
+typedef void (PFNGLUNLOCKARRAYSEXTPROC) (void);
 #endif
 
 
