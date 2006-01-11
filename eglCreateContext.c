@@ -27,6 +27,7 @@ EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_
 
 	memset(ctx, 0, sizeof(*ctx));
 
+	ctx->refcount = 1;
 	for(i = 0; i < NUM_CMDLISTS; i++)
 		ctx->dlist[i] = __pspgl_dlist_create(1, __pspgl_dlist_swap);
 

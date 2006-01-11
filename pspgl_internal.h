@@ -216,6 +216,8 @@ struct pspgl_context {
 
 
 struct pspgl_surface {
+	unsigned refcount;
+
 	unsigned pixfmt;
 	unsigned short width;
 	unsigned short height;

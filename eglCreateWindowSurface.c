@@ -41,6 +41,7 @@ EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindo
 		}
 	}
 
+	s->refcount = 1;
 	s->width = 480;
 	s->height = 272;
 	s->pixelperline = pow2(s->width);
