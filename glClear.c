@@ -14,6 +14,7 @@ void glClear (GLbitfield mask)
 	struct pspgl_surface *s = pspgl_curctx->draw;
 	unsigned long clearmask = pspgl_curctx->clear.color;
 	unsigned long clearmode = 0;
+	unsigned x, y, width, height;
 
 	if (mask & ~(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)) {
 		GLERROR(GL_INVALID_VALUE);
@@ -44,14 +45,26 @@ void glClear (GLbitfield mask)
 	if (s->depth_buffer && (mask & GL_DEPTH_BUFFER_BIT))
 		clearmode |= GU_DEPTH_BUFFER_BIT;
 
+	if (pspgl_curctx->scissor_test.enabled) {
+		x = pspgl_curctx->scissor_test.x;
+		y = pspgl_curctx->scissor_test.y;
+		width = pspgl_curctx->scissor_test.width;
+		height = pspgl_curctx->scissor_test.height;
+	} else {
+		x = 0;
+		y = 0;
+		width = s->width;
+		height = s->height;
+	}
+
 	vbuf[0].color = clearmask;
-	vbuf[0].x = 0;
-	vbuf[0].y = 0;
+	vbuf[0].x = x;
+	vbuf[0].y = s->height - y;
 	vbuf[0].z = pspgl_curctx->clear.depth;
 
 	vbuf[1].color = clearmask;
-	vbuf[1].x = s->width;
-	vbuf[1].y = s->height;
+	vbuf[1].x = x + width;
+	vbuf[1].y = s->height - (y + height);
 	vbuf[1].z = pspgl_curctx->clear.depth;
 
 	/* enable clear mode */
