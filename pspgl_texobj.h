@@ -36,6 +36,7 @@ struct pspgl_texobj {
 #define TOF_GENERATE_MIPMAPS		(1<<0)
 #define TOF_GENERATE_MIPMAP_DEBUG	(1<<1)
 #define TOF_SWIZZLED			(1<<2)
+#define TOF_FLIPPED			(1<<3)
 
 #define TEXOBJ_NTEXREG	(TEXSTATE_END - TEXSTATE_START + 1)
 	uint32_t	ge_texreg[TEXOBJ_NTEXREG];

@@ -308,6 +308,11 @@ void glPushAttrib( GLbitfield mask )
 		static const unsigned char texture_regs[] = {
 			CMD_ENA_TEXTURE,
 
+			CMD_TEXTURE_SU,
+			CMD_TEXTURE_SV,
+			CMD_TEXTURE_TU,
+			CMD_TEXTURE_TV,
+
 			CMD_TEX_MIPMAP0,
 			CMD_TEX_MIPMAP1,
 			CMD_TEX_MIPMAP2,
