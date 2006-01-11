@@ -502,6 +502,36 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 	return NULL;
 }
 
+/* Construct a teximg to refer to pixel data which already exists
+   within a buffer at a particular offset */
+struct pspgl_teximg *__pspgl_teximg_from_buffer(struct pspgl_buffer *buffer, unsigned offset,
+						unsigned width, unsigned height, unsigned stride,
+						const struct pspgl_texfmt *texfmt)
+{
+	struct pspgl_teximg *timg;
+
+	timg = malloc(sizeof(*timg));
+	if (timg == NULL)
+		goto out;
+
+	memset(timg, 0, sizeof(*timg));
+
+	timg->image = buffer;
+	timg->srcbuffer = buffer;
+	buffer->refcount += 2;
+
+	timg->offset = offset;
+	timg->srcoffset = offset;
+
+	timg->width = width;
+	timg->height = height;
+	timg->stride = stride;
+	timg->texfmt = texfmt;
+
+  out:
+	return timg;
+}
+
 void __pspgl_teximg_free(struct pspgl_teximg *timg)
 {
 	psp_log("freeing %p->image=%p ->srcbuffer=%p\n",

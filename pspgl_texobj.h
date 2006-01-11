@@ -70,6 +70,10 @@ extern struct pspgl_teximg *__pspgl_texobj_cmap(const struct pspgl_texobj *t);
 extern struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_bufferobj *buffer,
 					       unsigned width, unsigned height, unsigned size,
 					       GLboolean swizzle, const struct pspgl_texfmt *texfmt);
+struct pspgl_teximg *__pspgl_teximg_from_buffer(struct pspgl_buffer *buffer, unsigned offset,
+						unsigned width, unsigned height, unsigned stride,
+						const struct pspgl_texfmt *texfmt);
+
 extern void __pspgl_teximg_free(struct pspgl_teximg *timg);
 
 extern void __pspgl_update_texenv(struct pspgl_texobj *tobj);
