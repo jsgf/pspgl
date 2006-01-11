@@ -122,10 +122,6 @@ static struct pspgl_teximg alpha_cmap = {
 	.image = NULL,
 	.offset = 0,
 
-	.srcbuffer = NULL,
-	.srcoffset = 0,
-	.srcgeneration = 0,
-
 	.width = 256,
 	.height = 1,
 
@@ -136,10 +132,6 @@ static struct pspgl_teximg luminance_cmap = {
 	.image = NULL,
 	.offset = 0,
 
-	.srcbuffer = NULL,
-	.srcoffset = 0,
-	.srcgeneration = 0,
-
 	.width = 256,
 	.height = 1,
 
@@ -149,10 +141,6 @@ static struct pspgl_teximg luminance_cmap = {
 static struct pspgl_teximg intensity_cmap = {
 	.image = NULL,
 	.offset = 0,
-
-	.srcbuffer = NULL,
-	.srcoffset = 0,
-	.srcgeneration = 0,
 
 	.width = 256,
 	.height = 1,
@@ -426,7 +414,6 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 
 	timg->image = NULL;
 	timg->offset = 0;
-	timg->srcbuffer = NULL;
 
 	timg->width = width;
 	timg->height = height;
@@ -439,17 +426,12 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 		    ((pixels - NULL) + srcsize) > buffer->data->size)
 			goto invalid_operation;
 
-		timg->srcbuffer = buffer->data;
-		timg->srcoffset = pixels - NULL;
-		timg->srcbuffer->refcount++;
-		timg->srcgeneration = timg->srcbuffer->generation;
-
 		if (texfmt->flags & TF_NATIVE) {
 			/* They provided the texture in a buffer in
 			   native format; use it directly */
-			timg->image = timg->srcbuffer;
+			timg->image = buffer->data;
 			timg->image->refcount++;
-			timg->offset = timg->srcoffset;
+			timg->offset = pixels - NULL;
 		} 
 	}
 
@@ -517,11 +499,9 @@ struct pspgl_teximg *__pspgl_teximg_from_buffer(struct pspgl_buffer *buffer, uns
 	memset(timg, 0, sizeof(*timg));
 
 	timg->image = buffer;
-	timg->srcbuffer = buffer;
-	buffer->refcount += 2;
+	buffer->refcount++;
 
 	timg->offset = offset;
-	timg->srcoffset = offset;
 
 	timg->width = width;
 	timg->height = height;
@@ -534,13 +514,11 @@ struct pspgl_teximg *__pspgl_teximg_from_buffer(struct pspgl_buffer *buffer, uns
 
 void __pspgl_teximg_free(struct pspgl_teximg *timg)
 {
-	psp_log("freeing %p->image=%p ->srcbuffer=%p\n",
-		timg, timg->image, timg->srcbuffer);
+	psp_log("freeing %p->image=%p\n",
+		timg, timg->image);
 
 	if (timg->image)
 		__pspgl_buffer_free(timg->image);
-	if (timg->srcbuffer)
-		__pspgl_buffer_free(timg->srcbuffer);
 	free(timg);
 }
 

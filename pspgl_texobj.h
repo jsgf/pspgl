@@ -50,10 +50,6 @@ struct pspgl_teximg {
 	struct pspgl_buffer	*image;		/* image pixels */
 	unsigned		offset;		/* byte offset of pixels in image buffer */
 
-	struct pspgl_buffer	*srcbuffer;	/* if the src format is native, then this ==image */
-	unsigned		srcoffset;
-	short			 srcgeneration;	/* generation when the src image was converted */
-
 	unsigned	width, height;
 	unsigned	stride;
 
