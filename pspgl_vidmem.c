@@ -139,14 +139,17 @@ EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *
 
 	adr = (unsigned long) s->color_buffer[current_back]->base;
 	psp_log("color buffer adr 0x%08x\n", adr);
-	sendCommandi(CMD_DRAWBUF, ((adr & 0x00ffffff)));
+	sendCommandi(CMD_DRAWBUF, (adr & 0x00ffffff));
 	sendCommandi(CMD_DRAWBUFWIDTH, ((adr & 0xff000000) >> 8) | s->pixelperline);
 
 	if (s->depth_buffer) {
 		adr = (unsigned long) s->depth_buffer->base;
 		psp_log("depth buffer adr 0x%08x\n", adr);
-		sendCommandi(CMD_DEPTHBUF, ((adr & 0x00ffffff)));
+		sendCommandi(CMD_DEPTHBUF, (adr & 0x00ffffff));
 		sendCommandi(CMD_DEPTHBUFWIDTH, ((adr & 0xff000000) >> 8) | s->pixelperline);
+	} else {
+		sendCommandi(CMD_DEPTHBUF, 0);
+		sendCommandi(CMD_DEPTHBUFWIDTH, 0);
 	}
 
 	if (s->flags & SURF_DISPLAYED) {
