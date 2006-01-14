@@ -15,6 +15,9 @@ static int list_pin;		/* if != 0, prevent buffer list rearrangements */
    is NULL if the list is empty. */
 static struct pspgl_buffer *list_base = NULL;
 
+/* Freelist of buffers, for quick allocation */
+static struct pspgl_buffer *buffer_freelist = NULL;
+
 static void buffer_remove(struct pspgl_buffer *b)
 {
 	assert(b->list_next != NULL);
@@ -262,9 +265,13 @@ struct pspgl_buffer *__pspgl_buffer_new(GLsizeiptr size, GLenum usage)
 {
 	struct pspgl_buffer *ret;
 
-	ret = malloc(sizeof(*ret));
+	if (likely(buffer_freelist != NULL)) {
+		ret = buffer_freelist;
+		buffer_freelist = buffer_freelist->list_next;
+	} else
+		ret = malloc(sizeof(*ret));
 
-	if (ret != NULL)
+	if (likely(ret != NULL))
 		if (!__pspgl_buffer_init(ret, size, usage)) {
 			free(ret);
 			ret = NULL;
@@ -288,7 +295,9 @@ void __pspgl_buffer_free(struct pspgl_buffer *data)
 		else
 			free(data->base);
 	}
-	free(data);
+
+	data->list_next = buffer_freelist;
+	buffer_freelist = data;
 }
 
 void __pspgl_buffer_want_vidmem(struct pspgl_buffer *buf)
