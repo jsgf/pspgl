@@ -72,13 +72,13 @@ void glCopyTexImage2D(GLenum target,
 	/* The framebuffer and the texture are upside down with
 	   respect to each other, so we need to flip the image (in the
 	   framebuffer, lower addresses are in the upper-left, but for
-	   textures, lower addresses are lower-left).
-	*/
-	y = read->height - y;
+	   textures, lower addresses are lower-left). */
+	tobj->flags |= TOF_FLIPPED;
+	y = read->height - y - height;
 
 	struct pspgl_buffer *framebuffer = read->color_back;
 
-	__pspgl_copy_pixels(framebuffer->base, -read->pixelperline, x, y,
+	__pspgl_copy_pixels(framebuffer->base, read->pixelperline, x, y,
 			    timg->image->base + timg->offset, timg->width, dest_x, dest_y,
 			    width, height, read->pixfmt);
 
