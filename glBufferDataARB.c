@@ -10,6 +10,7 @@ void glBufferDataARB(GLenum target, GLsizeiptr size,
 {
 	struct pspgl_bufferobj *buf, **bufp;
 	struct pspgl_buffer *databuf;
+	GLenum error;
 
 	bufp = __pspgl_bufferobj_for_target(target);
 
@@ -18,22 +19,19 @@ void glBufferDataARB(GLenum target, GLsizeiptr size,
 
 	buf = *bufp;
 
-	if (buf == NULL) {
-		GLERROR(GL_INVALID_OPERATION);
-		return;
-	}
+	error = GL_INVALID_OPERATION;
+	if (unlikely(buf == NULL))
+		goto out_error;
 
-	if (size < 0) {
-		GLERROR(GL_INVALID_VALUE);
-		return;
-	}
+	error = GL_INVALID_VALUE;
+	if (unlikely(size < 0))
+		goto out_error;
 
 	databuf = __pspgl_buffer_new(size, usage);
 
-	if (databuf == NULL) {
-		GLERROR(GL_OUT_OF_MEMORY);
-		return;
-	}
+	error = GL_OUT_OF_MEMORY;
+	if (unlikely(databuf == NULL))
+		goto out_error;
 
 	if (buf->data) {
 		if (buf->mapped)
@@ -59,6 +57,10 @@ void glBufferDataARB(GLenum target, GLsizeiptr size,
 
 		__pspgl_buffer_unmap(databuf, GL_WRITE_ONLY_ARB);
 	}
+	return;
+
+  out_error:
+	GLERROR(error);
 }
 
 void glBufferData(GLenum target, GLsizeiptr size,

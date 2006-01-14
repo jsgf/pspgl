@@ -23,6 +23,7 @@ static void enable_clientstate (GLenum array, GLboolean enable)
 		break;
 	default:
 		GLERROR(GL_INVALID_ENUM);
+		return;
 	}
 
 	if (va->locked.cached_array &&

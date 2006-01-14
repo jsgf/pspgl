@@ -17,10 +17,12 @@ static const unsigned char depthfunc_mapping [] = {
 
 void glDepthFunc (GLenum func)
 {
-	if (func < GL_NEVER || func > GL_ALWAYS) {
-		GLERROR(GL_INVALID_ENUM);
-		return;
-	}
+	if (unlikely(func < GL_NEVER) || unlikely(func > GL_ALWAYS))
+		goto out_error;
 
 	sendCommandi(CMD_DEPTH_FUNC, depthfunc_mapping[func - GL_NEVER]);
+	return;
+
+  out_error:
+	GLERROR(GL_INVALID_ENUM);
 }

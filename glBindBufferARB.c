@@ -19,10 +19,9 @@ void glBindBufferARB(GLenum target, GLuint id)
 
 		if (bufp == NULL) {
 			bufp = __pspgl_bufferobj_new(NULL);
-			if (bufp == NULL) {
-				GLERROR(GL_OUT_OF_MEMORY);
-				return;
-			}
+			if (unlikely(bufp == NULL))
+				goto out_error;
+
 			__pspgl_hash_insert(hash, id, bufp);
 		}
 	}
@@ -45,6 +44,10 @@ void glBindBufferARB(GLenum target, GLuint id)
 	*prevp = bufp;
 	if (bufp)
 		bufp->refcount++;
+	return;
+
+  out_error:
+	GLERROR(GL_OUT_OF_MEMORY);
 }
 
 void glBindBuffer (GLenum, GLuint)

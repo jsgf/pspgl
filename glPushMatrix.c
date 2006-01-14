@@ -8,11 +8,8 @@ void glPushMatrix (void)
 	struct pspgl_context *c = pspgl_curctx;
 	struct pspgl_matrix_stack *curstk = c->current_matrix_stack;
 
-	if (++curstk->depth == curstk->limit) {
-		curstk->depth--;
-		GLERROR(GL_STACK_OVERFLOW);
-		return;
-	}
+	if (unlikely(++curstk->depth == curstk->limit))
+		goto out_error;
 
 	c->current_matrix = &curstk->stack[curstk->depth];
 
@@ -20,5 +17,10 @@ void glPushMatrix (void)
 
 	if (!(curstk->flags & MF_DISABLED))
 		curstk->flags |= MF_DIRTY;
+	return;
+
+  out_error:
+	curstk->depth--;
+	GLERROR(GL_STACK_OVERFLOW);
 }
 

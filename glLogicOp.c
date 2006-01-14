@@ -3,11 +3,14 @@
 
 void glLogicOp (GLenum opcode)
 {
-	if (opcode < GL_CLEAR || opcode > GL_SET) {
-		GLERROR(GL_INVALID_ENUM);
-	} else {
-		opcode &= 0x000f;
-		sendCommandi(CMD_LOGICOP, opcode);
-	}
+	if (unlikely(opcode < GL_CLEAR) || unlikely(opcode > GL_SET))
+		goto out_error;
+
+	opcode &= 0x000f;
+	sendCommandi(CMD_LOGICOP, opcode);
+	return;
+
+out_error:
+	GLERROR(GL_INVALID_ENUM);
 }
 

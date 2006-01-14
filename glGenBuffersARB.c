@@ -6,10 +6,10 @@ void glGenBuffersARB (GLsizei n, GLuint *buffers)
 	struct hashtable *hash = &pspgl_curctx->shared->buffers;
 	int i;
 
-	if (n < 0)
-		GLERROR(GL_INVALID_VALUE);
+	if (unlikely(n < 0))
+		goto out_error;
 
-	if (!buffers)
+	if (unlikely(!buffers))
 		return;
 
 	for(i = 0; i < n; i++) {
@@ -23,6 +23,10 @@ void glGenBuffersARB (GLsizei n, GLuint *buffers)
 
 		buffers[i] = id;
 	}
+	return;
+
+  out_error:
+	GLERROR(GL_INVALID_VALUE);
 }
 
 void glGenBuffers (GLsizei count, GLuint *buffers)

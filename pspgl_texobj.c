@@ -399,10 +399,12 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 	struct pspgl_teximg *timg;
 	unsigned srcsize;
 	unsigned stride = width;
+	GLenum error;
 
+	error = GL_OUT_OF_MEMORY;
 	timg = malloc(sizeof(*timg));
 	if (timg == NULL)
-		goto out_of_memory;
+		goto out_error;
 
 	memset(timg, 0, sizeof(*timg));
 
@@ -421,10 +423,11 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 
 	timg->texfmt = texfmt;
 
+	error = GL_INVALID_OPERATION;
 	if (buffer != NULL) {
 		if (buffer->mapped ||
 		    ((pixels - NULL) + srcsize) > buffer->data->size)
-			goto invalid_operation;
+			goto out_error;
 
 		if (texfmt->flags & TF_NATIVE) {
 			/* They provided the texture in a buffer in
@@ -440,8 +443,9 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 
 		timg->image = __pspgl_buffer_new(size, GL_STATIC_DRAW_ARB);
 
+		error = GL_OUT_OF_MEMORY;
 		if (timg->image == NULL)
-			goto out_of_memory;
+			goto out_error;
 
 		psp_log("allocated %p->image=%p->base=%p\n", 
 			timg, timg->image, timg->image->base);
@@ -470,14 +474,8 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 
 	return timg;
 
-  out_of_memory:
-	GLERROR(GL_OUT_OF_MEMORY);
-	goto out_err;
-
-  invalid_operation:
-	GLERROR(GL_INVALID_OPERATION);
-
-  out_err:
+  out_error:
+	GLERROR(error);
 	if (timg)
 		__pspgl_teximg_free(timg);
 

@@ -9,14 +9,14 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 	struct pspgl_buffer *vbuf;
 	unsigned vbuf_offset;
 	const void *buf;
+	GLenum error;
 
+	error = GL_INVALID_ENUM;
 	prim = __pspgl_glprim2geprim(mode);
-	if (prim < 0) {
-		GLERROR(GL_INVALID_ENUM);
-		return;
-	}
+	if (unlikely(prim < 0))
+		goto out_error;
 
-	if (count == 0)
+	if (unlikely(count == 0))
 		return;
 
 	vbuf = NULL;
@@ -47,10 +47,9 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 		vbuf = __pspgl_varray_convert(&vfmt, first, count);
 		vbuf_offset = 0;
 
-		if (unlikely(vbuf == NULL)) {
-			GLERROR(GL_OUT_OF_MEMORY);
-			return;
-		}
+		error = GL_OUT_OF_MEMORY;
+		if (unlikely(vbuf == NULL))
+			goto out_error;
 	}
 
 	buf = vbuf->base + vbuf_offset;
@@ -74,5 +73,9 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 	}
 
 	__pspgl_buffer_free(vbuf);
+	return;
+
+  out_error:
+	GLERROR(error);
 }
 

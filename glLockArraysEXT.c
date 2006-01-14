@@ -19,7 +19,7 @@ GLboolean __pspgl_cache_arrays(void)
 	unsigned size;
 	int count;
 
-	if (l->cached_array != NULL) {
+	if (likely(l->cached_array != NULL)) {
 		psp_log("OK: already cached\n");
 		return GL_TRUE;
 	}
@@ -103,16 +103,16 @@ GLboolean __pspgl_cache_arrays(void)
 void glLockArraysEXT(GLint first, GLsizei count)
 {
 	struct locked_arrays *l = &pspgl_curctx->vertex_array.locked;
+	GLenum error;
 
-	if (first < 0 || count <= 0) {
-		GLERROR(GL_INVALID_VALUE);
-		return;
-	}
+	error = GL_INVALID_VALUE;
 
-	if (l->count != 0) {
-		GLERROR(GL_INVALID_OPERATION);
-		return;
-	}
+	if (unlikely(first < 0) || unlikely(count <= 0))
+		goto out_error;
+
+	error = GL_INVALID_OPERATION;
+	if (l->count != 0)
+		goto out_error;
 
 	l->first = first;
 	l->count = count;
@@ -120,6 +120,10 @@ void glLockArraysEXT(GLint first, GLsizei count)
 	psp_log("locking arrays %d %d\n", first, count);
 
 	/* defer actually caching things until first use of arrays */
+	return;
+
+  out_error:
+	GLERROR(error);
 }
 
 /* Clear out the cached array (if any), but doesn't change the locked state */
@@ -140,7 +144,7 @@ void glUnlockArraysEXT(void)
 {
 	struct locked_arrays *l = &pspgl_curctx->vertex_array.locked;
 
-	if (l->count == 0) {
+	if (unlikely(l->count == 0)) {
 		GLERROR(GL_INVALID_OPERATION);
 		return;
 	}

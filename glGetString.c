@@ -34,13 +34,16 @@ const GLubyte * glGetString (GLenum name)
 	unsigned long idx = name - GL_VENDOR;
 	const char *s;
 
-	if (idx >= sizeof(gl_strings)/sizeof(gl_strings[0])) {
-		GLERROR(GL_INVALID_ENUM);
-		s = NULL;
-	} else {
-		s = gl_strings[idx];
-	}
+	s = NULL;
+	if (idx >= sizeof(gl_strings)/sizeof(gl_strings[0]))
+		goto out_error;
+
+	s = gl_strings[idx];
 
 	return (const GLubyte *) s;
+
+  out_error:
+	GLERROR(GL_INVALID_ENUM);
+	return NULL;
 }
 

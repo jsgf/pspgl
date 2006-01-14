@@ -7,7 +7,7 @@ void glPrioritizeTextures (GLsizei n, const GLuint *textures, const GLclampf *pr
 	struct pspgl_texobj *texobj;
 	GLsizei i;
 
-	if (n < 0) {
+	if (unlikely(n < 0)) {
 		GLERROR(GL_INVALID_VALUE);
 		return;
 	}

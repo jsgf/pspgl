@@ -199,14 +199,15 @@ do {								\
 void glLightfv (GLenum light, GLenum pname, const GLfloat *params)
 {
 	struct pspgl_context *c = pspgl_curctx;
+	GLenum error;
 
-	if (light < GL_LIGHT0 || light > GL_LIGHT3) {
-		GLERROR(GL_INVALID_ENUM);
-		return;
-	}
+	error = GL_INVALID_ENUM;
+	if (unlikely(light < GL_LIGHT0) || unlikely(light > GL_LIGHT3))
+		goto out_error;
 
 	light -= GL_LIGHT0;
 
+	error = GL_INVALID_VALUE;
 	switch (pname) {
 	case GL_AMBIENT:
 		sendCommandi(CMD_LIGHT0_AMB_COL + 3*light, COLOR3(params));
@@ -257,12 +258,12 @@ void glLightfv (GLenum light, GLenum pname, const GLfloat *params)
 
 	case GL_SPOT_EXPONENT:
 		if (params[0] < 0 || params[0] > 128)
-			goto invalid_value;
+			goto out_error;
 		sendCommandf(CMD_LIGHT0_SPOT_EXP+light, params[0]);
 		break;
 	case GL_SPOT_CUTOFF:
 		if (params[0] != 180.f && !(params[0] >= 0.f && params[0] <= 90.f))
-			goto invalid_value;
+			goto out_error;;
 		c->lights.spotlight[light] = (params[0] != 180.);
 		sendCommandf(CMD_LIGHT0_CUTOFF+light, cosf(params[0] * M_PI / 180.f));
 		break;
@@ -277,17 +278,16 @@ void glLightfv (GLenum light, GLenum pname, const GLfloat *params)
 		sendCommandf(CMD_LIGHT0_ATT_QUAD+3*light, params[0]);
 		break;
 	default:
-		GLERROR(GL_INVALID_ENUM);
-		return;
+		error = GL_INVALID_ENUM;
+		goto out_error;
 	}
 
 	set_light_type(c, light);	/* update light types, if needed */
 
 	return;
 
-  invalid_value:
-	GLERROR(GL_INVALID_VALUE);
-	return;
+  out_error:
+	GLERROR(error);
 }
 
 

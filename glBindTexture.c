@@ -7,25 +7,27 @@ void glBindTexture(GLenum target, GLuint id)
 	struct pspgl_texobj *tobj, *bound;
 	struct hashtable *hash = &pspgl_curctx->shared->texture_objects;
 	unsigned i;
+	GLenum error;
 
 	bound = pspgl_curctx->texture.bound;
 	tobj = __pspgl_hash_lookup(hash, id);
 
 	if (likely(tobj != NULL)) {
+		error = GL_INVALID_OPERATION;
+
 		if (unlikely(tobj->target == 0))
 			tobj->target = target;
-		else if (unlikely(tobj->target != target)) {
-			GLERROR(GL_INVALID_OPERATION);
-			return;
-		}
+		else if (unlikely(tobj->target != target))
+			goto out_error;
 	} else {
 		/* if this is a new id, create the texture */
 		tobj = __pspgl_texobj_new(id, target);
 		psp_log("id %u unknown; creating new texture %p\n", id, tobj);
-		if (tobj == NULL) {
-			GLERROR(GL_OUT_OF_MEMORY);
-			return;
-		}
+
+		error = GL_OUT_OF_MEMORY;
+		if (unlikely(tobj == NULL))
+			goto out_error;
+
 		__pspgl_hash_insert(hash, id, tobj);
 	}
 
@@ -60,4 +62,8 @@ void glBindTexture(GLenum target, GLuint id)
 
 	__pspgl_update_texenv(tobj);
 	sendCommandi(CMD_TEXCACHE_FLUSH, getReg(CMD_TEXCACHE_FLUSH)+1);
+	return;
+
+  out_error:
+	GLERROR(error);
 }

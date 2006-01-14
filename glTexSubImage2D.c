@@ -81,41 +81,50 @@ void glTexSubImage2D( GLenum target, GLint level,
 	struct pspgl_teximg *timg;
 	const struct pspgl_texfmt *texfmt;
 	void * restrict p;
+	GLenum error;
 
 	if (!pspgl_curctx->texture.bound)
 		glBindTexture(target, 0);
 
 	tobj = pspgl_curctx->texture.bound;
 
+	error = GL_OUT_OF_MEMORY;
 	if (tobj == NULL)
-		goto out_of_memory;
+		goto out_error;
 
+	error = GL_INVALID_ENUM;
 	if (tobj->target != target)
-		goto invalid_enum;
+		goto out_error;
 
+	error = GL_INVALID_OPERATION;
 	if (tobj->texfmt == NULL)
-		goto invalid_operation;
+		goto out_error;
 
+	error = GL_INVALID_VALUE;
 	if (level < 0 || level >= MIPMAP_LEVELS)
-		goto invalid_value;
+		goto out_error;
 
 	if (width < 0 || height < 0 || xoffset < 0 || yoffset < 0)
-		goto invalid_value;
+		goto out_error;
 
+	error = GL_INVALID_OPERATION;
 	timg = tobj->images[level];
 	if (timg == NULL)
-		goto invalid_operation;
+		goto out_error;
 
+	error = GL_INVALID_VALUE;
 	if (xoffset+width > timg->width || yoffset+height > timg->height)
-		goto invalid_value;
+		goto out_error;
 
+	error = GL_INVALID_ENUM;
 	texfmt = __pspgl_hardware_format(__pspgl_texformats, format, type);
 	if (texfmt != tobj->texfmt)
-		goto invalid_enum;
+		goto out_error;
 
 	/* Can't handle compressed images yet */
+	error = GL_INVALID_OPERATION;
 	if (texfmt->hwformat >= GE_DXT1 || texfmt->hwformat == GE_INDEX_4BIT)
-		goto invalid_operation;
+		goto out_error;
 
 	assert(timg->image->refcount > 0);
 
@@ -134,19 +143,6 @@ void glTexSubImage2D( GLenum target, GLint level,
 
 	return;
 
-  out_of_memory:
-	GLERROR(GL_OUT_OF_MEMORY);
-	return;
-
-  invalid_enum:
-	GLERROR(GL_INVALID_ENUM);
-	return;
-
-  invalid_value:
-	GLERROR(GL_INVALID_VALUE);
-	return;
-
-  invalid_operation:
-	GLERROR(GL_INVALID_OPERATION);
-	return;
+  out_error:
+	GLERROR(error);
 }

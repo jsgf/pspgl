@@ -20,12 +20,12 @@ void glDrawSplineRangeElementsPSP(GLenum mode, GLuint start, GLuint end,
 	unsigned count;
 	int minidx = start;
 	int maxidx = end;
+	GLenum error;
 
+	error = GL_INVALID_ENUM;
 	if (u_flags < GL_PATCH_INNER_INNER_PSP || u_flags > GL_PATCH_OUTER_OUTER_PSP ||
-	    v_flags < GL_PATCH_INNER_INNER_PSP || v_flags > GL_PATCH_OUTER_OUTER_PSP) {
-		GLERROR(GL_INVALID_ENUM);
-		return;
-	}
+	    v_flags < GL_PATCH_INNER_INNER_PSP || v_flags > GL_PATCH_OUTER_OUTER_PSP)
+		goto out_error;
 
 	switch(mode) {
 	case GL_TRIANGLES:	prim = 0; break;
@@ -33,8 +33,7 @@ void glDrawSplineRangeElementsPSP(GLenum mode, GLuint start, GLuint end,
 	case GL_POINTS:		prim = 2; break;
 
 	default:
-		GLERROR(GL_INVALID_ENUM);
-		return;
+		goto out_error;
 	}
 	sendCommandi(CMD_PATCH_PRIM, prim);
 
@@ -84,21 +83,17 @@ void glDrawSplineRangeElementsPSP(GLenum mode, GLuint start, GLuint end,
 		vbuf_offset = 0;
 		idx_base = minidx;
 
-		if (vbuf == NULL) {
-			GLERROR(GL_OUT_OF_MEMORY);
-			return;
-		}
+		error = GL_OUT_OF_MEMORY;
+		if (vbuf == NULL)
+			goto out_error;
 	}
 
 	hwformat = vfmtp->hwformat;
 
 	ibuf = __pspgl_varray_convert_indices(idx_type, indices, idx_base, count,
 					      &ibuf_offset, &hwformat);
-	if (ibuf == NULL) {
-		GLERROR(GL_OUT_OF_MEMORY);
-		__pspgl_buffer_free(vbuf);
-		return;
-	}
+	if (ibuf == NULL)
+		goto out_error_free_vbuf;
 
 	vtxp = vbuf->base + vbuf_offset;
 	idxp = ibuf->base + ibuf_offset;
@@ -114,7 +109,14 @@ void glDrawSplineRangeElementsPSP(GLenum mode, GLuint start, GLuint end,
 	__pspgl_dlist_pin_buffer(ibuf, BF_PINNED_RD);
 
 	__pspgl_buffer_free(vbuf);
-	__pspgl_buffer_free(ibuf);	
+	__pspgl_buffer_free(ibuf);
+	return;
+
+  out_error_free_vbuf:
+	__pspgl_buffer_free(vbuf);
+
+  out_error:
+	GLERROR(error);
 }
 
 void glDrawSplineElementsPSP(GLenum mode, GLuint u, GLuint v, 

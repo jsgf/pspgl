@@ -4,21 +4,18 @@
 void glWeightPointerPSP(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer)
 {
 	struct pspgl_vertex_array *va = &pspgl_curctx->vertex_array.weight;
+	GLenum error;
 
-	if (unlikely(size < 1 || size > NBONES)) {
-		GLERROR(GL_INVALID_VALUE);
-		return;
-	}
+	error = GL_INVALID_VALUE;
+	if (unlikely(size < 1 || size > NBONES))
+		goto out_error;
 
-	if (unlikely(type != GL_BYTE && type != GL_SHORT && type != GL_FLOAT)) {
-		GLERROR(GL_INVALID_ENUM);
-		return;
-	}
+	if (unlikely(stride < 0))
+		goto out_error;
 
-	if (unlikely(stride < 0)) {
-		GLERROR(GL_INVALID_VALUE);
-		return;
-	}
+	error = GL_INVALID_ENUM;
+	if (unlikely(type != GL_BYTE && type != GL_SHORT && type != GL_FLOAT))
+		goto out_error;
 
 	if (stride == 0)
 		stride = __pspgl_gl_sizeof(type) * size;
@@ -35,4 +32,8 @@ void glWeightPointerPSP(GLint size, GLenum type, GLsizei stride, const GLvoid *p
 	va->native = GL_TRUE;
 
 	__pspgl_varray_bind_buffer(va, pspgl_curctx->vertex_array.arraybuffer);
+	return;
+
+  out_error:
+	GLERROR(error);
 }

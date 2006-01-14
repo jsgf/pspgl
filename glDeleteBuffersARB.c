@@ -6,10 +6,8 @@ void glDeleteBuffersARB (GLsizei n, const GLuint *buffers)
 	int i;
 	struct hashtable *hash = &pspgl_curctx->shared->buffers;
 
-	if (n < 0) {
-		GLERROR(GL_INVALID_VALUE);
-		return;
-	}
+	if (unlikely(n < 0))
+		goto out_error;
 
 	for(i = 0; i < n; i++) {
 		GLuint id  = buffers[i];
@@ -37,6 +35,10 @@ void glDeleteBuffersARB (GLsizei n, const GLuint *buffers)
 			__pspgl_bufferobj_free(bufp);
 		}
 	}
+	return;
+
+  out_error:
+	GLERROR(GL_INVALID_VALUE);
 }
 
 void glDeleteBuffers (GLsizei n, const GLuint *buffers)

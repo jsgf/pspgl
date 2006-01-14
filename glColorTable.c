@@ -7,26 +7,31 @@ void glColorTable(GLenum target, GLenum internalformat,
 	struct pspgl_teximg *cmap;
 	struct pspgl_texobj *tobj;
 	const struct pspgl_texfmt *fmt;
+	GLenum error;
 
-	if (target != GL_TEXTURE_2D)
-		goto invalid_enum;
-
-	if (internalformat != format)
-		goto invalid_operation;
+	error = GL_INVALID_ENUM;
+	if (unlikely(target != GL_TEXTURE_2D))
+		goto out_error;
 
 	if (!(format == GL_RGB || format == GL_RGBA))
-		goto invalid_enum;
-
-	if (!ispow2(width))
-		goto invalid_value;
+		goto out_error;
 
 	fmt = __pspgl_hardware_format(__pspgl_texformats, format, type);
-	if (fmt == 0)
-		goto invalid_enum;
+	if (unlikely(fmt == NULL))
+		goto out_error;
+
+	error = GL_INVALID_OPERATION;
+	if (internalformat != format)
+		goto out_error;
+
+	error = GL_INVALID_VALUE;
+	if (!ispow2(width))
+		goto out_error;
 
 	cmap = __pspgl_teximg_new(data, pspgl_curctx->texture.unpackbuffer, width, 1, 0, GL_FALSE, fmt);
+	error = GL_OUT_OF_MEMORY;
 	if (cmap == 0)
-		goto out_of_memory;
+		goto out_error;
 
 	if (!pspgl_curctx->texture.bound)
 		glBindTexture(target, 0);
@@ -44,20 +49,8 @@ void glColorTable(GLenum target, GLenum internalformat,
 
 	return;
 
-  invalid_enum:
-	GLERROR(GL_INVALID_ENUM);
-	return;
-
-  invalid_operation:
-	GLERROR(GL_INVALID_OPERATION);
-	return;
-
-  invalid_value:
-	GLERROR(GL_INVALID_VALUE);
-	return;
-
-  out_of_memory:
-	GLERROR(GL_OUT_OF_MEMORY);
+  out_error:
+	GLERROR(error);
 	return;
 }
 

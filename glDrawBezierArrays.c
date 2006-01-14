@@ -13,6 +13,9 @@ void glDrawBezierArraysPSP(GLenum mode, GLuint u, GLuint v, GLint first)
 	const void *buf;
 	unsigned prim;
 	unsigned count;
+	GLenum error;
+
+	error = GL_INVALID_ENUM;
 
 	switch(mode) {
 	case GL_TRIANGLES:	prim = 0; break;
@@ -20,8 +23,7 @@ void glDrawBezierArraysPSP(GLenum mode, GLuint u, GLuint v, GLint first)
 	case GL_POINTS:		prim = 2; break;
 
 	default:
-		GLERROR(GL_INVALID_ENUM);
-		return;
+		goto out_error;
 	}
 	sendCommandi(CMD_PATCH_PRIM, prim);
 
@@ -29,6 +31,7 @@ void glDrawBezierArraysPSP(GLenum mode, GLuint u, GLuint v, GLint first)
 
 	vbuf = NULL;
 	vbuf_offset = 0;
+	vfmtp = &vfmt;
 
 	if (__pspgl_cache_arrays()) {
 		/* FAST: draw from locked array */
@@ -42,9 +45,8 @@ void glDrawBezierArraysPSP(GLenum mode, GLuint u, GLuint v, GLint first)
 		vbuf->refcount++;
 	}
 
-	if (vbuf == NULL) {
+	if (unlikely(vbuf == NULL)) {
 		/* SLOW: convert us some arrays */
-		vfmtp = &vfmt;
 		__pspgl_ge_vertex_fmt(c, &vfmt);
 
 		if (vfmt.hwformat == 0)
@@ -52,10 +54,9 @@ void glDrawBezierArraysPSP(GLenum mode, GLuint u, GLuint v, GLint first)
 
 		vbuf = __pspgl_varray_convert(&vfmt, first, count);
 
-		if (vbuf == NULL) {
-			GLERROR(GL_OUT_OF_MEMORY);
-			return;
-		}
+		error = GL_OUT_OF_MEMORY;
+		if (vbuf == NULL)
+			goto out_error;
 	}
 
 	buf = vbuf->base + vbuf_offset;
@@ -67,6 +68,10 @@ void glDrawBezierArraysPSP(GLenum mode, GLuint u, GLuint v, GLint first)
 	__pspgl_dlist_pin_buffer(vbuf, BF_PINNED_RD);
 
 	__pspgl_buffer_free(vbuf);
+	return;
+
+  out_error:
+	GLERROR(error);
 }
 
 

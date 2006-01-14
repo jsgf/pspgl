@@ -48,10 +48,8 @@ void glInterleavedArrays (GLenum format, GLsizei stride, const GLvoid *p)
 	unsigned long idx = format - GL_V2F;
 	const struct desc *desc;
 
-	if (idx > sizeof(array_desc)/sizeof(array_desc[0])) {
-		GLERROR(GL_INVALID_ENUM);
-		return;
-	}
+	if (idx > sizeof(array_desc)/sizeof(array_desc[0]))
+		goto out_error;
 
 	desc = &array_desc[idx];
 
@@ -99,4 +97,8 @@ void glInterleavedArrays (GLenum format, GLsizei stride, const GLvoid *p)
 			va->locked.vfmt.arrays, __pspgl_enabled_array_bits());
 		__pspgl_uncache_arrays();
 	}
+	return;
+
+  out_error:
+	GLERROR(GL_INVALID_ENUM);
 }

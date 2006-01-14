@@ -17,11 +17,14 @@ void glMatrixMode (GLenum mode)
 		break;
 
 	default:
-		GLERROR(GL_INVALID_ENUM);
-		return;
+		goto out_error;
 	}
 
 	c->current_matrix_stack = s;
 	c->current_matrix = &s->stack[s->depth];
+	return;
+
+  out_error:
+	GLERROR(GL_INVALID_ENUM);
 }
 

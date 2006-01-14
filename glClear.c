@@ -16,18 +16,11 @@ void glClear (GLbitfield mask)
 	unsigned long clearmode = 0;
 	unsigned x, y, width, height;
 
-	if (mask & ~(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT)) {
-		GLERROR(GL_INVALID_VALUE);
-		return;
-	}
+	if (mask & ~(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT))
+		goto out_error;
 
 	/* make room for 2 embedded vertices in cmd_buf, aligned to 16byte boundary */
 	vbuf = __pspgl_dlist_insert_space(2 * sizeof(struct clear_vertex));
-
-	if (!vbuf) {
-		GLERROR(GL_OUT_OF_MEMORY);
-		return;
-	}
 
 	if (mask & GL_COLOR_BUFFER_BIT) {
 		clearmode |= GU_COLOR_BUFFER_BIT;
@@ -76,5 +69,9 @@ void glClear (GLbitfield mask)
 
 	/* leave clear mode */
 	sendCommandi(CMD_CLEARMODE, 0);
+	return;
+
+  out_error:
+	GLERROR(GL_INVALID_VALUE);
 }
 

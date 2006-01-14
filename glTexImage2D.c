@@ -347,6 +347,7 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 		   GLsizei width, GLsizei height, GLint border, 
 		   GLenum format, GLenum type, const GLvoid *texels)
 {
+	GLenum error;
 	static const GLenum format_equiv[] = {
 		0,
 		GL_LUMINANCE,
@@ -359,21 +360,24 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 	struct pspgl_teximg *timg;
 	const struct pspgl_texfmt *texfmt;
 
-	if (target != GL_TEXTURE_2D)
-		goto invalid_enum;
+	error = GL_INVALID_ENUM;
+	if (unlikely(target != GL_TEXTURE_2D))
+		goto out_error;
 
+	error = GL_INVALID_VALUE;
 	if (!ispow2(width) || !ispow2(height))
-		goto invalid_value;
+		goto out_error;
 
 	if (level < 0 || level > MIPMAP_LEVELS)
-		goto invalid_value;
+		goto out_error;
+
 	/* PSP supports 512x512 textures, but only goes down to 2x2
 	   mipmaps for them, so just ignore any higher level */
 	if (level == MIPMAP_LEVELS)
 		return;
 
 	if (border != 0)
-		goto invalid_value;
+		goto out_error;
 
 	/* we need to special-case a few things */
 	switch(internalformat) {
@@ -384,21 +388,24 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 
 	case GL_INTENSITY:
 		/* intensity is always specified as luminance */
+		error = GL_INVALID_ENUM;
 		if (format != GL_LUMINANCE)
-			goto invalid_operation;
+			goto out_error;
 		format = internalformat;
 		break;
 	}
 
+	error = GL_INVALID_OPERATION;
 	if (format != internalformat)
-		goto invalid_operation;
+		goto out_error;
 
+	error = GL_INVALID_ENUM;
 	texfmt = __pspgl_hardware_format(__pspgl_texformats, internalformat, type);
 	if (texfmt == NULL)
-		goto invalid_enum;
+		goto out_error;
 
 	if (texfmt->hwformat >= GE_DXT1)
-		goto invalid_enum;
+		goto out_error;
 
 	psp_log("selected texfmt %d for fmt=%x type=%x\n",
 		texfmt->hwformat, internalformat, type);
@@ -406,14 +413,15 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 	if (!pspgl_curctx->texture.bound)
 		glBindTexture(target, 0);
 
+	error = GL_OUT_OF_MEMORY;
 	tobj = pspgl_curctx->texture.bound;
 	if (tobj == NULL)
-		goto out_of_memory;
+		goto out_error;
 
 	timg = __pspgl_teximg_new(texels, pspgl_curctx->texture.unpackbuffer,
 				  width, height, 0, (tobj->flags & TOF_SWIZZLED) != 0, texfmt);
 	if (timg == NULL)
-		goto out_of_memory;
+		goto out_error;
 
 	__pspgl_set_texture_image(tobj, level, timg);
 
@@ -426,18 +434,6 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 		__pspgl_update_mipmaps();
 	return;
 
-invalid_enum:
-	GLERROR(GL_INVALID_ENUM);
-	return;
-
-invalid_value:
-	GLERROR(GL_INVALID_VALUE);
-	return;
-
-invalid_operation:
-	GLERROR(GL_INVALID_OPERATION);
-	return;
-
-out_of_memory:
-	GLERROR(GL_OUT_OF_MEMORY);
+  out_error:
+	GLERROR(error);
 }

@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <string.h>
 
 #include "pspgl_internal.h"
 #include "pspgl_buffers.h"
@@ -19,6 +20,7 @@ EGLSurface eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config,
 
 	pixconf = &__pspgl_pixconfigs[EGLCFG_PIXIDX(config)];
 
+	s = NULL;
 	width = height = 0;
 	egl_texfmt = EGL_NO_TEXTURE;
 	egl_textarget = EGL_NO_TEXTURE;
@@ -69,6 +71,7 @@ EGLSurface eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config,
 	if (s == NULL)
 		goto out_error;
 
+	memset(s, 0, sizeof(*s));
 	s->refcount = 1;
 	s->width = width;
 	s->height = height;
@@ -98,6 +101,8 @@ EGLSurface eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config,
 	return (EGLSurface)s;
 
   out_error:
+	if (s)
+		eglDestroySurface(dpy, s);
 	EGLERROR(error);
 	return EGL_NO_SURFACE;
 }

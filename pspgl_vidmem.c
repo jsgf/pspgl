@@ -127,10 +127,8 @@ EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *
 
 	psp_log("current_front %d\n", s->current_front);
 
-	if (!s) {
-		EGLERROR(EGL_BAD_SURFACE);
-		return EGL_FALSE;
-	}
+	if (!s)
+		goto out_error;
 
 	psp_log("pixfmt %u\n", s->pixfmt);
 
@@ -174,6 +172,10 @@ EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *
 	s->flip_end = now();
 
 	return EGL_TRUE;
+
+  out_error:
+	EGLERROR(EGL_BAD_SURFACE);
+	return EGL_FALSE;
 }
 
 size_t __pspgl_vidmem_evict(struct pspgl_buffer *buf)

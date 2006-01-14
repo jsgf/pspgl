@@ -84,13 +84,12 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 	unsigned ibuf_offset;
 	const void *vtxp, *idxp;
 	unsigned hwformat;
+	GLenum error;
 
+	error = GL_INVALID_ENUM;
 	prim = __pspgl_glprim2geprim(mode);
-
-	if (unlikely(prim < 0)) {
-		GLERROR(GL_INVALID_ENUM);
-		return;
-	}
+	if (unlikely(prim < 0))
+		goto out_error;
 
 	if (unlikely(count == 0))
 		return;
@@ -112,6 +111,7 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 		vbuf->refcount++;
 	}
 
+	error = GL_OUT_OF_MEMORY;
 	if (unlikely(vbuf == NULL)) {
 		/* SLOW: convert us some arrays */
 		__pspgl_ge_vertex_fmt(pspgl_curctx, &vfmt);
@@ -137,21 +137,16 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 		vbuf_offset = 0;
 		idx_base = minidx;
 
-		if (unlikely(vbuf == NULL)) {
-			GLERROR(GL_OUT_OF_MEMORY);
-			return;
-		}
+		if (unlikely(vbuf == NULL))
+			goto out_error;
 	}
 
 	hwformat = vfmtp->hwformat;
 
 	ibuf = __pspgl_varray_convert_indices(idx_type, indices, idx_base, count,
 					      &ibuf_offset, &hwformat);
-	if (unlikely(ibuf == NULL)) {
-		GLERROR(GL_OUT_OF_MEMORY);
-		__pspgl_buffer_free(vbuf);
-		return;
-	}
+	if (unlikely(ibuf == NULL))
+		goto out_error_free_vbuf;
 
 	vtxp = vbuf->base + vbuf_offset;
 	idxp = ibuf->base + ibuf_offset;
@@ -189,6 +184,13 @@ void __pspgl_varray_draw_range_elts(GLenum mode, GLenum idx_type,
 
 	__pspgl_buffer_free(vbuf);
 	__pspgl_buffer_free(ibuf);
+	return;
+
+  out_error_free_vbuf:
+	__pspgl_buffer_free(vbuf);
+
+  out_error:
+	GLERROR(error);
 }
 
 void glDrawRangeElements( GLenum mode, GLuint start, GLuint end,

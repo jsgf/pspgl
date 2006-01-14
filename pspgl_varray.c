@@ -196,13 +196,13 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 	struct attrib *attr = vfmt->attribs;
 	unsigned offset;
 
-	memset(vfmt, 0, sizeof(*vfmt));
-
 	offset = 0;
 
-	if (!varray->vertex.enabled)
-		return;
+	if (unlikely(!varray->vertex.enabled))
+		goto out_disabled;
 
+	/* These attributes are tested in the order the hardware
+	   vertex format requires. */
 	if (varray->texcoord.enabled) {
 		unsigned hwtype = glfmt2gefmt(varray->texcoord.type);
 
@@ -320,6 +320,7 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 
 	offset = ROUNDUP(offset, 4);
 
+  out_disabled:
 	vfmt->nattrib = attr - vfmt->attribs;
 	vfmt->hwformat = hwformat;
 	vfmt->vertex_size = offset;
@@ -430,10 +431,8 @@ long __pspgl_glprim2geprim (GLenum glprim)
 void __pspgl_varray_bind_buffer(struct pspgl_vertex_array *va,
 				struct pspgl_bufferobj *buf)
 {
-	if (unlikely(buf && buf->mapped)) {
-		GLERROR(GL_INVALID_OPERATION);
-		return;
-	}
+	if (unlikely(buf && buf->mapped))
+		goto out_error;
 
 	/* If the array was previously coming out of an array we've
 	   been using as a vertex cache, then uncache it.  We do this
@@ -454,7 +453,11 @@ void __pspgl_varray_bind_buffer(struct pspgl_vertex_array *va,
 	if (va->buffer != NULL)
 		__pspgl_bufferobj_free(va->buffer);
 
-	va->buffer = buf;	
+	va->buffer = buf;
+	return;
+
+  out_error:
+	GLERROR(GL_INVALID_OPERATION);
 }
 
 /* Generate a new buffer containing a converted vertex array.  This is
@@ -472,20 +475,24 @@ struct pspgl_buffer *__pspgl_varray_convert(const struct vertex_format *vfmt,
 		return NULL;
 
 	buf = __pspgl_buffer_new(size, GL_STREAM_DRAW_ARB); /* used once */
-	if (unlikely(buf == NULL)) {
-		GLERROR(GL_OUT_OF_MEMORY);
-		return NULL;
-	}
+	if (unlikely(buf == NULL))
+		goto out_error;
 
 	bufp = __pspgl_buffer_map(buf, GL_WRITE_ONLY_ARB);
 	
-	if (unlikely(__pspgl_gen_varray(vfmt, first, count, bufp, size) != count)) {
-		__pspgl_buffer_free(buf);
-		buf = NULL;
-	} else
-		__pspgl_buffer_unmap(buf, GL_WRITE_ONLY_ARB);
+	if (unlikely(__pspgl_gen_varray(vfmt, first, count, bufp, size) != count))
+		goto out_unmap_buf;
+	__pspgl_buffer_unmap(buf, GL_WRITE_ONLY_ARB);
 
 	return buf;
+
+  out_unmap_buf:
+	__pspgl_buffer_unmap(buf, GL_WRITE_ONLY_ARB);
+	__pspgl_buffer_free(buf);
+
+  out_error:
+	GLERROR(GL_OUT_OF_MEMORY);
+	return NULL;
 }
 
 static int idx_sizeof(GLenum idx_type)
@@ -556,10 +563,8 @@ struct pspgl_buffer *__pspgl_varray_convert_indices(GLenum idxtype, const void *
 	*buffer_offset = 0;
 
 	if (idxbuf) {
-		if (unlikely(idxbuf->mapped)) {
-			GLERROR(GL_INVALID_OPERATION);
-			return NULL;
-		}
+		if (unlikely(idxbuf->mapped))
+			goto out_error;
 
 		if (minidx == 0 &&
 		    (idxtype == GL_UNSIGNED_BYTE || idxtype == GL_UNSIGNED_SHORT)) {
@@ -596,4 +601,8 @@ struct pspgl_buffer *__pspgl_varray_convert_indices(GLenum idxtype, const void *
 	}
 
 	return ret;
+
+  out_error:
+	GLERROR(GL_INVALID_OPERATION);
+	return NULL;
 }

@@ -55,8 +55,7 @@ void glBlendFunc (GLenum sfactor, GLenum dfactor)
 	case GL_DST_COLOR:
 	case GL_ONE_MINUS_DST_COLOR:
 	default:
-		GLERROR(GL_INVALID_ENUM);
-		return;
+		goto out_error;
 	}
 
 	switch (sfactor) {
@@ -91,11 +90,14 @@ void glBlendFunc (GLenum sfactor, GLenum dfactor)
 	case GL_SRC_COLOR:
 	case GL_ONE_MINUS_SRC_COLOR:
 	default:
-		GLERROR(GL_INVALID_ENUM);
-		return;
+		goto out_error;
 	}
 
 	__pspgl_context_writereg_masked(pspgl_curctx, CMD_BLEND_FUNC,
 					(dstfact << 4) | srcfact, 0x0ff);
+	return;
+
+  out_error:
+	GLERROR(GL_INVALID_ENUM);
 }
 

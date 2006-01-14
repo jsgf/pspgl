@@ -6,10 +6,8 @@ void glDeleteLists (GLuint list, GLsizei range)
 {
 	struct hashtable *hash = &pspgl_curctx->shared->display_lists;
 
-	if (range < 0) {
-		GLERROR(GL_INVALID_VALUE);
-		return;
-	}
+	if (unlikely(range < 0))
+		goto out_error;
 
 	for (; range>0; list++, range--) {
 		void *dlist = __pspgl_hash_remove(hash, list);
@@ -20,5 +18,9 @@ void glDeleteLists (GLuint list, GLsizei range)
 			free(dlist);
 		}
 	}
+
+	return;
+  out_error:
+	GLERROR(GL_INVALID_VALUE);
 }
 

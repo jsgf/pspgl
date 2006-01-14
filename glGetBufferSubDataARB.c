@@ -8,6 +8,7 @@ void glGetBufferSubDataARB(GLenum target, GLintptrARB offset,
 {
 	struct pspgl_bufferobj *buf, **bufp;
 	void *p;
+	GLenum error;
 
 	bufp = __pspgl_bufferobj_for_target(target);
 
@@ -16,21 +17,23 @@ void glGetBufferSubDataARB(GLenum target, GLintptrARB offset,
 
 	buf = *bufp;
 
-	if (buf == NULL || buf->data == NULL || buf->mapped) {
-		GLERROR(GL_INVALID_OPERATION);
-		return;
-	}
+	error = GL_INVALID_OPERATION;
+	if (buf == NULL || buf->data == NULL || buf->mapped)
+		goto out_error;
 
-	if (size < 0 || offset+size > buf->data->size) {
-		GLERROR(GL_INVALID_VALUE);
-		return;
-	}
+	error = GL_INVALID_VALUE;
+	if (size < 0 || offset+size > buf->data->size)
+		goto out_error;
 
 	p = __pspgl_buffer_map(buf->data, GL_READ_ONLY);
 
 	memcpy(data, p+offset, size);
 
 	__pspgl_buffer_unmap(buf->data, GL_READ_ONLY);
+	return;
+
+  out_error:
+	GLERROR(error);
 }
 
 void glGetBufferSubData(GLenum target, GLintptrARB offset,

@@ -61,18 +61,16 @@ void glPushAttrib( GLbitfield mask )
 {
 	struct pspgl_context *c = pspgl_curctx;
 	struct pspgl_saved_attrib *a;
+	GLenum error;
 
-	if (c->attribstackdepth >= MAX_ATTRIB_STACK) {
-		GLERROR(GL_STACK_OVERFLOW);
-		return;
-	}
+	error = GL_STACK_OVERFLOW;
+	if (unlikely(c->attribstackdepth >= MAX_ATTRIB_STACK))
+		goto out_error;
 
 	a = malloc(sizeof(*a));
-
-	if (a == NULL) {
-		GLERROR(GL_OUT_OF_MEMORY);
-		return;
-	}
+	error = GL_OUT_OF_MEMORY;
+	if (a == NULL)
+		goto out_error;
 
 	memset(a, 0, sizeof(*a));
 
@@ -395,6 +393,10 @@ void glPushAttrib( GLbitfield mask )
 	}
 
 	c->attribstack[c->attribstackdepth++] = a;
+	return;
+
+  out_error:
+	GLERROR(error);
 }
 
 void glPopAttrib( void )
@@ -403,10 +405,8 @@ void glPopAttrib( void )
 	struct pspgl_saved_attrib *a;
 	unsigned mask;
 
-	if (c->attribstackdepth == 0) {
-		GLERROR(GL_STACK_UNDERFLOW);
-		return;
-	}
+	if (c->attribstackdepth == 0)
+		goto out_error;
 
 	a = c->attribstack[--c->attribstackdepth];
 
@@ -481,4 +481,8 @@ void glPopAttrib( void )
 		c->viewport = a->viewport;
 
 	free(a);
+	return;
+
+  out_error:
+	GLERROR(GL_STACK_UNDERFLOW);
 }

@@ -88,48 +88,43 @@ void glCompressedTexImage2D(GLenum target, GLint level,
 	const struct pspgl_texfmt *texfmt;
 	struct pspgl_texobj *tobj;
 	struct pspgl_teximg *timg;
+	GLenum error;
 
+	error = GL_INVALID_VALUE;
 	if (!ispow2(width) || !ispow2(height))
-		goto invalid_value;
+		goto out_error;
 
 	if (level < 0 || level > MIPMAP_LEVELS)
-		goto invalid_value;
+		goto out_error;
 
 	if (border != 0)
-		goto invalid_value;
+		goto out_error;
 
 	texfmt = __pspgl_hardware_format(comptexformats, internalformat, GL_UNSIGNED_BYTE);
-	if (texfmt == NULL)
-		goto invalid_enum;
+	error = GL_INVALID_ENUM;
+	if (unlikely(texfmt == NULL))
+		goto out_error;
 
 	if (!pspgl_curctx->texture.bound)
 		glBindTexture(target, 0);
 
 	tobj = pspgl_curctx->texture.bound;
-	if (tobj == NULL)
-		goto out_of_memory;
+	error = GL_OUT_OF_MEMORY;
+	if (unlikely(tobj == NULL))
+		goto out_error;
 
 	__pspgl_texobj_unswizzle(tobj);
 
 	timg = __pspgl_teximg_new(data, pspgl_curctx->texture.unpackbuffer,
 				  width, height, imageSize, GL_FALSE, texfmt);
 	if (timg == NULL)
-		goto out_of_memory;
+		goto out_error;
 
 	__pspgl_set_texture_image(tobj, level, timg);
 
 	__pspgl_update_texenv(tobj);
 	return;
 
-invalid_enum:
-	GLERROR(GL_INVALID_ENUM);
-	return;
-
-invalid_value:
-	GLERROR(GL_INVALID_VALUE);
-	return;
-
-out_of_memory:
-	GLERROR(GL_OUT_OF_MEMORY);
-
+out_error:
+	GLERROR(error);
 }

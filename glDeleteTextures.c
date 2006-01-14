@@ -7,10 +7,8 @@ void glDeleteTextures (GLsizei n, const GLuint *textures)
 	struct hashtable *hash = &pspgl_curctx->shared->texture_objects;
 	GLsizei i;
 
-	if (n < 0) {
-		GLERROR(GL_INVALID_VALUE);
-		return;
-	}
+	if (unlikely(n < 0))
+		goto out_error;
 
 	for (i=0; i<n; i++) {
 		if (textures[i] != 0) {
@@ -22,5 +20,9 @@ void glDeleteTextures (GLsizei n, const GLuint *textures)
 			}
 		}
 	}
+
+	return;
+  out_error:
+	GLERROR(GL_INVALID_VALUE);
 }
 

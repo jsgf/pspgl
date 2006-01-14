@@ -12,10 +12,8 @@ void glTexEnvfv (GLenum target, GLenum pname, const GLfloat *params)
 {
 	int mode;
 
-	if (target != GL_TEXTURE_ENV) {
-		GLERROR(GL_INVALID_ENUM);
-		return;
-	}
+	if (target != GL_TEXTURE_ENV)
+		goto out_error;
 
 	switch (pname) {
 	case GL_TEXTURE_ENV_MODE:
@@ -36,20 +34,22 @@ void glTexEnvfv (GLenum target, GLenum pname, const GLfloat *params)
 			mode = GE_TEXENV_ADD;
 			break;
 		default:
-			goto invalid_enum;
+			goto out_error;
 		}
 		__pspgl_context_writereg_masked(pspgl_curctx, CMD_TEXENV_FUNC, mode, 0x0000ff);
 		break;
+
 	case GL_TEXTURE_ENV_COLOR:
 		__pspgl_context_writereg(pspgl_curctx, CMD_TEXENV_COL, COLOR3(params));
 		break;
+
 	default:
-		goto invalid_enum;
+		goto out_error;
 	}
 
 	return;
 	
-invalid_enum:
+out_error:
 	GLERROR(GL_INVALID_ENUM);
 }
 

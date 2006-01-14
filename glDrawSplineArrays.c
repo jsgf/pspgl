@@ -15,12 +15,13 @@ void glDrawSplineArraysPSP(GLenum mode, GLuint u, GLuint v,
 	const void *buf;
 	unsigned prim;
 	unsigned count;
+	GLenum error;
+
+	error = GL_INVALID_ENUM;
 
 	if (u_flags < GL_PATCH_INNER_INNER_PSP || u_flags > GL_PATCH_OUTER_OUTER_PSP ||
-	    v_flags < GL_PATCH_INNER_INNER_PSP || v_flags > GL_PATCH_OUTER_OUTER_PSP) {
-		GLERROR(GL_INVALID_ENUM);
-		return;
-	}
+	    v_flags < GL_PATCH_INNER_INNER_PSP || v_flags > GL_PATCH_OUTER_OUTER_PSP)
+		goto out_error;
 
 	switch(mode) {
 	case GL_TRIANGLES:	prim = 0; break;
@@ -28,8 +29,7 @@ void glDrawSplineArraysPSP(GLenum mode, GLuint u, GLuint v,
 	case GL_POINTS:		prim = 2; break;
 
 	default:
-		GLERROR(GL_INVALID_ENUM);
-		return;
+		goto out_error;
 	}
 	sendCommandi(CMD_PATCH_PRIM, prim);
 
@@ -37,6 +37,7 @@ void glDrawSplineArraysPSP(GLenum mode, GLuint u, GLuint v,
 
 	vbuf = NULL;
 	vbuf_offset = 0;
+		vfmtp = &vfmt;
 
 	if (__pspgl_cache_arrays()) {
 		/* FAST: draw from locked array */
@@ -50,9 +51,9 @@ void glDrawSplineArraysPSP(GLenum mode, GLuint u, GLuint v,
 		vbuf->refcount++;
 	}
 
-	if (vbuf == NULL) {
+	error = GL_OUT_OF_MEMORY;
+	if (unlikely(vbuf == NULL)) {
 		/* SLOW: convert us some arrays */
-		vfmtp = &vfmt;
 		__pspgl_ge_vertex_fmt(c, &vfmt);
 
 		if (vfmt.hwformat == 0)
@@ -60,10 +61,8 @@ void glDrawSplineArraysPSP(GLenum mode, GLuint u, GLuint v,
 
 		vbuf = __pspgl_varray_convert(&vfmt, first, count);
 
-		if (vbuf == NULL) {
-			GLERROR(GL_OUT_OF_MEMORY);
-			return;
-		}
+		if (vbuf == NULL)
+			goto out_error;
 	}
 
 	buf = vbuf->base + vbuf_offset;
@@ -79,4 +78,8 @@ void glDrawSplineArraysPSP(GLenum mode, GLuint u, GLuint v,
 	__pspgl_dlist_pin_buffer(vbuf, BF_PINNED_RD);
 
 	__pspgl_buffer_free(vbuf);
+	return;
+
+  out_error:
+	GLERROR(error);
 }

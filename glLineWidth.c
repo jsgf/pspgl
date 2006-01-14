@@ -3,7 +3,7 @@
 
 void glLineWidth (GLfloat width)
 {
-	if (width != 1.0)
-		GLERROR(GL_INVALID_ENUM);
+	if (width <= 0.f)
+		GLERROR(GL_INVALID_VALUE);
 }
 

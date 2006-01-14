@@ -19,15 +19,16 @@ void glDrawBezierRangeElementsPSP(GLenum mode, GLuint start, GLuint end,
 	unsigned count;
 	int minidx = start;
 	int maxidx = end;
+	GLenum error;
 
+	error = GL_INVALID_ENUM;
 	switch(mode) {
 	case GL_TRIANGLES:	prim = 0; break;
 	case GL_LINES:		prim = 1; break;
 	case GL_POINTS:		prim = 2; break;
 
 	default:
-		GLERROR(GL_INVALID_ENUM);
-		return;
+		goto out_error;
 	}
 	sendCommandi(CMD_PATCH_PRIM, prim);
 
@@ -38,6 +39,8 @@ void glDrawBezierRangeElementsPSP(GLenum mode, GLuint start, GLuint end,
 
 	vbuf = NULL;
 	idx_base = 0;
+	vfmtp = &vfmt;
+	vbuf_offset = 0;
 
 	if (__pspgl_cache_arrays()) {
 		/* FAST: directly usable locked arrays */
@@ -51,9 +54,9 @@ void glDrawBezierRangeElementsPSP(GLenum mode, GLuint start, GLuint end,
 		vbuf->refcount++;
 	}
 
-	if (vbuf == NULL) {
+	error = GL_OUT_OF_MEMORY;
+	if (unlikely(vbuf == NULL)) {
 		/* SLOW: convert us some arrays */
-		vfmtp = &vfmt;
 		__pspgl_ge_vertex_fmt(c, &vfmt);
 
 		if (vfmt.hwformat == 0)
@@ -77,21 +80,16 @@ void glDrawBezierRangeElementsPSP(GLenum mode, GLuint start, GLuint end,
 		vbuf_offset = 0;
 		idx_base = minidx;
 
-		if (vbuf == NULL) {
-			GLERROR(GL_OUT_OF_MEMORY);
-			return;
-		}
+		if (vbuf == NULL)
+			goto out_error;
 	}
 
 	hwformat = vfmtp->hwformat;
 
 	ibuf = __pspgl_varray_convert_indices(idx_type, indices, idx_base, count,
 					      &ibuf_offset, &hwformat);
-	if (ibuf == NULL) {
-		GLERROR(GL_OUT_OF_MEMORY);
-		__pspgl_buffer_free(vbuf);
-		return;
-	}
+	if (ibuf == NULL)
+		goto out_error_free_vbuf;
 
 	vtxp = vbuf->base + vbuf_offset;
 	idxp = ibuf->base + ibuf_offset;
@@ -103,7 +101,14 @@ void glDrawBezierRangeElementsPSP(GLenum mode, GLuint start, GLuint end,
 	__pspgl_dlist_pin_buffer(ibuf, BF_PINNED_RD);
 
 	__pspgl_buffer_free(vbuf);
-	__pspgl_buffer_free(ibuf);	
+	__pspgl_buffer_free(ibuf);
+	return;
+
+  out_error_free_vbuf:
+	__pspgl_buffer_free(vbuf);
+
+  out_error:
+	GLERROR(error);
 }
 
 void glDrawBezierElementsPSP(GLenum mode, GLuint u, GLuint v, 

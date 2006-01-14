@@ -5,21 +5,19 @@ void glTexCoordPointer (GLint size, GLenum type, GLsizei stride, const GLvoid *p
 {
 	struct pspgl_vertex_array *va = &pspgl_curctx->vertex_array.texcoord;
 	GLboolean native;
+	GLenum error;
 
-	if (unlikely(size < 2 || size > 4)) {
-		GLERROR(GL_INVALID_VALUE);
-		return;
-	}
+	error = GL_INVALID_VALUE;
 
-	if (unlikely(type != GL_BYTE && type != GL_SHORT && type != GL_FLOAT)) {
-		GLERROR(GL_INVALID_ENUM);
-		return;
-	}
+	if (unlikely(size < 2 || size > 4))
+		goto out_error;
 
-	if (unlikely(stride < 0)) {
-		GLERROR(GL_INVALID_VALUE);
-		return;
-	}
+	if (unlikely(stride < 0))
+		goto out_error;
+
+	error = GL_INVALID_ENUM;
+	if (unlikely(type != GL_BYTE && type != GL_SHORT && type != GL_FLOAT))
+		goto out_error;
 
 	if (stride == 0)
 		stride = __pspgl_gl_sizeof(type) * size;
@@ -37,4 +35,9 @@ void glTexCoordPointer (GLint size, GLenum type, GLsizei stride, const GLvoid *p
 	va->native = native;
 
 	__pspgl_varray_bind_buffer(va, pspgl_curctx->vertex_array.arraybuffer);
+
+	return;
+
+  out_error:
+	GLERROR(error);
 }

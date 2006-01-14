@@ -66,10 +66,8 @@ void glCopyTexImage2D(GLenum target,
 	if ((y + height) > read->height)
 		height -= (y + height) - read->height;
 
-	if (width <= 0 || height <= 0) {
-		GLERROR(GL_INVALID_VALUE);
-		return;
-	}
+	if (unlikely(width <= 0) || unlikely(height <= 0))
+		goto out_error;
 
 	/* The framebuffer and the texture are upside down with
 	   respect to each other, so we need to flip the image (in the
@@ -94,4 +92,7 @@ void glCopyTexImage2D(GLenum target,
 		__pspgl_update_mipmaps();
 
 	return;
+
+  out_error:
+	GLERROR(GL_INVALID_VALUE);
 }

@@ -14,10 +14,8 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 
 	vbuf = (struct t2f_c4ub_n3f_v3f *) c->beginend.vbuf_adr;
 
-	if (unlikely(!vbuf)) {
-		GLERROR(GL_OUT_OF_MEMORY);
-		return;
-	}
+	if (unlikely(!vbuf))
+		goto out_error;
 
 	vbuf += c->beginend.vertex_count;
 
@@ -80,6 +78,10 @@ void glVertex3f (GLfloat x, GLfloat y, GLfloat z)
 			memcpy(vbuf_start, vbuf - overhang + 1, overhang * sizeof(vbuf[0]));
 		}
 	}
+	return;
+
+  out_error:
+	GLERROR(GL_OUT_OF_MEMORY);
 }
 
 

@@ -17,6 +17,7 @@ void glReadPixels( GLint x, GLint y,
 	unsigned pixfmt;
 	int dest_x, dest_y;
 	GLsizei dest_stride;
+	GLenum error;
 
 	read = pspgl_curctx->read;
 
@@ -25,15 +26,13 @@ void glReadPixels( GLint x, GLint y,
 
 		fmt = __pspgl_hardware_format(__pspgl_texformats, format, type);
 
-		if (fmt->hwformat != read->pixfmt) {
-			GLERROR(GL_INVALID_ENUM);
-			return;
-		}
+		error = GL_INVALID_ENUM;
+		if (unlikely(fmt->hwformat != read->pixfmt))
+			goto out_error;
 
-		if ((fmt->flags & TF_NATIVE) == 0) {
-			GLERROR(GL_INVALID_OPERATION);
-			return;
-		}
+		error = GL_INVALID_OPERATION;
+		if ((fmt->flags & TF_NATIVE) == 0)
+			goto out_error;
 
 		framebuffer = read->color_back;
 		fb_offset = 0;
@@ -41,14 +40,13 @@ void glReadPixels( GLint x, GLint y,
 		hwsize = fmt->hwsize;
 		pixfmt = read->pixfmt;
 	} else {
-		if (read->depth_buffer == NULL) {
-			GLERROR(GL_INVALID_OPERATION);
-			return;
-		}
-		if (type != GL_UNSIGNED_SHORT) {
-			GLERROR(GL_INVALID_ENUM);
-			return;
-		}
+		error = GL_INVALID_OPERATION;
+		if (read->depth_buffer == NULL)
+			goto out_error;
+
+		error = GL_INVALID_ENUM;
+		if (type != GL_UNSIGNED_SHORT)
+			goto out_error;
 
 		/* The PSP provides a window into VRAM which makes the
 		   depth buffer look properly linearized. */
@@ -81,10 +79,9 @@ void glReadPixels( GLint x, GLint y,
 	if ((y + height) > read->height)
 		height -= (y + height) - read->height;
 
-	if (width <= 0 || height <= 0) {
-		GLERROR(GL_INVALID_VALUE);
-		return;
-	}
+	error = GL_INVALID_VALUE;
+	if (unlikely(width <= 0) || unlikely(height <= 0))
+		goto out_error;
 
 	/* The framebuffer and the texture are upside down with
 	   respect to each other, so we need to flip the image (in the
@@ -127,4 +124,8 @@ void glReadPixels( GLint x, GLint y,
 		/* Sync with copy.  XXX check for use of a PBO to make this unnecessary. */
 		glFinish();
 	}
+	return;
+
+  out_error:
+	GLERROR(error);
 }
