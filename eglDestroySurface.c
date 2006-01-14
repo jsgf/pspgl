@@ -14,8 +14,8 @@ EGLBoolean eglDestroySurface (EGLDisplay dpy, EGLSurface surface)
 		return EGL_TRUE;
 
 	/* Even if single-buffered, both front and back are initialized */
-	__pspgl_buffer_free(s->color_buffer[0]);
-	__pspgl_buffer_free(s->color_buffer[1]);
+	__pspgl_buffer_free(s->color_front);
+	__pspgl_buffer_free(s->color_back);
 
 	if (s->depth_buffer)
 		__pspgl_buffer_free(s->depth_buffer);

@@ -4,8 +4,11 @@
 EGLBoolean eglSwapBuffers (EGLDisplay dpy, EGLSurface draw)
 {
 	struct pspgl_surface *s = (struct pspgl_surface *) draw;
+	struct pspgl_buffer *t;
 
-	s->current_front ^= 1;
+	t = s->color_front;
+	s->color_front = s->color_back;
+	s->color_back = t;
 
 	return __pspgl_vidmem_setup_write_and_display_buffer(s);
 }

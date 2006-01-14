@@ -149,7 +149,7 @@ void __pspgl_context_pin_buffers(struct pspgl_context *c)
 			__pspgl_dlist_pin_buffer(tobj->images[i]->image,
 						 BF_PINNED_RD);
 
-	__pspgl_dlist_pin_buffer(c->draw->color_buffer[!c->draw->current_front], BF_PINNED);
+	__pspgl_dlist_pin_buffer(c->draw->color_back, BF_PINNED);
 	if ((c->hw.ge_reg[CMD_ENA_DEPTH_TEST] & 0xff) && c->draw->depth_buffer)
 		__pspgl_dlist_pin_buffer(c->draw->depth_buffer, BF_PINNED);
 }

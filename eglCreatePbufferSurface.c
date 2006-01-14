@@ -73,7 +73,6 @@ EGLSurface eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config,
 	s->width = width;
 	s->height = height;
 	s->pixelperline = pow2(width);
-	s->current_front = 0;
 	s->flags = 0;
 	s->pixfmt = pixconf->hwformat;
 
@@ -85,10 +84,10 @@ EGLSurface eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config,
 	s->alpha_mask	= MASK(pixconf->alpha_bits);
 	s->stencil_mask	= MASK(pixconf->stencil_bits);
 
-	if (!(s->color_buffer[0] = __pspgl_buffer_new(bufferlen, GL_STATIC_COPY_ARB)))
+	if (!(s->color_back = __pspgl_buffer_new(bufferlen, GL_STATIC_COPY_ARB)))
 		goto out_error;
-	s->color_buffer[1] = s->color_buffer[0];
-	s->color_buffer[1]->refcount++;
+	s->color_front = s->color_back;
+	s->color_front->refcount++;
 
 	if (has_depthbuffer) {
 		bufferlen = s->height * s->pixelperline * 2;

@@ -121,11 +121,11 @@ void __pspgl_vram_dump (void)
 		surf.alpha_mask = s->alpha_mask;
 		surf.stencil_mask = s->stencil_mask;
 
-		surf.front.start = s->color_buffer[s->current_front]->base - sceGeEdramGetAddr();
+		surf.front.start = s->color_front->base - sceGeEdramGetAddr();
 		surf.front.size = s->height * s->pixelperline * (s->pixfmt == GE_RGBA_8888 ? 4 : 2);
 		surf.front.stride = s->pixelperline;
 
-		surf.back.start = s->color_buffer[!s->current_front]->base - sceGeEdramGetAddr();
+		surf.back.start = s->color_back->base - sceGeEdramGetAddr();
 		surf.back.size = s->height * s->pixelperline * (s->pixfmt == GE_RGBA_8888 ? 4 : 2);
 		surf.back.stride = s->pixelperline;
 

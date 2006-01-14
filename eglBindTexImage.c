@@ -41,7 +41,7 @@ EGLBoolean eglBindTexImage(EGLDisplay dpy, EGLSurface surface, EGLint buffer)
 	tobj->flags &= ~TOF_SWIZZLED;
 	tobj->flags |= TOF_FLIPPED;
 
-	timg = __pspgl_teximg_from_buffer(s->color_buffer[!s->current_front], 0,
+	timg = __pspgl_teximg_from_buffer(s->color_back, 0,
 					  s->width, s->height, s->pixelperline, texfmt);
 
 	__pspgl_set_texture_image(tobj, 0, timg);

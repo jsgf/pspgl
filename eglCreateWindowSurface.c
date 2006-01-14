@@ -45,7 +45,6 @@ EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindo
 	s->width = 480;
 	s->height = 272;
 	s->pixelperline = pow2(s->width);
-	s->current_front = 0;
 	s->flags = SURF_DISPLAYED;
 	s->pixfmt = pixconf->hwformat;
 
@@ -62,22 +61,22 @@ EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindo
 		s->alpha_mask, s->stencil_mask);
 
 	if (has_frontbuffer) {
-		if (!(s->color_buffer[0] = __pspgl_buffer_new(bufferlen, GL_STATIC_COPY_ARB)))
+		if (!(s->color_front = __pspgl_buffer_new(bufferlen, GL_STATIC_COPY_ARB)))
 			goto bad_alloc;
-		s->color_buffer[0]->flags |= BF_PINNED_FIXED;
+		s->color_front->flags |= BF_PINNED_FIXED;
 	}
 
 	if (has_backbuffer) {
-		if (!(s->color_buffer[1] = __pspgl_buffer_new(bufferlen, GL_STATIC_COPY_ARB)))
+		if (!(s->color_back = __pspgl_buffer_new(bufferlen, GL_STATIC_COPY_ARB)))
 			goto bad_alloc;
-		s->color_buffer[1]->flags |= BF_PINNED_FIXED;
+		s->color_back->flags |= BF_PINNED_FIXED;
 	} else {
 		/* If we're single buffered, set back buffer == front
 		   buffer; this way all the other code can assume
 		   double-buffering without needing to check, but we
 		   still get single-buffered behaviour. */
-		s->color_buffer[1] = s->color_buffer[0];
-		s->color_buffer[1]->refcount++;
+		s->color_back = s->color_front;
+		s->color_back->refcount++;
 	}
 
 	bufferlen = s->height * s->pixelperline * 2;

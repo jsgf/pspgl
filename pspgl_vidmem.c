@@ -121,7 +121,6 @@ void  __pspgl_vidmem_free (struct pspgl_buffer *buf)
 
 EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *s)
 {
-	int current_back = s->current_front ^ 1;
 	unsigned long adr;
 
 	s->flip_start = now();
@@ -137,7 +136,7 @@ EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *
 
 	sendCommandi(CMD_PSM, s->pixfmt);
 
-	adr = (unsigned long) s->color_buffer[current_back]->base;
+	adr = (unsigned long) s->color_back->base;
 	psp_log("color buffer adr 0x%08x\n", adr);
 	sendCommandi(CMD_DRAWBUF, (adr & 0x00ffffff));
 	sendCommandi(CMD_DRAWBUFWIDTH, ((adr & 0xff000000) >> 8) | s->pixelperline);
@@ -154,9 +153,9 @@ EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *
 
 	if (s->flags & SURF_DISPLAYED) {
 		/* wait for completion of pending render operations before display */
-		__pspgl_buffer_dlist_sync(s->color_buffer[s->current_front]);
+		__pspgl_buffer_dlist_sync(s->color_front);
 
-		sceDisplaySetFrameBuf(s->color_buffer[s->current_front]->base,
+		sceDisplaySetFrameBuf(s->color_front->base,
 				      s->pixelperline,
 				      s->pixfmt,
 				      PSP_DISPLAY_SETBUF_NEXTFRAME);
