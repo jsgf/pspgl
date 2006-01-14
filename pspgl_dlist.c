@@ -72,19 +72,6 @@ void __pspgl_dlist_enqueue_cmd (unsigned long cmd)
 }
 
 
-static
-void dlist_finish (struct pspgl_dlist *d)
-{
-	if (unlikely((d->len + DLIST_EXTRA) > DLIST_SIZE))
-		__pspgl_log("d->len=%d DLIST_SIZE=%d\n", d->len, DLIST_SIZE);
-	assert((d->len + DLIST_EXTRA) <= DLIST_SIZE);
-
-	d->cmd_buf[d->len++] = 0x0f000000;	/* FINISH */
-	d->cmd_buf[d->len++] = 0x0c000000;	/* END */
-	d->cmd_buf[d->len++] = 0x00000000;	/* NOP */
-	d->cmd_buf[d->len++] = 0x00000000;	/* NOP */
-}
-
 /* Wait for a dlist to stop being used by the hardware, and do the
    appropriate updates on any buffers it pins. */
 static void sync_list(struct pspgl_dlist *list)
@@ -117,6 +104,19 @@ static void sync_list(struct pspgl_dlist *list)
 	}
 
 	dlist_reset(list);
+}
+
+static
+void dlist_finish (struct pspgl_dlist *d)
+{
+	if (unlikely((d->len + DLIST_EXTRA) > DLIST_SIZE))
+		__pspgl_log("d->len=%d DLIST_SIZE=%d\n", d->len, DLIST_SIZE);
+	assert((d->len + DLIST_EXTRA) <= DLIST_SIZE);
+
+	d->cmd_buf[d->len++] = 0x0f000000;	/* FINISH */
+	d->cmd_buf[d->len++] = 0x0c000000;	/* END */
+	d->cmd_buf[d->len++] = 0x00000000;	/* NOP */
+	d->cmd_buf[d->len++] = 0x00000000;	/* NOP */
 }
 
 /* Submit all pending command lists to hardware, and move to the next
@@ -205,31 +205,28 @@ void __pspgl_dlist_cancel (void)
 	}
 }
 
-static inline unsigned long align16 (unsigned long val) { return ((((unsigned long) val) + 0x0f) & ~0x0f); }
-
 void * __pspgl_dlist_insert_space (unsigned long size)
 {
 	struct pspgl_dlist *d = &dlists[dlist_current];
 	unsigned long len;
 	unsigned long adr;
 
-	size = align16(size + 0x0f + 2 * sizeof(d->cmd_buf[0]));
-	size /= sizeof(d->cmd_buf[0]);
+	size = ROUNDUP(size, sizeof(d->cmd_buf[0])) / sizeof(d->cmd_buf[0]);
 
-	if ((d->len + size) >= (DLIST_SIZE - 4)) {
+	if ((d->len + 2 + size) >= (DLIST_SIZE - 4)) {
 		__pspgl_dlist_submit();
 		d = &dlists[dlist_current];
 
-		if ((d->len + size) >= (DLIST_SIZE - DLIST_EXTRA))
-			return NULL;
+		assert(d->len == 0);
+		assert(size <= (DLIST_SIZE - DLIST_EXTRA));
 	}
 
 	len = d->len;
-	d->len += size;
+	d->len += size + 2;
 	adr = (unsigned long) &d->cmd_buf[d->len];
-	d->cmd_buf[len] = (16 << 24) | ((adr >> 8) & 0xf0000);	/* BASE */
-	d->cmd_buf[len+1] = (8 << 24) | (adr & 0xffffff);	/* JUMP */
+	d->cmd_buf[len  ] = (CMD_BASE << 24) | ((adr >> 8) & 0xf0000);
+	d->cmd_buf[len+1] = (CMD_JUMP << 24) | (adr & 0xffffff);
 
-	return ((void *) align16((unsigned long) &d->cmd_buf[len+2]));
+	return (void *)&d->cmd_buf[len+2];
 }
 
