@@ -35,12 +35,10 @@ void __pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd
 void __pspgl_context_flush_pending_state_changes (struct pspgl_context *c,
 						  unsigned first, unsigned last)
 {
-	unsigned i;
-
 	first = first & ~31;
 	last = (last + 31 + 1) & ~31;
 
-	for(i = first; i < last; i += 32) {
+	for(unsigned i = first; i < last; i += 32) {
 		uint32_t word = c->hw.ge_reg_touched[i/32];
 		unsigned j;
 
@@ -87,7 +85,6 @@ static void flush_matrix(struct pspgl_context *c, unsigned opcode, int index,
 {
 	const GLfloat *m;
 	int n;
-	int i, j;
 
 	if (!(stk->flags & MF_DIRTY))
 		return;
@@ -101,8 +98,8 @@ static void flush_matrix(struct pspgl_context *c, unsigned opcode, int index,
 
 	__pspgl_context_writereg_uncached(c, opcode, index * n * 4);
 	opcode++;
-	for (j=0; j<4; j++)
-		for (i=0; i<n; i++)
+	for (int j=0; j<4; j++)
+		for (int i=0; i<n; i++)
 			pspgl_context_writereg_mtx(c, opcode, m[4*j+i]);
 }
 
@@ -127,31 +124,31 @@ static void flush_pending_matrix_changes (struct pspgl_context *c)
 void __pspgl_context_pin_buffers(struct pspgl_context *c)
 {
 	struct pspgl_texobj *tobj;
-	struct pspgl_teximg *cmap;
-	int i;
+
+	/* pin back buffer and depth buffer */
+	__pspgl_dlist_pin_buffer(c->draw->color_back, BF_PINNED);
+	if ((c->hw.ge_reg[CMD_ENA_DEPTH_TEST] & 1) && c->draw->depth_buffer)
+		__pspgl_dlist_pin_buffer(c->draw->depth_buffer, BF_PINNED);
 
 	tobj = c->texture.bound;	
 
-	/* do nothing if there's no texture or texturing is disabled */
-	if ((tobj == NULL) ||
-	    (c->hw.ge_reg[CMD_ENA_TEXTURE] & 1) == 0)
-		return;
+	/* If we're texturing, then pin texture-related buffers */
+	if ((tobj != NULL) &&
+	    (c->hw.ge_reg[CMD_ENA_TEXTURE] & 1)) {
+		struct pspgl_teximg *cmap;
 
-	/* find the effective cmap, if any */
-	cmap = __pspgl_texobj_cmap(tobj);
-	if (cmap)
-		__pspgl_dlist_pin_buffer(cmap->image, BF_PINNED_RD);
+		/* find the effective cmap, if any */
+		cmap = __pspgl_texobj_cmap(tobj);
+		if (cmap)
+			__pspgl_dlist_pin_buffer(cmap->image, BF_PINNED_RD);
 
-	/* Walk the images pointed to by the texture object and make
-	   sure they're pinned. */
-	for (i = 0; i < MIPMAP_LEVELS; i++)
-		if (tobj->images[i] && tobj->images[i]->image)
-			__pspgl_dlist_pin_buffer(tobj->images[i]->image,
-						 BF_PINNED_RD);
-
-	__pspgl_dlist_pin_buffer(c->draw->color_back, BF_PINNED);
-	if ((c->hw.ge_reg[CMD_ENA_DEPTH_TEST] & 0xff) && c->draw->depth_buffer)
-		__pspgl_dlist_pin_buffer(c->draw->depth_buffer, BF_PINNED);
+		/* Walk the images pointed to by the texture object and make
+		   sure they're pinned. */
+		for (int i = 0; i < MIPMAP_LEVELS; i++)
+			if (tobj->images[i] && tobj->images[i]->image)
+				__pspgl_dlist_pin_buffer(tobj->images[i]->image,
+							 BF_PINNED_RD);
+	}
 }
 
 void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt, 
