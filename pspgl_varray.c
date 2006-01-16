@@ -139,7 +139,7 @@ GLboolean __pspgl_vertex_is_native(const struct vertex_format *vfmt)
 	while(i < nattr-1) {
 		const void *nextptr = __pspgl_bufferobj_deref(next->buffer, (void *)next->ptr);
 
-		psp_log("attr %d array=%p next=%p, native=%d size=%d ptr(%p)+size=%p next(%d)->ptr=%p\n",
+		psp_log("attr %d array=%p next=%p, native=%d size=%d ptr(%p)+size=%p next(%p)->ptr=%p\n",
 			i, array, next, array->native, vfmt->attribs[0].size,
 			__pspgl_bufferobj_deref(array->buffer, (void *)array->ptr),
 			ptr, nextptr);
@@ -210,6 +210,7 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 
 		assert(varray->texcoord.size >= 2 && varray->texcoord.size <= 4);
 
+		attr->convert = NULL;
 		attr->array = &varray->texcoord;
 		offset = ROUNDUP(offset, ge_sizeof(hwtype));
 		attr->offset = offset;
@@ -228,6 +229,7 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 		hwformat |= GE_WEIGHT_SHIFT(hwtype);
 		hwformat |= GE_WEIGHTS(nweights);
 
+		attr->convert = NULL;
 		attr->array = &varray->weight;
 		offset = ROUNDUP(offset, ge_sizeof(hwtype));
 		attr->offset = offset;
@@ -251,6 +253,7 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 		assert(type == GL_FLOAT || type == GL_UNSIGNED_BYTE);
 		assert(size == 3 || size == 4);
 
+		attr->convert = NULL;
 		if (type == GL_FLOAT) {
 			if (size == 3)
 				attr->convert = cvt_color_float3_ub;
@@ -277,6 +280,7 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 
 		hwformat |= GE_NORMAL_SHIFT(hwtype);
 
+		attr->convert = NULL;
 		attr->array = &varray->normal;
 		offset = ROUNDUP(offset, ge_sizeof(hwtype));
 		attr->offset = offset;
@@ -299,6 +303,7 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 		/* Size must be either 2, 3 or 4. For size==2, we need
 		   to fill in an extra z coord; for size==4, we just
 		   ignore w  */
+		attr->convert = NULL;
 		if (size == 2) {
 			switch(hwtype) {
 			case GE_INT_8BIT:	attr->convert = cvt_byte2_byte3; break;
@@ -340,7 +345,6 @@ void __pspgl_ge_vertex_fmt(struct pspgl_context *ctx, struct vertex_format *vfmt
 int __pspgl_gen_varray(const struct vertex_format *vfmt, int first, int count, 
 		       void *to, int space)
 {
-	int i;
 	unsigned char *dest = to;
 	int nvtx = space / vfmt->vertex_size;
 	void *ptrs[MAX_ATTRIB];
@@ -368,19 +372,22 @@ int __pspgl_gen_varray(const struct vertex_format *vfmt, int first, int count,
 		return nvtx;
 	}
 
-	for(i = 0; i < vfmt->nattrib; i++) {
+	psp_log("converting arrays\n");
+	for(int i = 0; i < vfmt->nattrib; i++) {
 		struct pspgl_vertex_array *a = vfmt->attribs[i].array;
 
 		ptrs[i] = __pspgl_bufferobj_map(a->buffer, GL_READ_ONLY_ARB, (void *)a->ptr) +
 			(first * a->stride);
+		psp_log("  mapped ptr[%d]=%p\n", i, ptrs[i]);
 	}
 
-	for(i = 0; i < nvtx; i++) {
-		int j;
-
-		for(j = 0; j < vfmt->nattrib; j++) {
+	for(int i = 0; i < nvtx; i++) {
+		for(int j = 0; j < vfmt->nattrib; j++) {
 			const struct attrib *attr = &vfmt->attribs[j];
 			struct pspgl_vertex_array *a = attr->array;
+
+			psp_log("vtx %d attr %d attr->offset=%d attr->convert=%p dest=%p\n",
+				i, j, attr->offset, attr->convert, dest);
 
 			if (attr->convert)
 				(*attr->convert)(&dest[attr->offset], ptrs[j], attr);
@@ -392,12 +399,13 @@ int __pspgl_gen_varray(const struct vertex_format *vfmt, int first, int count,
 		dest += vfmt->vertex_size;
 	}
 
-	for(i = 0; i < vfmt->nattrib; i++) {
+	for(int i = 0; i < vfmt->nattrib; i++) {
 		struct pspgl_vertex_array *a = vfmt->attribs[i].array;
 
 		__pspgl_bufferobj_unmap(a->buffer, GL_READ_ONLY_ARB);
 	}
 
+	psp_log("converted %d vertices\n", nvtx);
 
 	return nvtx;
 }

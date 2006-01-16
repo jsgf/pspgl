@@ -23,11 +23,13 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 	vbuf_offset = 0;
 	vfmtp = &vfmt;
 
+	psp_log("checking for cached array...\n");
 	/* Check to see if we can use the locked array fast path */
 	if (__pspgl_cache_arrays()) {
 		/* FAST: draw from locked array */
 		struct locked_arrays *l = &pspgl_curctx->vertex_array.locked;
 
+		psp_log("yep, cached\n");
 		vbuf = l->cached_array;
 		vbuf_offset = l->cached_array_offset;
 		vfmtp = &l->vfmt;
@@ -44,8 +46,12 @@ void __pspgl_varray_draw(GLenum mode, GLint first, GLsizei count)
 		if (unlikely(vfmt.hwformat == 0))
 			return;
 
+		psp_log("converting %d vertices at %d\n", count, first);
+
 		vbuf = __pspgl_varray_convert(&vfmt, first, count);
 		vbuf_offset = 0;
+
+		psp_log("returned vbuf=%p\n", vbuf);
 
 		error = GL_OUT_OF_MEMORY;
 		if (unlikely(vbuf == NULL))

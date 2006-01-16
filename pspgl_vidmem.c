@@ -125,7 +125,7 @@ EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *
 
 	s->flip_start = now();
 
-	psp_log("current_front %d\n", s->current_front);
+	psp_log("current_front %p->%p\n", s->color_front, s->color_front->base);
 
 	if (!s)
 		goto out_error;
@@ -165,7 +165,7 @@ EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *
 			} while ((sceDisplayGetVcount() % pspgl_curctx->swap_interval) != 0);
 		}
 
-		psp_log("display @ adr 0x%08p\n", s->color_buffer[s->current_front]->base);
+		psp_log("display @ adr 0x%08p\n", s->color_front->base);
 	}
 
 	s->prev_end = s->flip_end;

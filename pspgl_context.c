@@ -45,8 +45,8 @@ void __pspgl_context_flush_pending_state_changes (struct pspgl_context *c,
 		c->hw.ge_reg_touched[i/32] = 0;
 
 		if (word && 0)
-			psp_log("setting i %d word %08x dlist=%p\n",
-				i, word, c->dlist_current);
+			psp_log("setting i %d word %08x\n",
+				i, word);
 
 		for(j = i; word != 0; j++, word >>= 1) {
 			if ((word & 1) && (c->hw.ge_reg[j] >> 24) == j)

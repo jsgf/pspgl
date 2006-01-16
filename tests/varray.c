@@ -4,6 +4,7 @@
 #include <math.h>
 
 #include "glchk.h"
+#include "perfmeter.h"
 
 static
 void reshape (int w, int h)
@@ -69,6 +70,8 @@ void display (void)
 	static GLfloat angle;
 
 	angle += delta;
+
+	pm_framestart();
 
 	GLCHK(glColor3f(1,1,0));
 	GLCHK(glClear(GL_COLOR_BUFFER_BIT));
@@ -198,6 +201,8 @@ void display (void)
 	if (lock_arrays)
 		GLCHK(glUnlockArraysEXT());
 #endif
+
+	pm_frameend();
 
 	glutSwapBuffers();
 	glutPostRedisplay();
