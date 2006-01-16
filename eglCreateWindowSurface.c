@@ -51,6 +51,9 @@ EGLSurface eglCreateWindowSurface (EGLDisplay dpy, EGLConfig config, NativeWindo
 	s->alpha_mask	= MASK(pixconf->alpha_bits);
 	s->stencil_mask	= MASK(pixconf->stencil_bits);
 
+	s->read = &s->color_back;
+	s->draw = &s->color_back;
+
 	bufferlen = s->height * s->pixelperline * bytesperpixel;
 
 	psp_log("width = %lu\n", s->width);

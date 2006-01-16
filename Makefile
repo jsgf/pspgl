@@ -107,6 +107,7 @@ API_OBJS = \
 	glPolygonMode.o \
 	glPolygonOffset.o \
 	glPrioritizeTextures.o \
+	glReadBuffer.o \
 	glReadPixels.o \
 	glRotatef.o \
 	glScalef.o \

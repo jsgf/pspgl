@@ -34,7 +34,7 @@ void glReadPixels( GLint x, GLint y,
 		if ((fmt->flags & TF_NATIVE) == 0)
 			goto out_error;
 
-		framebuffer = read->color_back;
+		framebuffer = *(read->read);
 		fb_offset = 0;
 
 		hwsize = fmt->hwsize;

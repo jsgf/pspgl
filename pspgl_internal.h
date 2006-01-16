@@ -223,6 +223,9 @@ struct pspgl_surface {
 	struct pspgl_buffer *color_front, *color_back;
 	struct pspgl_buffer *depth_buffer;
 
+	struct pspgl_buffer **read;
+	struct pspgl_buffer **draw;
+
 	unsigned alpha_mask, stencil_mask;
 
 	/* timing stats */

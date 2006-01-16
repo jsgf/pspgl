@@ -126,7 +126,7 @@ void __pspgl_context_pin_buffers(struct pspgl_context *c)
 	struct pspgl_texobj *tobj;
 
 	/* pin back buffer and depth buffer */
-	__pspgl_dlist_pin_buffer(c->draw->color_back, BF_PINNED);
+	__pspgl_dlist_pin_buffer(*c->draw->draw, BF_PINNED);
 	if ((c->hw.ge_reg[CMD_ENA_DEPTH_TEST] & 1) && c->draw->depth_buffer)
 		__pspgl_dlist_pin_buffer(c->draw->depth_buffer, BF_PINNED);
 

@@ -134,7 +134,7 @@ EGLBoolean __pspgl_vidmem_setup_write_and_display_buffer (struct pspgl_surface *
 
 	sendCommandi(CMD_PSM, s->pixfmt);
 
-	adr = (unsigned long) s->color_back->base;
+	adr = (unsigned long) (*s->draw)->base;
 	psp_log("color buffer adr 0x%08x\n", adr);
 	sendCommandi(CMD_DRAWBUF, (adr & 0x00ffffff));
 	sendCommandi(CMD_DRAWBUFWIDTH, ((adr & 0xff000000) >> 8) | s->pixelperline);

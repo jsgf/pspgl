@@ -79,6 +79,9 @@ EGLSurface eglCreatePbufferSurface (EGLDisplay dpy, EGLConfig config,
 	s->flags = 0;
 	s->pixfmt = pixconf->hwformat;
 
+	s->read = &s->color_back;
+	s->draw = &s->color_back;
+
 	if (egl_textarget != EGL_NO_TEXTURE)
 		s->flags |= SURF_TEXTURE;
 	if (egl_texfmt == EGL_TEXTURE_RGBA)
