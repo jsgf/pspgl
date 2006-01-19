@@ -1,5 +1,5 @@
 #include "pspgl_internal.h"
-
+#include "pspgl_buffers.h"
 
 void glDrawBuffer(GLenum mode)
 {
@@ -15,6 +15,11 @@ void glDrawBuffer(GLenum mode)
 	default:
 		/* XXX IMPROVE: support front & aux buffers */
 		GLERROR(GL_INVALID_ENUM);
+		return;
 	}
+
+	unsigned adr = (unsigned long) (*s->draw)->base;
+	sendCommandi(CMD_DRAWBUF, (adr & 0x00ffffff));
+	sendCommandi(CMD_DRAWBUFWIDTH, ((adr & 0xff000000) >> 8) | s->pixelperline);
 }
 
