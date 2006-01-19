@@ -15,11 +15,10 @@ void *__pspgl_uncached(void *p, size_t size);
    times. */
 #define ROUNDUP(x, a)  (((x)+((a)-1)) & ~((a)-1))
 
-/* log-base-2 function.  For non-power-of-2 inputs, it returns the result of pow2(lg2(x)) */
+/* log-base-2 function. */
+static inline uint32_t lg2(uint32_t x) __attribute__((const));
 static inline uint32_t lg2(uint32_t x)
 {
-	uint32_t ret;
-
 	if (__builtin_constant_p(x))
 		switch(x) {
 		case 1:		return 0;
@@ -41,22 +40,18 @@ static inline uint32_t lg2(uint32_t x)
 		case 65536:	return 16;
 		}
 
-	ret = -1;
-	do {
-		ret++;
-		x >>= 1;
-	} while(x);
-
-	return ret;
+	return 31 - __builtin_clz(x);
 }
 
 /* returns true if x is a power of 2 */
+static inline int ispow2(uint32_t x) __attribute__((const));
 static inline int ispow2(uint32_t x)
 {
 	return (x & (x - 1)) == 0;
 }
 
 /* Return the next power of 2 >= x */
+static inline uint32_t pow2(uint32_t x) __attribute__((const));
 static inline uint32_t pow2(uint32_t x)
 {
 	uint32_t ret;

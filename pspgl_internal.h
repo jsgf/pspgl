@@ -364,9 +364,9 @@ unsigned long COLOR4 (const GLfloat c[4])
 
 extern const GLfloat __pspgl_identity[];
 
-extern void __pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd, unsigned long argi);
-extern void __pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd, unsigned long argi, unsigned long mask);
-extern void __pspgl_context_writereg_uncached (struct pspgl_context *c, unsigned long cmd, unsigned long argi);
+extern void __pspgl_context_writereg (struct pspgl_context *c, uint32_t cmd, uint32_t argi);
+extern void __pspgl_context_writereg_masked (struct pspgl_context *c, uint32_t cmd, uint32_t argi, uint32_t mask);
+extern void __pspgl_context_writereg_uncached (struct pspgl_context *c, uint32_t cmd, uint32_t argi);
 
 extern void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt, 
 					 const void *vertex, const void *index);

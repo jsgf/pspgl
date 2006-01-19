@@ -5,10 +5,10 @@
 /**
  *  cached register write, save value and mark as touched...
  */
-void __pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd,
-			       unsigned long argi) 
+void __pspgl_context_writereg (struct pspgl_context *c, uint32_t cmd,
+			       uint32_t argi) 
 {
-	unsigned long new = ((cmd) << 24) | ((argi) & 0xffffff);
+	uint32_t new = (cmd << 24) | (argi & 0xffffff);
 
 	if (new != c->hw.ge_reg[cmd]) {
 		c->hw.ge_reg[cmd] = new;
@@ -17,10 +17,10 @@ void __pspgl_context_writereg (struct pspgl_context *c, unsigned long cmd,
 }
 
 
-void __pspgl_context_writereg_masked (struct pspgl_context *c, unsigned long cmd,
-				      unsigned long argi, unsigned long mask)
+void __pspgl_context_writereg_masked (struct pspgl_context *c, uint32_t cmd,
+				      uint32_t argi, uint32_t mask)
 {
-	unsigned long new = (cmd << 24) | (c->hw.ge_reg[cmd] & ~mask) | (argi & mask & 0xffffff);
+	uint32_t new = (cmd << 24) | (c->hw.ge_reg[cmd] & ~mask) | (argi & mask & 0xffffff);
 
 	if (new != c->hw.ge_reg[cmd]) {
 		c->hw.ge_reg[cmd] = new;
@@ -59,9 +59,9 @@ void __pspgl_context_flush_pending_state_changes (struct pspgl_context *c,
 /**
  *  trigger some real action
  */
-void __pspgl_context_writereg_uncached (struct pspgl_context *c, unsigned long cmd, unsigned long argi) 
+void __pspgl_context_writereg_uncached (struct pspgl_context *c, uint32_t cmd, uint32_t argi) 
 {
-	unsigned long val = ((cmd) << 24) | ((argi) & 0xffffff);
+	uint32_t val = ((cmd) << 24) | ((argi) & 0xffffff);
 
 	c->hw.ge_reg[cmd] = val;	/* still need to record value */
 	c->hw.ge_reg_touched[cmd/32] &= ~(1 << (cmd % 32)); /* not dirty */
@@ -74,7 +74,7 @@ void __pspgl_context_writereg_uncached (struct pspgl_context *c, unsigned long c
 static inline
 void pspgl_context_writereg_mtx (struct pspgl_context *c, int cmd, GLfloat argf)
 {
-	union { float f; unsigned int i; } arg = { .f = argf };
+	union { float f; uint32_t i; } arg = { .f = argf };
 	unsigned long val = (cmd << 24) | (arg.i >> 8);
 	__pspgl_dlist_enqueue_cmd(val);
 }
