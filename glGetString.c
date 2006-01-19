@@ -27,6 +27,8 @@ char *gl_strings [] = {
 	"GL_PSP_view_matrix "
 	"GL_PSP_sprites "
 	"GL_MESA_pack_invert "
+	"GL_ARB_pixel_buffer_object "
+	"GL_EXT_pixel_buffer_object "
 };
 
 

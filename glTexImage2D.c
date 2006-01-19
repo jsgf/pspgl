@@ -418,10 +418,13 @@ void glTexImage2D (GLenum target, GLint level, GLint internalformat,
 	if (tobj == NULL)
 		goto out_error;
 
+	if (pspgl_curctx->unpack.pbo != NULL)
+		tobj->flags &= ~TOF_SWIZZLED;
+
 	timg = __pspgl_teximg_new(texels, &pspgl_curctx->unpack,
 				  width, height, 0, (tobj->flags & TOF_SWIZZLED) != 0, texfmt);
 	if (timg == NULL)
-		goto out_error;
+		return;		/* error already set */
 
 	__pspgl_set_texture_image(tobj, level, timg);
 

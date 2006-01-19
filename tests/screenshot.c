@@ -3,6 +3,8 @@
 #include <stdlib.h>
 #include <malloc.h>
 #include <png.h>
+
+#define GL_GLEXT_PROTOTYPES
 #include <GL/gl.h>
 
 static void writepng(FILE *fp, const unsigned char *image, int width, int height)
@@ -69,6 +71,7 @@ void screenshot(const char *basename)
 	glPixelStorei(GL_PACK_INVERT_MESA, GL_TRUE);
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+	glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, 0);
 
 	//image = malloc(480*272*4);
 	image = memalign(64, 480*272*4);

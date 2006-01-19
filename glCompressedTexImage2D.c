@@ -118,7 +118,7 @@ void glCompressedTexImage2D(GLenum target, GLint level,
 	timg = __pspgl_teximg_new(data, &pspgl_curctx->unpack,
 				  width, height, imageSize, GL_FALSE, texfmt);
 	if (timg == NULL)
-		goto out_error;
+		return;		/* error already set */
 
 	__pspgl_set_texture_image(tobj, level, timg);
 

@@ -14,6 +14,7 @@
 #define USE_VBO_IDX	1
 #define USE_TRISTRIPS	1
 #define USE_CVA		0
+#define USE_PBO		1
 
 #define BONES	8
 
@@ -29,7 +30,7 @@
 #define NSTRIPS (CYL_SLICES * CYL_ROWS * 2)
 
 static int shot = 0;
-static GLuint buffers[2];
+static GLuint buffers[3];
 
 static struct vertex {
 #if DO_VB || 0
@@ -56,6 +57,13 @@ static struct indices {
 
 #define min( a, b ) ( ((a)<(b))?(a):(b) )
 #define max( a, b ) ( ((a)>(b))?(a):(b) )
+
+typedef GLushort depth_t;
+static void *depth;
+
+#define DEPTHSZ	256
+#define DEPTHBYTES	(DEPTHSZ*DEPTHSZ*sizeof(depth_t))
+#define CMAPBYTES	(sizeof(short) * 65536)
 
 /* useful geometry functions */
 void genSkinnedCylinder( unsigned slices, unsigned rows, float length, float radius, unsigned bones,
@@ -181,7 +189,7 @@ void reshape (int w, int h)
 	GLCHK(glViewport(0, 0, w, h));
 	GLCHK(glMatrixMode(GL_PROJECTION));
 	GLCHK(glLoadIdentity());
-	gluPerspective(75., 16./9., 1., 100.);
+	gluPerspective(50., 16./9., 1., 100.);
 
 	GLCHK(glMatrixMode(GL_MODELVIEW));
 }
@@ -237,7 +245,7 @@ void display (void)
 
 	GLCHK(glMatrixMode(GL_MODELVIEW));
 	GLCHK(glLoadIdentity());
-	GLCHK(glTranslatef(0,0,-5));
+	GLCHK(glTranslatef(0,0,-10.f));
 	GLCHK(glRotatef(40 + angle*.1, 0, 1, 0));
 
 	for(i = 0; i < ARMS; i++) {
@@ -280,13 +288,6 @@ void display (void)
 	}
 
 	{
-#define DEPTHSZ	256
-		typedef GLushort depth_t;
-
-		static depth_t *depth;
-		static unsigned short *cmap;
-		int i;
-
 		GLCHK(glPushAttrib(GL_ENABLE_BIT));
 
 		GLCHK(glEnable(GL_TEXTURE_2D));
@@ -307,26 +308,14 @@ void display (void)
 		GLCHK(glLoadIdentity());
 		GLCHK(glOrtho(0, 480, 0, 272, 0, 1));
 
-		if (depth == NULL) {
-			depth = memalign(64, DEPTHSZ*DEPTHSZ*sizeof(depth_t));
-			memset(depth, 0, DEPTHSZ*DEPTHSZ*sizeof(depth_t));
-		}
-
 		GLCHK(glReadPixels(480/2-(DEPTHSZ/2), 272/2-(DEPTHSZ/2), DEPTHSZ, DEPTHSZ,
 				   GL_DEPTH_COMPONENT, GL_UNSIGNED_SHORT, depth));
-		if (!SYS && 0) {
+		if (!SYS && 1) {
 			GLCHK(glTexImage2D(GL_TEXTURE_2D, 0, GL_COLOR_INDEX16_EXT, DEPTHSZ, DEPTHSZ, 0,
 					   GL_COLOR_INDEX16_EXT, GL_UNSIGNED_SHORT, depth));
-			if (cmap == NULL) {
-				cmap = malloc(65536 * sizeof(short));
-				for(i = 0; i < 65536; i++)
-					cmap[i] = i;
-				GLCHK(glColorTableEXT(GL_TEXTURE_2D, GL_RGB, 65536, GL_RGB,
-						      GL_UNSIGNED_SHORT_5_6_5, cmap));
-			}
 		} else {
 			GLCHK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, DEPTHSZ, DEPTHSZ, 0,
-					   GL_RGB, GL_UNSIGNED_SHORT_5_6_5, depth));
+					   GL_RGB, GL_UNSIGNED_SHORT_5_6_5_REV, depth));
 		}
 
 		GLCHK(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST));
@@ -429,6 +418,14 @@ void joystick (unsigned int buttonMask, int x, int y, int z)
 	GLCHK(glClearColor(c[0], c[1], c[2], c[3]));
 }
 
+static void init_cmap(unsigned short *cmap)
+{
+	for(unsigned i = 0; i < 65536; i++) {
+		unsigned char c = i >> (16-5);
+		cmap[i] = (c << 10) | (c << 5) | c;
+	}
+}
+
 int main(int argc, char* argv[])
 {
 	int i;
@@ -443,8 +440,8 @@ int main(int argc, char* argv[])
 	glutReshapeFunc(reshape);
 	glutDisplayFunc(display);
 
-	psp_log("config: sys=%d vbo=%d vboidx=%d tristrips=%d cva=%d\n",
-		SYS, USE_VBO, USE_VBO_IDX, USE_TRISTRIPS, USE_CVA);
+	psp_log("config: sys=%d vbo=%d vboidx=%d pbo=%d tristrips=%d cva=%d\n",
+		SYS, USE_VBO, USE_VBO_IDX, USE_PBO, USE_TRISTRIPS, USE_CVA);
 
 	GLCHK(glShadeModel(GL_SMOOTH));
 
@@ -455,7 +452,7 @@ int main(int argc, char* argv[])
 	struct indices *idxmap;
 
 
-	GLCHK(glGenBuffersARB(2, buffers));
+	GLCHK(glGenBuffersARB(3, buffers));
 
 	if (USE_VBO) {
 		GLCHK(glBindBufferARB(GL_ARRAY_BUFFER_ARB, buffers[0]));
@@ -474,6 +471,33 @@ int main(int argc, char* argv[])
 		indices = 0;
 	} else
 		idxmap = indices = malloc(sizeof(struct indices));
+
+	if (USE_PBO) {
+		unsigned short *cmap;
+
+		GLCHK(glBindBufferARB(GL_PIXEL_PACK_BUFFER_ARB, buffers[2]));
+		GLCHK(glBindBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, buffers[2]));
+		GLCHK(glBufferDataARB(GL_PIXEL_PACK_BUFFER_ARB, DEPTHBYTES + CMAPBYTES, NULL,
+				      GL_STREAM_COPY_ARB));
+		depth = NULL;
+		GLCHK(cmap = glMapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB, GL_WRITE_ONLY_ARB));
+		init_cmap(cmap + DEPTHBYTES);
+		GLCHK(glUnmapBufferARB(GL_PIXEL_UNPACK_BUFFER_ARB));
+
+		GLCHK(glColorTableEXT(GL_TEXTURE_2D, GL_RGB, 65536, GL_RGB,
+				      GL_UNSIGNED_SHORT_1_5_5_5_REV, NULL + DEPTHBYTES));
+
+	} else {
+		unsigned short *cmap;
+
+		depth = memalign(64, DEPTHBYTES + CMAPBYTES);
+		memset(depth, 0, DEPTHSZ*DEPTHSZ*sizeof(depth_t));
+		cmap = depth + DEPTHBYTES;
+		init_cmap(cmap);
+
+		GLCHK(glColorTableEXT(GL_TEXTURE_2D, GL_RGB, 65536, GL_RGB,
+				      GL_UNSIGNED_SHORT_1_5_5_5_REV, cmap));
+	}
 
 	genSkinnedCylinder(CYL_SLICES, CYL_ROWS, CYL_LENGTH, CYL_RADIUS, BONES, 
 			   vtxmap, idxmap->tris, idxmap->tristrips, 
