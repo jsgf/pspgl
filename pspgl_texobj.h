@@ -64,7 +64,7 @@ extern void __pspgl_texobj_free (struct pspgl_texobj *t);
 extern void __pspgl_texobj_unswizzle(struct pspgl_texobj *tobj);
 extern struct pspgl_teximg *__pspgl_texobj_cmap(const struct pspgl_texobj *t);
 
-extern struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_bufferobj *buffer,
+extern struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, const struct pixelstore *unpack,
 					       unsigned width, unsigned height, unsigned size,
 					       GLboolean swizzle, const struct pspgl_texfmt *texfmt);
 struct pspgl_teximg *__pspgl_teximg_from_buffer(struct pspgl_buffer *buffer, unsigned offset,

@@ -22,6 +22,7 @@ void __pspgl_copy_pixels(const void *srcbuf, int srcstride, int srcx, int srcy,
 	sendCommandi(CMD_COPY_DST, (unsigned)dstbuf);
 
 	if (srcstride < 0 || dststride < 0) {
+		/* Flipping the image, so copy line-by-line */
 		int sdy = sgni(srcstride);
 		int ddy = sgni(dststride);
 
@@ -49,6 +50,7 @@ void __pspgl_copy_pixels(const void *srcbuf, int srcstride, int srcx, int srcy,
 			dsty += ddy;
 		}
 	} else {
+		/* Just copy the whole thing in one go */
 		sendCommandi(CMD_COPY_SRC_STRIDE, (((unsigned)srcbuf & 0xff000000) >> 8) | srcstride);
 		sendCommandi(CMD_COPY_DST_STRIDE, (((unsigned)dstbuf & 0xff000000) >> 8) | dststride);
 

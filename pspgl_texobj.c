@@ -268,19 +268,19 @@ static void convert_compressed_image(const void *pixels, unsigned width, unsigne
 	(*texfmt->convert)(texfmt, to, pixels, size);
 }
 
-static void convert_image(const void *pixels, unsigned width, unsigned height,
+static void convert_image(const void *pixels, unsigned width, unsigned height, unsigned srcstride,
 			  void *to, const struct pspgl_texfmt *texfmt)
 {
 	const unsigned char *src = pixels;
 	unsigned char *dest = to;
 
-	psp_log("convert %p -> %p size=%dx%d texfmt=%p (%x/%x -> %d)\n",
-		pixels, to, width, height,
+	psp_log("convert %p -> %p size=%dx%d stride=%d texfmt=%p (%x/%x -> %d)\n",
+		pixels, to, width, height, stride,
 		texfmt, texfmt->format, texfmt->type, texfmt->hwformat);
 
 	while(height--) {
 		(*texfmt->convert)(texfmt, dest, src, width);
-		src += texfmt->pixsize * width;
+		src += texfmt->pixsize * srcstride;
 		dest += texfmt->hwsize * width;
 	}
 }
@@ -392,14 +392,24 @@ struct pspgl_teximg *__pspgl_texobj_cmap(const struct pspgl_texobj *tobj)
 	return ret;
 }
 
-struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_bufferobj *buffer,
+struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, const struct pixelstore *unpack,
 					unsigned width, unsigned height, unsigned size,
 					GLboolean swizzled, const struct pspgl_texfmt *texfmt)
 {
 	struct pspgl_teximg *timg;
 	unsigned srcsize;
-	unsigned stride = width;
+	unsigned srcstride;
 	GLenum error;
+	struct pspgl_bufferobj *buffer = unpack->pbo;
+
+	srcstride = width;
+	if (unpack->row_length != 0)
+		srcstride = unpack->row_length;
+
+	if (unpack->alignment > texfmt->pixsize)
+		srcstride = ROUNDUP(srcstride, unpack->alignment / texfmt->pixsize);
+
+	pixels += (unpack->skip_rows * srcstride + unpack->skip_pixels) * texfmt->pixsize;
 
 	error = GL_OUT_OF_MEMORY;
 	timg = malloc(sizeof(*timg));
@@ -410,8 +420,8 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 
 	srcsize = size;
 	if (size == 0) {
-		size = stride * height * texfmt->hwsize;
-		srcsize = stride * height * texfmt->pixsize;
+		size = width * height * texfmt->hwsize;
+		srcsize = srcstride * height * texfmt->pixsize;
 	}
 
 	timg->image = NULL;
@@ -419,7 +429,7 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 
 	timg->width = width;
 	timg->height = height;
-	timg->stride = stride;
+	timg->stride = width;
 
 	timg->texfmt = texfmt;
 
@@ -435,6 +445,7 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 			timg->image = buffer->data;
 			timg->image->refcount++;
 			timg->offset = pixels - NULL;
+			timg->stride = srcstride;
 		} 
 	}
 
@@ -464,7 +475,7 @@ struct pspgl_teximg *__pspgl_teximg_new(const void *pixels, struct pspgl_buffero
 			else if (swizzled && (width*texfmt->hwsize > 16) && (height >= 8))
 				convert_swizzle_image(src, width, height, p, texfmt);
 			else
-				convert_image(src, width, height, p, texfmt);
+				convert_image(src, width, height, srcstride, p, texfmt);
 
 			__pspgl_buffer_unmap(timg->image, GL_WRITE_ONLY_ARB);
 		}

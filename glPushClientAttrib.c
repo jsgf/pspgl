@@ -8,7 +8,7 @@ struct pspgl_saved_clattrib {
 	GLbitfield attrmask;
 
 	struct varray varray;
-	struct texture texture;
+	struct pixelstore pack, unpack;
 };
 
 void glPushClientAttrib(GLbitfield mask)
@@ -59,13 +59,13 @@ void glPushClientAttrib(GLbitfield mask)
 	}
 
 	if (mask & GL_CLIENT_PIXEL_STORE_BIT) {
-		a->texture.unpackbuffer = c->texture.unpackbuffer;
-		a->texture.packbuffer = c->texture.packbuffer;
+		a->pack = c->pack;
+		a->unpack = c->unpack;
 
-		if (a->texture.unpackbuffer)
-			a->texture.unpackbuffer->refcount++;
-		if (a->texture.packbuffer)
-			a->texture.packbuffer->refcount++;
+		if (a->pack.pbo)
+			a->pack.pbo->refcount++;
+		if (a->unpack.pbo)
+			a->unpack.pbo->refcount++;
 	}
 
 	c->clattribstack[c->clattribstackdepth++] = a;
@@ -118,13 +118,13 @@ void glPopClientAttrib(void)
 	}
 
 	if (mask & GL_CLIENT_PIXEL_STORE_BIT) {
-		if (c->texture.unpackbuffer)
-			__pspgl_bufferobj_free(c->texture.unpackbuffer);
-		c->texture.unpackbuffer = a->texture.unpackbuffer;
+		if (c->pack.pbo)
+			__pspgl_bufferobj_free(c->pack.pbo);
+		c->pack = a->pack;
 
-		if (c->texture.packbuffer)
-			__pspgl_bufferobj_free(c->texture.packbuffer);
-		c->texture.packbuffer = a->texture.packbuffer;
+		if (c->unpack.pbo)
+			__pspgl_bufferobj_free(c->unpack.pbo);
+		c->unpack = a->unpack;
 	}
 
 	free(a);

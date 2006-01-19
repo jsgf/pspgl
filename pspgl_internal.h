@@ -191,10 +191,15 @@ struct pspgl_context {
 	} fog;
  	struct texture {
 		struct pspgl_texobj	*bound;	/* currently bound texture */
-
-		struct pspgl_bufferobj	*unpackbuffer;
-		struct pspgl_bufferobj	*packbuffer;
  	} texture;
+	struct pixelstore {
+		unsigned row_length;
+		unsigned alignment;
+		unsigned skip_pixels;
+		unsigned skip_rows;
+
+		struct pspgl_bufferobj *pbo;
+	} pack, unpack;
 	struct vertexblend {
 		GLboolean enabled;
 	} vertexblend;

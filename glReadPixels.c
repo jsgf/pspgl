@@ -4,6 +4,7 @@
 
 #include "pspgl_internal.h"
 #include "pspgl_texobj.h"
+#include "pspgl_dlist.h"
 
 void glReadPixels( GLint x, GLint y,
 		   GLsizei width, GLsizei height,
@@ -16,8 +17,9 @@ void glReadPixels( GLint x, GLint y,
 	unsigned hwsize;
 	unsigned pixfmt;
 	int dest_x, dest_y;
-	GLsizei dest_stride;
+	GLsizei dst_stride;
 	GLenum error;
+	const struct pixelstore *pack = &pspgl_curctx->pack;
 
 	read = pspgl_curctx->read;
 
@@ -59,7 +61,16 @@ void glReadPixels( GLint x, GLint y,
 
 	dest_x = 0;
 	dest_y = 0;
-	dest_stride = width;
+
+	dst_stride = width;
+	if (pack->row_length != 0)
+		dst_stride = pack->row_length;
+	if (pack->alignment > hwsize)
+		dst_stride = ROUNDUP(dst_stride, pack->alignment / hwsize);
+	error = GL_INVALID_OPERATION;
+	if (pack->pbo && pack->pbo->mapped)
+		goto out_error;
+	pixels += (pack->skip_rows * dst_stride + pack->skip_pixels) * hwsize;
 
 	if (x < 0) {
 		x = -x;
@@ -97,32 +108,45 @@ void glReadPixels( GLint x, GLint y,
 		unsigned src_stride;
 
 		src_stride = read->pixelperline * hwsize;
-		dest_stride *= hwsize;
+		dst_stride *= hwsize;
 
 		__pspgl_buffer_dlist_sync(framebuffer);
 
 		map = __pspgl_buffer_map(framebuffer, GL_READ_ONLY_ARB);
 		src = map + fb_offset + (y * read->pixelperline + x) * hwsize;
-		dst = pixels + (dest_y * dest_stride + dest_y) * hwsize;
+		dst = __pspgl_bufferobj_map(pack->pbo, GL_WRITE_ONLY_ARB,
+					    pixels + (dest_y * dst_stride + dest_y) * hwsize);
 
 		while(height--) {
 			memcpy(dst, src, width * hwsize);
-			dst += dest_stride;
+			dst += dst_stride;
 			src -= src_stride;
 		}
 
+		__pspgl_bufferobj_unmap(pack->pbo, GL_WRITE_ONLY_ARB);
 		__pspgl_buffer_unmap(framebuffer, GL_READ_ONLY_ARB);
 	} else {
-		/* Make sure the cache has no aliased content before the DMA transfer.
-		   XXX Use a pspgl_buffer for this, with a pointer to an transient? */
-		sceKernelDcacheWritebackInvalidateRange(pixels, width*height*hwsize);
+		void *dst = __pspgl_bufferobj_deref(pack->pbo, pixels);
+
+		if (pack->pbo == NULL) {
+			/* Make sure the cache has no aliased content
+			   before the DMA transfer.  Not necessary if
+			   we're copying into a PBO, since we've already
+			   made sure its unmapped. */
+			sceKernelDcacheWritebackInvalidateRange(dst, dst_stride*height*hwsize);
+		}
 
 		__pspgl_copy_pixels(framebuffer->base + fb_offset, -read->pixelperline, x, y,
-				    pixels, dest_stride, 0, 0,
+				    dst, dst_stride, 0, 0,
 				    width, height, pixfmt);
 
-		/* Sync with copy.  XXX check for use of a PBO to make this unnecessary. */
-		glFinish();
+		if (pack->pbo != NULL)
+			__pspgl_dlist_pin_buffer(pack->pbo->data, BF_PINNED_WR);
+		else {
+			/* Wait for copy to finish if we're copying
+			   directly into application address space */
+			glFinish();
+		}
 	}
 	return;
 

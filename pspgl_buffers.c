@@ -324,11 +324,11 @@ struct pspgl_bufferobj **__pspgl_bufferobj_for_target(GLenum target)
 		break;
 
 	case GL_PIXEL_PACK_BUFFER_ARB:
-		ret = &pspgl_curctx->texture.packbuffer;
+		ret = &pspgl_curctx->pack.pbo;
 		break;
 
 	case GL_PIXEL_UNPACK_BUFFER_ARB:
-		ret = &pspgl_curctx->texture.unpackbuffer;
+		ret = &pspgl_curctx->unpack.pbo;
 		break;
 
 	default:

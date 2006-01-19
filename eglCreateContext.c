@@ -49,6 +49,10 @@ EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_
 	}
 
 	ctx->attribstackdepth = 0;
+	ctx->clattribstackdepth = 0;
+
+	ctx->pack.alignment = 4;
+	ctx->unpack.alignment = 4;
 
 	ctx->shared->refcount++;
 

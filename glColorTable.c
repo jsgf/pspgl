@@ -28,7 +28,7 @@ void glColorTable(GLenum target, GLenum internalformat,
 	if (!ispow2(width))
 		goto out_error;
 
-	cmap = __pspgl_teximg_new(data, pspgl_curctx->texture.unpackbuffer, width, 1, 0, GL_FALSE, fmt);
+	cmap = __pspgl_teximg_new(data, &pspgl_curctx->unpack, width, 1, 0, GL_FALSE, fmt);
 	error = GL_OUT_OF_MEMORY;
 	if (cmap == 0)
 		goto out_error;
