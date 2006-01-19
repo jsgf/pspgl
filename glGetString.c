@@ -26,6 +26,7 @@ char *gl_strings [] = {
 	"GL_PSP_vertex_blend "
 	"GL_PSP_view_matrix "
 	"GL_PSP_sprites "
+	"GL_MESA_pack_invert "
 };
 
 

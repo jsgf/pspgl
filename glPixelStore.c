@@ -26,6 +26,9 @@ void glPixelStorei( GLenum pname, GLint param )
 	case GL_PACK_SKIP_ROWS:
 		c->pack.skip_rows = param;
 		break;
+	case GL_PACK_INVERT_MESA:
+		c->pack.invert = param;
+		break;
 
 	case GL_UNPACK_ROW_LENGTH:
 		c->unpack.row_length = param;

@@ -25,7 +25,7 @@ static void writepng(FILE *fp, const unsigned char *image, int width, int height
 		     PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT);
 
 	for(row = 0; row < height; row++)
-		rows[height-1-row] = &image[row * width * 4];
+		rows[row] = &image[row * width * 4];
 
 	png_set_rows(png_ptr, info_ptr, (png_byte**)rows);
 	png_write_png(png_ptr, info_ptr, PNG_TRANSFORM_IDENTITY, NULL);
@@ -65,9 +65,16 @@ void screenshot(const char *basename)
 	if (fp == NULL)
 		return;
 
+	glPushClientAttrib(GL_CLIENT_PIXEL_STORE_BIT);
+	glPixelStorei(GL_PACK_INVERT_MESA, GL_TRUE);
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+
 	//image = malloc(480*272*4);
 	image = memalign(64, 480*272*4);
 	glReadPixels(0,0, 480,272, GL_RGBA,GL_UNSIGNED_BYTE, image);
+
+	glPopClientAttrib();
 
 	if (glGetError() != 0)
 		goto out;

@@ -197,6 +197,7 @@ struct pspgl_context {
 		unsigned alignment;
 		unsigned skip_pixels;
 		unsigned skip_rows;
+		GLboolean invert;
 
 		struct pspgl_bufferobj *pbo;
 	} pack, unpack;

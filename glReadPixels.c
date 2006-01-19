@@ -17,7 +17,7 @@ void glReadPixels( GLint x, GLint y,
 	unsigned hwsize;
 	unsigned pixfmt;
 	int dest_x, dest_y;
-	GLsizei dst_stride;
+	GLsizei dst_stride, src_stride;
 	GLenum error;
 	const struct pixelstore *pack = &pspgl_curctx->pack;
 
@@ -94,20 +94,24 @@ void glReadPixels( GLint x, GLint y,
 	if (unlikely(width <= 0) || unlikely(height <= 0))
 		goto out_error;
 
-	/* The framebuffer and the texture are upside down with
-	   respect to each other, so we need to flip the image (in the
-	   framebuffer, lower addresses are in the upper-left, but for
-	   textures, lower addresses are lower-left). */
-	y = read->height - y;
+	src_stride = read->pixelperline;
+
+	if (!pack->invert) {
+		/* The framebuffer and the output are upside down with
+		   respect to each other, so we need to flip the image (in the
+		   framebuffer, lower addresses are in the upper-left, but for
+		   textures, lower addresses are lower-left). */
+		y = read->height - y;
+		src_stride = -src_stride;
+	}
 
 	if (((unsigned)pixels & 0xf) != 0) {
 		/* Unaligned dest buffer; we can't use DMA */
 		const void *map;
 		const void *src;
 		void *dst;
-		unsigned src_stride;
 
-		src_stride = read->pixelperline * hwsize;
+		src_stride *= hwsize;
 		dst_stride *= hwsize;
 
 		__pspgl_buffer_dlist_sync(framebuffer);
@@ -120,7 +124,7 @@ void glReadPixels( GLint x, GLint y,
 		while(height--) {
 			memcpy(dst, src, width * hwsize);
 			dst += dst_stride;
-			src -= src_stride;
+			src += src_stride;
 		}
 
 		__pspgl_bufferobj_unmap(pack->pbo, GL_WRITE_ONLY_ARB);
@@ -136,7 +140,7 @@ void glReadPixels( GLint x, GLint y,
 			sceKernelDcacheWritebackInvalidateRange(dst, dst_stride*height*hwsize);
 		}
 
-		__pspgl_copy_pixels(framebuffer->base + fb_offset, -read->pixelperline, x, y,
+		__pspgl_copy_pixels(framebuffer->base + fb_offset, src_stride, x, y,
 				    dst, dst_stride, 0, 0,
 				    width, height, pixfmt);
 
