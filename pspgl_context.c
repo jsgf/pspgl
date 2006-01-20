@@ -84,7 +84,6 @@ static void flush_matrix(struct pspgl_context *c, unsigned opcode, int index,
 			 struct pspgl_matrix_stack *stk)
 {
 	const GLfloat *m;
-	int n;
 
 	if (!(stk->flags & MF_DIRTY))
 		return;
@@ -94,13 +93,36 @@ static void flush_matrix(struct pspgl_context *c, unsigned opcode, int index,
 		m = __pspgl_identity;
 	else
 		m = stk->stack[stk->depth].mat;
-	n = (opcode == CMD_MAT_PROJ_TRIGGER) ? 4 : 3;
+
+	/*
+	  Different matrices skip different rows:
+	  PROJ is a full 4x4 projective matrix
+	  BONE, VIEW and MODEL are 4x3 matricies, skipping the 4th row
+
+	  TEXTURE is a 4x3 matrix which skips the 3rd row (z) because
+	  texcoords never have a Z value.  This still allows
+	  projective texture effects.
+	 */
+	int skip;
+
+	switch(opcode) {
+	case CMD_MAT_PROJ_TRIGGER:	skip = -1; break;
+	case CMD_MAT_TEXTURE_TRIGGER:	skip = 2; break;
+	case CMD_MAT_BONE_TRIGGER:
+	case CMD_MAT_VIEW_TRIGGER:
+	case CMD_MAT_MODEL_TRIGGER:	skip = 3; break;
+	default:
+		return;
+	}
+
+	int n = (skip == -1) ? 4 : 3;
 
 	__pspgl_context_writereg_uncached(c, opcode, index * n * 4);
 	opcode++;
 	for (int j=0; j<4; j++)
-		for (int i=0; i<n; i++)
-			pspgl_context_writereg_mtx(c, opcode, m[4*j+i]);
+		for (int i=0; i<4; i++)
+			if (i != skip)
+				pspgl_context_writereg_mtx(c, opcode, m[4*j + i]);
 }
 
 static void flush_pending_matrix_changes (struct pspgl_context *c)

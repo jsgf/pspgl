@@ -13,14 +13,24 @@ int filter_gl2ge (GLenum f)
 static
 void update_clamp (struct pspgl_context *c, int shift, GLenum param)
 {
+	unsigned clamp;
+
 	switch (param) {
 	case GL_REPEAT:
-	case GL_CLAMP:
-		__pspgl_context_writereg_masked(c, CMD_TEXWRAP, (param - GL_REPEAT) << shift, 0xff << shift);
+		clamp = GE_TEX_WRAP_REPEAT;
 		break;
+
+	case GL_CLAMP_TO_EDGE:
+	case GL_CLAMP:		/* no borders, so not really but close enough */
+		clamp = GE_TEX_WRAP_CLAMP;
+		break;
+
 	default:
 		GLERROR(GL_INVALID_ENUM);
+		return;
 	}
+	
+	__pspgl_context_writereg_masked(c, CMD_TEXWRAP, clamp << shift, 0xff << shift);
 }
 
 

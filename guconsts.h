@@ -371,15 +371,15 @@
 #define GE_TEX_FILTER_LINEAR_MIPMAP_LINEAR	7
 
 /* Texture Map Mode */
-#define GU_TEXTURE_COORDS	(0)
-#define GU_TEXTURE_MATRIX	(1)
-#define GU_ENVIRONMENT_MAP	(2)
+#define GE_TEXTURE_COORDS	(0)
+#define GE_TEXTURE_MATRIX	(1)
+#define GE_ENVIRONMENT_MAP	(2)
 
 /* Texture Projection Map Mode */
-#define GU_POSITION		(0)
-#define GU_UV			(1)
-#define GU_NORMALIZED_NORMAL	(2)
-#define GU_NORMAL		(3)
+#define GE_POSITION		(0)
+#define GE_UV			(1)
+#define GE_NORMALIZED_NORMAL	(2)
+#define GE_NORMAL		(3)
 
 /* Front Face Direction */
 #define GU_CW			(0)

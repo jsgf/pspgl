@@ -313,11 +313,9 @@ static void convert_swizzle_image(const void *pixels, unsigned width, unsigned h
 	}
 }
 
-static void tobj_setstate(struct pspgl_texobj *tobj, unsigned reg, unsigned setting)
+static void tobj_setstate(struct pspgl_texobj *tobj, uint32_t reg, uint32_t setting)
 {
-	assert(reg >= TEXSTATE_START && reg <= TEXSTATE_END);
-
-	tobj->ge_texreg[reg - TEXSTATE_START] = (reg << 24) | (setting & 0xffffff);
+	tobj->ge_texreg[reg - TEXSTATE_START] = (reg << 24) | (setting & 0x00ffffff);
 }
 
 struct pspgl_texobj *__pspgl_texobj_new(GLuint id, GLenum target)
@@ -325,15 +323,19 @@ struct pspgl_texobj *__pspgl_texobj_new(GLuint id, GLenum target)
 	struct pspgl_texobj *tobj = malloc(sizeof(*tobj));
 	unsigned i;
 
+	if (tobj == NULL)
+		return NULL;
+
 	memset(tobj, 0, sizeof(*tobj));
 
 	tobj->refcount = 1;
 	tobj->target = target;
-	tobj->flags = TOF_SWIZZLED; /* start by swizzling */
+	tobj->flags = TOF_SWIZZLED; /* swizzle by default */
 
 	for(i = TEXSTATE_START; i <= TEXSTATE_END; i++)
 		tobj_setstate(tobj, i, 0);
 
+	tobj_setstate(tobj, CMD_TEXMAPMODE, (GE_UV << 8) | GE_TEXTURE_MATRIX);
 	tobj_setstate(tobj, CMD_TEXFILT, (GE_TEX_FILTER_LINEAR << 8) | GE_TEX_FILTER_LINEAR);
 	tobj_setstate(tobj, CMD_TEXWRAP, (GE_TEX_WRAP_REPEAT << 8) | GE_TEX_WRAP_REPEAT);
 

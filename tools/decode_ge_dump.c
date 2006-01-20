@@ -269,6 +269,25 @@ process_index(const void *idxp)
 }
 #endif
 
+static const char *pixformats[] = {
+	"RGB 565",
+	"RGBA 5551",
+	"RGBA 4444",
+	"RGBA 8888",
+	"INDEX 4",
+	"INDEX 8",
+	"INDEX 16",
+	"INDEX 32",
+	"DXT1",
+	"DXT3",
+	"DXT5",
+	"??11",
+	"??12",
+	"??13",
+	"??14",
+	"??15"
+};
+
 static
 unsigned process_insn (uint32_t insn)
 {
@@ -601,29 +620,29 @@ unsigned process_insn (uint32_t insn)
 	case 0xb8 ... 0xbf:
 		DUMP("(Mipmap Level %d) Texture Width 2^%d, Height 2^%d", opcode - 0xb8, arg & 0xff, arg >> 8);
 		break;
+	case 0xc0: {
+		static const char *mode[] = { "texcoord", "matrix", "env map", "??" };
+		static const char *proj_mode[] = { "pos", "texcoord", "normalized normal", "normal" };
+
+		DUMP("texture map mode: %s  projection map mode: %s",
+		     mode[arg & 3], proj_mode[(arg >> 8) & 3]);
+		break;
+	}
+	case 0xc1:
+		DUMP("Env map matrix col 1: %d col 2: %d", arg & 3, (arg >> 8) & 3);
+		break;
 	case 0xc2:
 		DUMP("Texture mode: maxlevels=%d ?=%d swizzle=%d",
 		     (arg >> 16) & 0xff, (arg >> 8) & 0xff, arg & 0xff);
 		break;
 	case 0xc3:
-		DUMP("Texture Format %d (%s)", arg,
-		     arg == 0 ? "RGB565" :
-		     arg == 1 ? "RGBA551" :
-		     arg == 2 ? "RGBA4444" :
-		     arg == 3 ? "RGBA8888" :
-		     arg == 4 ? "INDEX4" :
-		     arg == 5 ? "INDEX8" :
-		     arg == 6 ? "INDEX16" :
-		     arg == 7 ? "INDEX32" :
-		     arg == 8 ? "DXT1" :
-		     arg == 9 ? "DXT3" :
-		     arg == 10 ? "DXT5" : "???");
+		DUMP("Texture Format %d (%s)", arg, pixformats[arg & 0xf]);
 		break;
 	case 0xc4:
-		DUMP("CLUT load size %d", arg);
+		DUMP("CLUT load size %d(=%d)", arg, arg*8);
 		break;
 	case 0xc5:
-		DUMP("CLUT mode %06x: format %d, mask %02x", arg, arg & 0x3, (arg >> 8) & 0xff);
+		DUMP("CLUT mode %06x: format %d %s, mask %02x", arg, arg & 0x3, pixformats[arg & 0x3], (arg >> 8) & 0xff);
 		break;
 	case 0xc6: {
 		static const char *filt[] = { "nearest", "linear",
@@ -664,7 +683,7 @@ unsigned process_insn (uint32_t insn)
 		DUMP("Texture Slope %1.5f", float32(arg));
 		break;
 	case 0xd2:
-		DUMP("Pixel Format %d (%s)", arg, arg == 0 ? "RGB565" : arg == 1 ? "RGBA551" : arg == 2 ? "RGBA4444" : arg == 3 ? "RGBA8888" : "???");
+		DUMP("Pixel Format %d (%s)", arg, pixformats[arg & 0xff]);
 		break;
 	case 0xd3:
 		DUMP("Clear Enable = %d, Flags (%s|%s|%s)", (arg & 1),
