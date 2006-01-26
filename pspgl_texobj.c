@@ -335,7 +335,6 @@ struct pspgl_texobj *__pspgl_texobj_new(GLuint id, GLenum target)
 	for(i = TEXSTATE_START; i <= TEXSTATE_END; i++)
 		tobj_setstate(tobj, i, 0);
 
-	tobj_setstate(tobj, CMD_TEXMAPMODE, (GE_UV << 8) | GE_TEXTURE_MATRIX);
 	tobj_setstate(tobj, CMD_TEXFILT, (GE_TEX_FILTER_LINEAR << 8) | GE_TEX_FILTER_LINEAR);
 	tobj_setstate(tobj, CMD_TEXWRAP, (GE_TEX_WRAP_REPEAT << 8) | GE_TEX_WRAP_REPEAT);
 

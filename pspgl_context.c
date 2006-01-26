@@ -147,7 +147,7 @@ void __pspgl_context_pin_buffers(struct pspgl_context *c)
 {
 	struct pspgl_texobj *tobj;
 
-	/* pin back buffer and depth buffer */
+	/* pin draw buffer and depth buffer */
 	__pspgl_dlist_pin_buffer(*c->draw->draw, BF_PINNED);
 	if ((c->hw.ge_reg[CMD_ENA_DEPTH_TEST] & 1) && c->draw->depth_buffer)
 		__pspgl_dlist_pin_buffer(c->draw->depth_buffer, BF_PINNED);
@@ -186,20 +186,27 @@ void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt,
 	   (if any).  Only bother if texturing is enabled and someone
 	   said they changed the CLUT state.  */
 	if ((tobj != NULL) &&
-	    (c->hw.ge_reg[CMD_ENA_TEXTURE] & 1) &&
-	    (c->hw.dirty & HWD_CLUT)) {
-		struct pspgl_teximg *cmap = __pspgl_texobj_cmap(tobj);
-
-		if (cmap) {
-			unsigned long p = (unsigned long)cmap->image->base + cmap->offset;
+	    (c->hw.ge_reg[CMD_ENA_TEXTURE] & 1)) {
+		if (c->hw.dirty & HWD_CLUT) {
+			struct pspgl_teximg *cmap = __pspgl_texobj_cmap(tobj);
 
 			c->hw.dirty &= ~HWD_CLUT;
 
-			__pspgl_context_writereg(c, CMD_SET_CLUT, p);
-			__pspgl_context_writereg(c, CMD_SET_CLUT_MSB, (p >> 8) & 0xf0000);
-			__pspgl_context_writereg(c, CMD_CLUT_MODE, cmap->texfmt->hwformat | (0xff << 8));
-			clut_load = cmap->width / 8;
+			if (cmap) {
+				unsigned long p = (unsigned long)cmap->image->base + cmap->offset;
+
+				__pspgl_context_writereg(c, CMD_SET_CLUT, p);
+				__pspgl_context_writereg(c, CMD_SET_CLUT_MSB, (p >> 8) & 0xf0000);
+				__pspgl_context_writereg(c, CMD_CLUT_MODE, cmap->texfmt->hwformat | (0xff << 8));
+				clut_load = cmap->width / 8;
+			}
 		}
+
+		if (c->texture_stack.stack[c->texture_stack.depth].flags & MF_IDENTITY)
+			__pspgl_context_writereg(c, CMD_TEXMAPMODE, (GE_UV << 8) | GE_TEXTURE_COORDS);
+		else
+			__pspgl_context_writereg(c, CMD_TEXMAPMODE, (GE_UV << 8) | GE_TEXTURE_MATRIX);
+
 	}
 
 	__pspgl_context_writereg(c, CMD_VERTEXTYPE, vtxfmt);
