@@ -275,7 +275,7 @@ static void convert_image(const void *pixels, unsigned width, unsigned height, u
 	unsigned char *dest = to;
 
 	psp_log("convert %p -> %p size=%dx%d stride=%d texfmt=%p (%x/%x -> %d)\n",
-		pixels, to, width, height, stride,
+		pixels, to, width, height, srcstride,
 		texfmt, texfmt->format, texfmt->type, texfmt->hwformat);
 
 	while(height--) {

@@ -138,6 +138,7 @@ API_OBJS = \
 	pspgl_dlist.o \
 	pspgl_ge_init.o \
 	pspgl_hash.o \
+	pspgl_matrix.o \
 	pspgl_misc.o \
 	pspgl_stats.o \
 	pspgl_texobj.o \

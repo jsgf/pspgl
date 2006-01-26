@@ -1,18 +1,33 @@
+#include <pspvfpu.h>
+
 #include "pspgl_internal.h"
 
 
 void glTranslatef (GLfloat x, GLfloat y, GLfloat z)
 {
-	GLfloat *m = pspgl_curctx->current_matrix->mat;
+	struct pspgl_context *c = pspgl_curctx;
+	struct pspgl_matrix_stack *stk = c->current_matrix_stack;
+	struct pspgl_matrix *mat = c->current_matrix;
 
-	m[12] += x * m[0] + y * m[4] + z * m[8];
-	m[13] += x * m[1] + y * m[5] + z * m[9];
-	m[14] += x * m[2] + y * m[6] + z * m[10];
-	m[15] += x * m[3] + y * m[7] + z * m[11];
+	assert(stk->flags & MF_VFPU);
 
-	if (!(pspgl_curctx->current_matrix_stack->flags & MF_DISABLED))
-		pspgl_curctx->current_matrix_stack->flags |= MF_DIRTY;
+	if (!(stk->flags & MF_DISABLED))
+		stk->flags |= MF_DIRTY;
 
-	pspgl_curctx->current_matrix->flags &= ~MF_IDENTITY;
+	mat->flags &= ~MF_IDENTITY;
+
+	pspvfpu_use_matrices(c->vfpu_context, VFPU_STACKTOP, VMAT6);
+
+	asm volatile("mtv	%0, s630\n"	// x
+		     "mtv	%1, s631\n"	// y
+		     "mtv	%2, s632\n"	// z
+
+		     "vscl.q	c600, c700, s630\n"	// col[0] * x
+		     "vscl.q	c610, c710, s631\n"	// col[1] * y
+		     "vscl.q	c620, c720, s632\n"	// col[2] * z
+
+		     "vadd.q	c730, c730, c600\n"	// col[3] += col[0] * x
+		     "vadd.q	c730, c730, c610\n"	// col[3] += col[1] * y
+		     "vadd.q	c730, c730, c620\n"	// col[3] += col[2] * z
+		     : : "r" (x), "r" (y), "r" (z));
 }
-

@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "pspgl_internal.h"
+#include "pspgl_matrix.h"
 
 static void set_light_type(struct pspgl_context *c, int light)
 {
@@ -223,6 +224,8 @@ void glLightfv (GLenum light, GLenum pname, const GLfloat *params)
 		const struct pspgl_matrix_stack *mv = &c->modelview_stack;
 		float eye[4];
 
+		__pspgl_matrix_sync(c, mv);
+
 		/* Transform light into eye-space using the current
 		   modelview matrix.  This is done once at
 		   specification time. */
@@ -245,6 +248,8 @@ void glLightfv (GLenum light, GLenum pname, const GLfloat *params)
 		vec[0] = -params[0];
 		vec[1] = -params[1];
 		vec[2] = -params[2];
+
+		__pspgl_matrix_sync(c, mv);
 
 		memcpy(inv, __pspgl_identity, sizeof(inv));
 		invert_matrix_general(mv->stack[mv->depth].mat, inv);

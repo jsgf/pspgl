@@ -29,4 +29,3 @@ void gluPerspectivef (GLfloat fovy, GLfloat aspect, GLfloat zNear, GLfloat zFar)
 
 	glMultMatrixf(m);
 }
-

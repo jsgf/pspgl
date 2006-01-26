@@ -4,6 +4,7 @@
 #include <GL/glut.h>
 #include <math.h>
 
+#define LOGME 0
 #include "glchk.h"
 #include "perfmeter.h"
 
@@ -209,12 +210,11 @@ void display (void)
 	//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
 #if DO_VB
-	int j;
-	for(j = 0; j < BONES; j++) {
+	for(int j = 0; j < BONES; j++) {
 		GLCHK(glMatrixMode(GL_BONE0_PSP + j));
 		GLCHK(glLoadIdentity());
 
-		GLCHK(glRotatef((180. / M_PI) * cosf(val * (M_PI/180.)), 0, 0, 1));
+		GLCHK(glRotatef((180. / M_PI) * cosf(val * (M_PI/180.)), 0, j / 8., 1));
 		if (j > 0) {
 			GLfloat prev_bone[16];
 

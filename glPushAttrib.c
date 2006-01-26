@@ -3,6 +3,7 @@
 
 #include "pspgl_internal.h"
 #include "pspgl_texobj.h"
+#include "pspgl_matrix.h"
 
 struct pspgl_saved_attrib
 {
@@ -471,9 +472,7 @@ void glPopAttrib( void )
 	}
 
 	if (mask & GL_TRANSFORM_BIT) {
-		struct pspgl_matrix_stack *s = a->current_matrix_stack;
-		c->current_matrix_stack = s;
-		c->current_matrix = &s->stack[s->depth];
+		__pspgl_matrix_select(c, a->current_matrix_stack);
 		__pspgl_enable_state(GL_VERTEX_BLEND_PSP, a->vertexblend.enabled);
 	}
 

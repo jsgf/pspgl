@@ -1,30 +1,31 @@
+#include <pspvfpu.h>
+
 #include "pspgl_internal.h"
 
 
 void glMultMatrixf (const GLfloat *m)
 {
-	GLfloat *matrix = pspgl_curctx->current_matrix->mat;
-	int i;
+	struct pspgl_context *c = pspgl_curctx;
+	struct pspgl_matrix_stack *stk = c->current_matrix_stack;
+	struct pspgl_matrix *mat = c->current_matrix;
 
-	/**
-	 *   Assumtion: (P != B). (P == A) is allowed.
-	 *   Based on mesa code, initially contributed by Thomas Malik
-	 */
-	#define A(row,col)  matrix[4*col+row]
-	#define B(row,col)  m[4*col+row]
-	#define P(row,col)  matrix[4*col+row]
+	if (!(stk->flags & MF_DISABLED))
+		stk->flags |= MF_DIRTY;
 
-	for (i=0; i<4; i++) {
-		const GLfloat ai0=A(i,0),  ai1=A(i,1),  ai2=A(i,2),  ai3=A(i,3);
-		P(i,0) = ai0 * B(0,0) + ai1 * B(1,0) + ai2 * B(2,0) + ai3 * B(3,0);
-		P(i,1) = ai0 * B(0,1) + ai1 * B(1,1) + ai2 * B(2,1) + ai3 * B(3,1);
-		P(i,2) = ai0 * B(0,2) + ai1 * B(1,2) + ai2 * B(2,2) + ai3 * B(3,2);
-		P(i,3) = ai0 * B(0,3) + ai1 * B(1,3) + ai2 * B(2,3) + ai3 * B(3,3);
-	}
+	mat->flags &= ~MF_IDENTITY;
 
-	if (!(pspgl_curctx->current_matrix_stack->flags & MF_DISABLED))
-		pspgl_curctx->current_matrix_stack->flags |= MF_DIRTY;
+	pspvfpu_use_matrices(pspgl_curctx->vfpu_context, VFPU_STACKTOP, VMAT6 | VMAT5);
 
-	pspgl_curctx->current_matrix->flags &= ~MF_IDENTITY; /* could check, I suppose */
+	assert(stk->flags & MF_VFPU);
+
+	asm volatile("vmmov.q	m500, m700\n"
+
+		     "ulv.q	c600,  0 + %0\n"
+		     "ulv.q	c610, 16 + %0\n"
+		     "ulv.q	c620, 32 + %0\n"
+		     "ulv.q	c630, 48 + %0\n"
+
+		     "vmmul.q	m700, m500, m600\n"
+		     : : "m" (*m) : "memory");
 }
 

@@ -4,6 +4,7 @@
 #include <GL/glut.h>
 #include <math.h>
 
+#define LOGME 0
 #include "glchk.h"
 #include "perfmeter.h"
 

@@ -1,6 +1,6 @@
 #include <math.h>
 #include "pspgl_internal.h"
-
+#include "pspgl_matrix.h"
 
 static inline
 void cross_product (GLfloat a [3], GLfloat b [3], GLfloat product [3])
@@ -32,6 +32,7 @@ void gluLookAtf (GLfloat eyeX, GLfloat eyeY, GLfloat eyeZ,
 		 GLfloat centerX, GLfloat centerY, GLfloat centerZ,
 		 GLfloat upX, GLfloat upY, GLfloat upZ)
 {
+#if 0
 	GLfloat m [16];
 	GLfloat f [3];
 	GLfloat u [3];
@@ -57,5 +58,53 @@ void gluLookAtf (GLfloat eyeX, GLfloat eyeY, GLfloat eyeZ,
 
 	glMultMatrixf(m);
 	glTranslatef(-eyeX, -eyeY, -eyeZ);
+#else
+	struct pspgl_context *c = pspgl_curctx;
+	struct pspgl_matrix_stack *stk = c->current_matrix_stack;
+	struct pspgl_matrix *mat = c->current_matrix;
+
+	pspvfpu_use_matrices(c->vfpu_context, VFPU_STACKTOP, VMAT5 | VMAT6);
+
+	assert(stk->flags & MF_VFPU);
+
+	if (!(stk->flags & MF_DISABLED))
+		stk->flags |= MF_DIRTY;
+
+	mat->flags &= ~MF_IDENTITY;
+
+	/* 
+	   Matrix 5:
+	   0: sX sY sZ 1/|s|
+	   1: uX uY uZ -
+	   2: fX fY fZ 1/|f|
+	 */
+	asm volatile("mtv	%0, s501\n" : : "r" (upX));
+	asm volatile("mtv	%0, s511\n" : : "r" (upY));
+	asm volatile("mtv	%0, s521\n" : : "r" (upZ));
+
+	asm volatile("mtv	%0, s502\n" : : "r" (centerX - eyeX));
+	asm volatile("mtv	%0, s512\n" : : "r" (centerY - eyeY));
+	asm volatile("mtv	%0, s522\n" : : "r" (centerZ - eyeZ));
+
+	asm volatile("vmmov.t	m600, m700\n"		// prepare for multiply
+
+		     "vdot.t	s532, r502, r502\n"	// t = fx*fx + fy*fy + fz*fz
+		     "vrsq.s	s532, s532\n"		// t = 1/sqrt(t)
+		     "vscl.t	r502[-1:1,-1:1,-1:1], r502, s532\n"	// normalize f
+
+		     "vcrsp.t	r500, r502, r501\n"	// s = f x u
+		     "vdot.t	s530, r500, r500\n"	// t = sx*sx+sy*sy+sz*sz
+		     "vrsq.s	s530, s530\n"		// t = 1/sqrt(t)
+		     "vscl.t	r500[-1:1,-1:1,-1:1], r500, s530\n"	// normalize s
+
+		     "vcrsp.t	r501, r500, r502\n"	// u = s x f
+
+		     "vneg.t	r502, r502\n"		// f = -f
+
+		     "vmmul.t	m700, m600, m500\n"	// top *= mat5
+		);
+
+	glTranslatef(-eyeX, -eyeY, -eyeZ);
+#endif
 }
 

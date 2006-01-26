@@ -1,4 +1,7 @@
 #include <stdlib.h>
+
+#include <pspvfpu.h>
+
 #include "pspgl_internal.h"
 #include "pspgl_texobj.h"
 
@@ -32,6 +35,11 @@ EGLBoolean eglDestroyContext (EGLDisplay dpy, EGLContext ctx)
 	free(c->modelview_stack.stack);
 	free(c->texture_stack.stack);
 	free(c->view_stack.stack);
+	for(int i = 0; i < NBONES; i++)
+		free(c->bone_stacks[i].stack);
+
+	if (c->vfpu_context)
+		pspvfpu_deletecontext(c->vfpu_context);
 
 	free(c);
 

@@ -1,6 +1,7 @@
 #include "pspgl_internal.h"
 #include "pspgl_texobj.h"
 #include "pspgl_dlist.h"
+#include "pspgl_matrix.h"
 
 /**
  *  cached register write, save value and mark as touched...
@@ -91,8 +92,11 @@ static void flush_matrix(struct pspgl_context *c, unsigned opcode, int index,
 
 	if (stk->flags & MF_DISABLED)
 		m = __pspgl_identity;
-	else
+	else {
+		__pspgl_matrix_sync(c, stk);
+
 		m = stk->stack[stk->depth].mat;
+	}
 
 	/*
 	  Different matrices skip different rows:

@@ -6,6 +6,8 @@
 #include <GL/gl.h>
 #include <GLES/egl.h>
 
+#include <pspvfpu.h>
+
 #include "guconsts.h"
 
 #include "pspgl_hash.h"
@@ -36,9 +38,15 @@ struct pspgl_shared_context {
 #define MF_DIRTY	(1<<0)	/* hardware needs updating (stack) */
 #define MF_DISABLED	(1<<1)	/* always load with identity (stack) */
 #define MF_IDENTITY	(1<<2)	/* is identity matrix (matrix) */
+#define MF_VFPU		(1<<3)	/* matrix stack top is in VFPU (stack) */
+
+#define VFPU_STACKTOP	VMAT7	/* use matrix 7 for top-of-stack */
 
 struct pspgl_matrix {
-	GLfloat mat[16];
+	/* Align matrix so VFPU can use aligned memory operations.
+	   XXX separate flags so that we don't waste a pile of space
+	   in padding. */
+	GLfloat mat[16] __attribute__((aligned(VFPU_ALIGNMENT)));
 	unsigned flags;
 };
 
@@ -86,6 +94,8 @@ struct t2f_c4ub_n3f_v3f {
 };
 
 struct pspgl_context {
+	struct pspvfpu_context *vfpu_context;
+
 	struct hwstate {
 		unsigned dirty;
 #define HWD_CLUT	(1 << 0)
@@ -279,7 +289,7 @@ void __pspgl_copy_memory(const void *src, void *dst, size_t size);
 
 static inline unsigned long long now()
 {
-	unsigned long long ret;
+	unsigned long long ret = 0;
 
 	sceRtcGetCurrentTick(&ret);
 	return ret;

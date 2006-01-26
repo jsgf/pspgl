@@ -1,5 +1,5 @@
 #include "pspgl_internal.h"
-
+#include "pspgl_matrix.h"
 
 void glMatrixMode (GLenum mode)
 {
@@ -20,8 +20,7 @@ void glMatrixMode (GLenum mode)
 		goto out_error;
 	}
 
-	c->current_matrix_stack = s;
-	c->current_matrix = &s->stack[s->depth];
+	__pspgl_matrix_select(c, s);
 	return;
 
   out_error:

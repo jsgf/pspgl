@@ -1,19 +1,45 @@
 #include <stdlib.h>
-#include <pspuser.h>
 #include <GL/glut.h>
 
+//#define LOGME 1
 #include "glchk.h"
 
+static void dumpmat(GLenum mat, const char *s)
+{
+	float m[16];
+
+	glGetFloatv(mat, m);
+	psp_log("%s = \n"
+		"  [ %f %f %f %f\n"
+		"    %f %f %f %f\n"
+		"    %f %f %f %f\n"
+		"    %f %f %f %f ]\n",
+		s,
+		m[0], m[4], m[8], m[12],
+		m[1], m[5], m[9], m[13],
+		m[2], m[6], m[10], m[14],
+		m[3], m[7], m[11], m[15]);
+}
 
 static
 void reshape (int w, int h)
 {
 	GLCHK(glViewport(0, 0, w, h));
 	GLCHK(glMatrixMode(GL_PROJECTION));
+	dumpmat(GL_PROJECTION_MATRIX, "fresh proj");
 	GLCHK(glLoadIdentity());
+	dumpmat(GL_PROJECTION_MATRIX, "ident proj");
 	GLCHK(glOrtho(-2*1.7, 2*1.7, 2, -2, -2, 2));
+	dumpmat(GL_PROJECTION_MATRIX, "ortho proj");
+
 	GLCHK(glMatrixMode(GL_MODELVIEW));
 	GLCHK(glLoadIdentity());
+	dumpmat(GL_MODELVIEW_MATRIX, "ident modelview");
+	dumpmat(GL_PROJECTION_MATRIX, "non-current proj");
+
+	gluLookAt(0.0f, 0.0f, 2.5f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f);
+	dumpmat(GL_MODELVIEW_MATRIX, "lookat modelview");
+	glLoadIdentity();
 }
 
 
@@ -47,30 +73,35 @@ void display (void)
 		GLCHK(glMatrixMode(GL_MODELVIEW));
 		GLCHK(glLoadIdentity());
 		GLCHK(glTranslatef(1. * (x - 2), 1. * (y - .5), 0));
+		//dumpmat(GL_MODELVIEW_MATRIX, "trans modelview");
 		GLCHK(glRotatef(angle * 1.32f, 0.0f, 0.0f, 1.0f));
+		dumpmat(GL_MODELVIEW_MATRIX, "rot modelview");
 
 		GLCHK(glBindTexture(GL_TEXTURE_2D, texid[i]));
 
-		GLCHK(glBegin(GL_TRIANGLE_FAN));
-		GLCHK(glColor3f(1, 0, 0));
-		GLCHK(glTexCoord2f(0, 0));
-		GLCHK(glVertex3f(0, 0, 0));
+		glBegin(GL_TRIANGLE_FAN);
+		  glColor3f(1, 0, 0);
+		  glTexCoord2f(0, 0);
+		  glVertex3f(0, 0, 0);
 
-		GLCHK(glColor3f(0, 1 ,0));
-		GLCHK(glTexCoord2f(0, 1));
-		GLCHK(glVertex3f(0, 1, 0));
+		  glColor3f(0, 1 ,0);
+		  glTexCoord2f(0, 1);
+		  glVertex3f(0, 1, 0);
 
-		GLCHK(glColor3f(0, 0, 1));
-		GLCHK(glTexCoord2f(1, 1));
-		GLCHK(glVertex3f(1, 1, 0));
+		  glColor3f(0, 0, 1);
+		  glTexCoord2f(1, 1);
+		  glVertex3f(1, 1, 0);
 
-		GLCHK(glColor3f(1, 1, 1));
-		GLCHK(glTexCoord2f(1, 0));
-		GLCHK(glVertex3f(1, 0, 0));
+		  glColor3f(1, 1, 1);
+		  glTexCoord2f(1, 0);
+		  glVertex3f(1, 0, 0);
 		GLCHK(glEnd());
 	}
 	glutSwapBuffers();
 	glutPostRedisplay();
+#if SYS
+	usleep(1000000/30);
+#endif
 }
 
 
@@ -136,6 +167,8 @@ int main(int argc, char* argv[])
 	psp_log("main starting\n");
 
 	glutInit(&argc, argv);
+        glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
+        glutInitWindowSize(480, 272);
 	glutCreateWindow( __FILE__ );
 	glutKeyboardFunc(keydown);
 	glutKeyboardUpFunc(keyup);
