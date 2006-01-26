@@ -11,5 +11,6 @@ const GLfloat __pspgl_identity [] = {
 void glLoadIdentity (void)
 {
 	glLoadMatrixf(__pspgl_identity);
+	pspgl_curctx->current_matrix->flags |= MF_IDENTITY;
 }
 

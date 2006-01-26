@@ -7,6 +7,7 @@ static void init_matrix_stack(struct pspgl_matrix_stack *mstk, int limit, unsign
 	mstk->stack = malloc(sizeof(*mstk->stack) * limit);
 
 	memcpy(mstk->stack[0].mat, __pspgl_identity, sizeof(mstk->stack[0].mat));
+	mstk->stack[0].flags = MF_IDENTITY;
 
 	mstk->limit = limit;
 	mstk->depth = 0;

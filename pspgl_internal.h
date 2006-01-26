@@ -33,8 +33,13 @@ struct pspgl_shared_context {
 	struct hashtable buffers;
 };
 
+#define MF_DIRTY	(1<<0)	/* hardware needs updating (stack) */
+#define MF_DISABLED	(1<<1)	/* always load with identity (stack) */
+#define MF_IDENTITY	(1<<2)	/* is identity matrix (matrix) */
+
 struct pspgl_matrix {
 	GLfloat mat[16];
+	unsigned flags;
 };
 
 struct pspgl_matrix_stack {
@@ -42,8 +47,6 @@ struct pspgl_matrix_stack {
 	unsigned limit;
 	unsigned depth;
 	unsigned flags;
-#define MF_DIRTY	(1<<0)	/* hardware needs updating */
-#define MF_DISABLED	(1<<1)	/* always load with identity */
 };
 
 #define VARRAY_MAX	5	/* number of arrays */

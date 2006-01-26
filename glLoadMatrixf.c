@@ -11,4 +11,6 @@ void glLoadMatrixf (const GLfloat *m)
 
 	if (!(pspgl_curctx->current_matrix_stack->flags & MF_DISABLED))
 		pspgl_curctx->current_matrix_stack->flags |= MF_DIRTY;
+
+	pspgl_curctx->current_matrix->flags &= ~MF_IDENTITY;
 }
