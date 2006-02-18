@@ -9,7 +9,7 @@ char *gl_strings [] = {
 	/* GL_RENDERER */
 	"OpenGL ES-CM 1.1",
 	/* GL_VERSION */
-	"(pspGL build " __DATE__ ", " __TIME__ ")",
+	"1.3 (pspGL build " __DATE__ ", " __TIME__ ")",
 	/* GL_EXTENSIONS */
 	"GL_EXT_texture_env_add "
 	"GL_ARB_texture_env_add "
