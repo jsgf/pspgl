@@ -10,8 +10,8 @@
 
 struct vertex {
 	float s,t;
-	float x,y,z;
 	float nx,ny,nz;
+	float x,y,z;
 };
 
 static const struct light {

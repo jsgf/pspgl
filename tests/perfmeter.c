@@ -1,5 +1,7 @@
 #define GL_GLEXT_PROTOTYPES
 
+#include <stdlib.h>
+
 #include <sys/time.h>
 #include <GL/gl.h>
 
@@ -8,6 +10,25 @@
 
 static unsigned long long start, end, prev;
 
+#if _PSP
+#include <psptypes.h>
+#include <psprtc.h>
+
+static long long now(void)
+{
+	unsigned long long ret = 0;
+	static unsigned tickres;
+
+	if (tickres == 0)
+		tickres = sceRtcGetTickResolution();
+
+	sceRtcGetCurrentTick(&ret);
+
+	ret = (ret * 1000000ull) / tickres;
+
+	return ret;
+}
+#else
 static long long now(void)
 {
 	struct timeval t;
@@ -16,9 +37,17 @@ static long long now(void)
 
 	return t.tv_sec * 1000000ll + t.tv_usec;
 }
+#endif
 
-static void showstats(float drawtime, float frametime, float queuewait)
+#define log(x...) __pspgl_log(x)
+extern void glOrthof (GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat near, GLfloat far);
+
+static void showstats(float _drawtime, float _frametime, float _queuewait)
 {
+	/* work around an apparent compiler bug, in which these get
+	   stomped by the call to glOrtho */
+	volatile float drawtime = _drawtime, frametime =_frametime, queuewait = _queuewait;
+
 	GLCHK(glPushAttrib(GL_ENABLE_BIT |
 			   GL_COLOR_BUFFER_BIT |
 			   GL_CURRENT_BIT |
@@ -28,10 +57,11 @@ static void showstats(float drawtime, float frametime, float queuewait)
 	GLCHK(glPushMatrix());
 	GLCHK(glLoadIdentity());
 
+
 	GLCHK(glMatrixMode(GL_PROJECTION));
 	GLCHK(glPushMatrix());
 	GLCHK(glLoadIdentity());
-	GLCHK(glOrtho(0, 1, 0, 10, -1, 1));
+	GLCHK(glOrthof(0, 1, 0, 10, -1, 1));
 
 #if GL_PSP_view_matrix
 	GLCHK(glMatrixMode(GL_VIEW_PSP));
@@ -43,6 +73,7 @@ static void showstats(float drawtime, float frametime, float queuewait)
 	GLCHK(glDisable(GL_LIGHTING));
 	GLCHK(glDisable(GL_CULL_FACE));
 	GLCHK(glDisable(GL_TEXTURE_2D));
+	GLCHK(glDisable(GL_ALPHA_TEST));
 	GLCHK(glEnable(GL_BLEND));
 	GLCHK(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA));
 #if GL_PSP_vertex_blend
@@ -102,7 +133,10 @@ static void showstats(float drawtime, float frametime, float queuewait)
 		int i;
 		struct vertex {
 			float x,y,z;
-		} ticks[NTICKS * 2];
+		} *ticks;
+		static const int size = sizeof(struct vertex) * NTICKS * 2;
+
+		ticks = malloc(size);
 
 		GLCHK(glGenBuffersARB(1, &bufferid));
 
@@ -117,8 +151,9 @@ static void showstats(float drawtime, float frametime, float queuewait)
 
 		GLCHK(glBindBufferARB(GL_ARRAY_BUFFER_ARB, bufferid));
 		GLCHK(glBufferDataARB(GL_ARRAY_BUFFER_ARB, 
-				      sizeof(ticks), ticks,
+				      size, ticks,
 				      GL_STATIC_DRAW_ARB));
+		free(ticks);
 	} else
 		GLCHK(glBindBufferARB(GL_ARRAY_BUFFER_ARB, bufferid));
 	

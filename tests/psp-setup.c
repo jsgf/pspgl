@@ -60,7 +60,7 @@ int exit_callback (int arg1, int arg2, void *common)
 static
 int update_thread (SceSize args, void *argp)
 {
-	int cbid = sceKernelCreateCallback("Exit Callback", exit_callback, (void *) 0);
+	int cbid = sceKernelCreateCallback("Exit Callback", exit_callback, NULL);
 	sceKernelRegisterExitCallback(cbid);
 	sceKernelSleepThreadCB();
 	return 0;
