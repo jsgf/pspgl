@@ -33,8 +33,10 @@ void glGetFloatv (GLenum pname, GLfloat *params)
 		/* FALLTHROUGH */
 	get_matrix:
 		if (params) {
-			GLfloat *matrix = s->stack[s->depth].mat;
+			const GLfloat *matrix = s->stack[s->depth].mat;
 			int i;
+
+			__pspgl_matrix_sync(pspgl_curctx, s);
 
 			for (i=0; i<16; i++)
 				params[i] = matrix[i];

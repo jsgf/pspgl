@@ -190,7 +190,7 @@ eglGetProcAddress.o: eglGetProcAddress.c pspgl_proctable.h
 # Extract all the public GL and EGL API symbols which are extensions (ends with PSP, ARB or EXT)
 # Symbols must be sorted by name so that bsearch can be used to look for them.
 pspgl_proctable.h: $(API_OBJS) Makefile
-	$(ARCH)nm -fp -g --defined-only $(API_OBJS) | sort +0 | \
+	$(ARCH)nm -fp -g --defined-only $(API_OBJS) | sort -k1 | \
 		awk '$$2=="T" && $$1 ~ /^(gl|egl)[A-Z][a-zA-Z]+(PSP|ARB|EXT)/ \
 			{ print "\t{ \"" $$1 "\", (void (*)())"$$1 " }," }' > $@ \
 			|| rm -f $@

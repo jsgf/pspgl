@@ -18,12 +18,10 @@ void __pspgl_matrix_sync(struct pspgl_context *c, const struct pspgl_matrix_stac
 
 	pspvfpu_use_matrices(c->vfpu_context, VFPU_STACKTOP, 0);
 
-	assert(s->flags & MF_VFPU);
-
-	asm volatile("sv.q	c700,  0 + %0\n"
-		     "sv.q	c710, 16 + %0\n"
-		     "sv.q	c720, 32 + %0\n"
-		     "sv.q	c730, 48 + %0\n"
+	asm volatile("sv.q	c700,  0 + %0, wb\n"
+		     "sv.q	c710, 16 + %0, wb\n"
+		     "sv.q	c720, 32 + %0, wb\n"
+		     "sv.q	c730, 48 + %0, wb\n"
 		     : "=m" (m->mat[0]) : : "memory");
 }
 

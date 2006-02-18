@@ -2,7 +2,7 @@
 
 #include "pspgl_internal.h"
 
-const GLfloat __pspgl_identity[] = {
+const GLfloat __pspgl_identity[] __attribute__((aligned(VFPU_ALIGNMENT))) = {
 	1.0, 0.0, 0.0, 0.0,
 	0.0, 1.0, 0.0, 0.0,
 	0.0, 0.0, 1.0, 0.0,
@@ -14,6 +14,9 @@ void glLoadIdentity (void)
 	struct pspgl_context *c = pspgl_curctx;
 	struct pspgl_matrix_stack *stk = c->current_matrix_stack;
 	struct pspgl_matrix *mat = c->current_matrix;
+
+	if (mat->flags & MF_IDENTITY)
+		return;
 
 	assert(stk->flags & MF_VFPU);
 

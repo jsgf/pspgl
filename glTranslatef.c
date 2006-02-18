@@ -26,8 +26,8 @@ void glTranslatef (GLfloat x, GLfloat y, GLfloat z)
 		     "vscl.q	c610, c710, s631\n"	// col[1] * y
 		     "vscl.q	c620, c720, s632\n"	// col[2] * z
 
-		     "vadd.q	c730, c730, c600\n"	// col[3] += col[0] * x
-		     "vadd.q	c730, c730, c610\n"	// col[3] += col[1] * y
-		     "vadd.q	c730, c730, c620\n"	// col[3] += col[2] * z
+		     "vadd.q	c610, c610, c600\n"	// col[1] += col[0]
+		     "vadd.q	c730, c730, c620\n"	// col[3] += col[2]
+		     "vadd.q	c730, c730, c610\n"	// col[3] += col[1]+col[0]
 		     : : "r" (x), "r" (y), "r" (z));
 }

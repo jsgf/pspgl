@@ -16,7 +16,7 @@ void *__pspgl_uncached(void *p, size_t size);
 #define ROUNDUP(x, a)  (((x)+((a)-1)) & ~((a)-1))
 
 /* log-base-2 function. */
-static inline uint32_t lg2(uint32_t x) __attribute__((const));
+static inline uint32_t lg2(uint32_t x) __attribute__((const,always_inline));
 static inline uint32_t lg2(uint32_t x)
 {
 	if (__builtin_constant_p(x))
@@ -51,11 +51,9 @@ static inline int ispow2(uint32_t x)
 }
 
 /* Return the next power of 2 >= x */
-static inline uint32_t pow2(uint32_t x) __attribute__((const));
+static inline uint32_t pow2(uint32_t x) __attribute__((const,always_inline));
 static inline uint32_t pow2(uint32_t x)
 {
-	uint32_t ret;
-
 	if (__builtin_constant_p(x)) {
 		if (ispow2(x))
 			return x;
@@ -80,10 +78,7 @@ static inline uint32_t pow2(uint32_t x)
 		}
 	}
 
-	for(ret = 1; ret < x; ret <<= 1)
-		;
-
-	return ret;
+	return 1 << (32 - __builtin_clz(x-1));
 }
 
 /* Branch probabilities */

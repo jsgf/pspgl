@@ -31,6 +31,11 @@ PSPSDK := $(shell psp-config --pspsdk-path)
 
 all: $(DEPDIR) $(TESTS:%=%.elf)
 
+syms: $(TESTS:%=%.sym)
+
+%.sym: %.elf
+	prxtool -y $< > $@
+
 install: $(TESTS:%=install-%)
 
 -include install-settings
