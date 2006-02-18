@@ -551,11 +551,8 @@ void __pspgl_update_texenv(struct pspgl_texobj *tobj)
 		__pspgl_context_writereg_masked(pspgl_curctx, CMD_TEXENV_FUNC,
 						(fmt->flags & TF_ALPHA) ? GE_TEXENV_RGBA : GE_TEXENV_RGB, 0x100);
 
-	if (tobj->flags & TOF_FLIPPED) {
-		sendCommandf(CMD_TEXTURE_SV, -1.0f);
-		sendCommandf(CMD_TEXTURE_TV, 1.0f);
-	} else {
-		sendCommandf(CMD_TEXTURE_SV, 1.0f);
-		sendCommandf(CMD_TEXTURE_TV, 0.0f);
-	}
+	/* If we've switched textures or changed the flip status, mark
+	   the texture matrix as dirty so that any adjustment can be
+	   applied. */
+	pspgl_curctx->texture_stack.flags |= MF_DIRTY;
 }

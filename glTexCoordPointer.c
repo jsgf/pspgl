@@ -28,6 +28,12 @@ void glTexCoordPointer (GLint size, GLenum type, GLsizei stride, const GLvoid *p
 		pointer, __pspgl_bufferobj_deref(pspgl_curctx->vertex_array.arraybuffer, (void *)pointer),
 		size, type, stride, native);
 
+	/* If we're changed vertex formats, then mark the texture
+	   matrix as dirty, so that any adjustment for this format can
+	   be applied. */
+	if (va->type != type)
+		pspgl_curctx->texture_stack.flags |= MF_DIRTY;
+
 	va->size = size;
 	va->type = type;
 	va->stride = stride;

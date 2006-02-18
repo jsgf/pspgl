@@ -20,12 +20,15 @@ static GLboolean init_matrix_stack(struct pspgl_matrix_stack *mstk, int limit, u
 	mstk->depth = 0;
 	mstk->flags = flags | MF_DIRTY;
 
+	mstk->scale[0] = mstk->scale[1] = mstk->scale[2] = mstk->scale[3] = 1.0f;
+	mstk->trans[0] = mstk->trans[1] = mstk->trans[2] = mstk->trans[3] = 0.0f;
+
 	return GL_TRUE;
 }
 
 EGLContext eglCreateContext (EGLDisplay dpy, EGLConfig config, EGLContext share_context, const EGLint *attrib_list)
 {
-	struct pspgl_context *ctx = malloc(sizeof(struct pspgl_context));
+	struct pspgl_context *ctx = memalign(VFPU_ALIGNMENT, sizeof(struct pspgl_context));
 
 	if (!ctx)
 		goto out_error;

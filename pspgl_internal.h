@@ -39,6 +39,7 @@ struct pspgl_shared_context {
 #define MF_DISABLED	(1<<1)	/* always load with identity (stack) */
 #define MF_IDENTITY	(1<<2)	/* is identity matrix (matrix) */
 #define MF_VFPU		(1<<3)	/* matrix stack top is in VFPU (stack) */
+#define MF_ADJUST	(1<<4)	/* some pre-use adjustments to apply */
 
 #define VFPU_STACKTOP	VMAT7	/* use matrix 7 for top-of-stack */
 
@@ -51,7 +52,12 @@ struct pspgl_matrix {
 };
 
 struct pspgl_matrix_stack {
+	/* adjustments to be applied before use */
+	float scale[4] __attribute__((aligned(VFPU_ALIGNMENT)));
+	float trans[4] __attribute__((aligned(VFPU_ALIGNMENT)));
+
 	struct pspgl_matrix *stack;
+
 	unsigned limit;
 	unsigned depth;
 	unsigned flags;

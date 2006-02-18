@@ -17,7 +17,6 @@ void __pspgl_context_writereg (struct pspgl_context *c, uint32_t cmd,
 	}
 }
 
-
 void __pspgl_context_writereg_masked (struct pspgl_context *c, uint32_t cmd,
 				      uint32_t argi, uint32_t mask)
 {
@@ -85,6 +84,7 @@ static void flush_matrix(struct pspgl_context *c, unsigned opcode, int index,
 			 struct pspgl_matrix_stack *stk)
 {
 	const GLfloat *m;
+	GLfloat adjusted[16];
 
 	if (!(stk->flags & MF_DIRTY))
 		return;
@@ -96,6 +96,45 @@ static void flush_matrix(struct pspgl_context *c, unsigned opcode, int index,
 		__pspgl_matrix_sync(c, stk);
 
 		m = stk->stack[stk->depth].mat;
+	}
+
+	if (stk->flags & MF_ADJUST) {
+		/* Apply adjustment to the matrix.  This is used for
+		   scaling OpenGL integral vertex and texcoord data to
+		   PSP integral vertex/texture coords (OpenGL
+		   interprets them as literal integers, but the PSP
+		   treats them as being in the range [-1, 1]).  Also
+		   used for flipping inverted textures. */
+		pspvfpu_use_matrices(c->vfpu_context, 0, VMAT4 | VMAT5 | VMAT6);
+
+		asm volatile("vmzero.t	m500\n"
+
+			     /* original matrix */
+			     "lv.q	c600,  0 + %3\n"
+			     "lv.q	c610, 16 + %3\n"
+			     "lv.q	c620, 32 + %3\n"
+			     "lv.q	c630, 48 + %3\n"
+
+			     /* translate */
+			     "lv.q	c530, 0 + %2\n"
+
+			     /* scale - doesn't seem to be a way of
+				loading a diagonal in one go... */
+			     "lv.s	s500, 0 + %1\n"
+			     "lv.s	s511, 4 + %1\n"
+			     "lv.s	s522, 8 + %1\n"
+			     
+			     "vidt.q	r503\n"
+
+			     "vmmul.q	m400, m600, m500\n"
+
+			     "usv.q	c400,  0 + %0\n"
+			     "usv.q	c410, 16 + %0\n"
+			     "usv.q	c420, 32 + %0\n"
+			     "usv.q	c430, 48 + %0\n"
+			     : "=m" (adjusted) : "m" (stk->scale[0]), "m" (stk->trans[0]), "m" (m[0]));
+
+		m = adjusted;
 	}
 
 	/*
@@ -206,11 +245,74 @@ void __pspgl_context_render_setup(struct pspgl_context *c, unsigned vtxfmt,
 			}
 		}
 
-		if (c->texture_stack.stack[c->texture_stack.depth].flags & MF_IDENTITY)
-			__pspgl_context_writereg(c, CMD_TEXMAPMODE, (GE_UV << 8) | GE_TEXTURE_COORDS);
-		else
-			__pspgl_context_writereg(c, CMD_TEXMAPMODE, (GE_UV << 8) | GE_TEXTURE_MATRIX);
+		__pspgl_context_writereg(c, CMD_TEXMAPMODE, (GE_UV << 8) | GE_TEXTURE_MATRIX);
 
+		/* If we're using an integral texcoord format (byte or
+		   short), then we need to add a scaling factor.  GL
+		   interprets the texcoord as a simple integer,
+		   whereas the PSP treats it as number scaled (-1, 1).
+
+		   This is combined with flipping for flipped textures.
+		*/
+		{
+			struct pspgl_matrix_stack *tm = &c->texture_stack;
+			float su = 1.f, sv = 1.f;
+			float tu = 0.f, tv = 0.f;
+
+			switch(vtxfmt & GE_TEXTURE_SHIFT(3)) {
+			case GE_TEXTURE_8BIT:
+				su = 127.f;
+				sv = 127.f;
+				break;
+
+			case GE_TEXTURE_16BIT:
+				su = 32767.f;
+				sv = 32767.f;
+				break;
+			}
+
+			if (tobj->flags & TOF_FLIPPED) {
+				sv = -sv;
+				tv = 1.f;
+			}
+
+			tm->flags &= ~MF_ADJUST;
+			if (su != 1 || sv != 1 || tu != 0 || tv != 0) {
+				tm->flags |= MF_ADJUST;
+				tm->scale[0] = su;
+				tm->scale[1] = sv;
+				tm->scale[2] = 1.f;
+				tm->trans[0] = tu;
+				tm->trans[1] = tv;
+				tm->trans[2] = 0.f;
+			}
+		}
+	}
+
+	/* If the program is used 8 or 16 bit vertex coords, we need
+	   to scale them to match what the PSP hardware wants.  OpenGL
+	   defines integral coords as just signed integers, but the
+	   PSP interprets them as scaled floats in the range -1 - 1.
+	   Therefore, we need to apply an appropriate scale factor as
+	   a backend adjustment.  The modelview matrix is the first one to
+	   be applied to a vertex, so put the scaling there (XXX
+	   except for bones when skinning is enabled...) */
+	c->modelview_stack.flags &= ~MF_ADJUST;
+	
+	switch(vtxfmt & GE_VERTEX_SHIFT(3)) {
+	case GE_VERTEX_8BIT:
+		c->modelview_stack.scale[0] = 127.f;
+		c->modelview_stack.scale[1] = 127.f;
+		c->modelview_stack.scale[2] = 127.f;
+		c->modelview_stack.flags |= MF_ADJUST;
+		break;
+
+	case GE_VERTEX_16BIT:
+		c->modelview_stack.scale[0] = 32767.f;
+		c->modelview_stack.scale[1] = 32767.f;
+		c->modelview_stack.scale[2] = 32767.f;
+		c->modelview_stack.flags |= MF_ADJUST;
+		break;
 	}
 
 	__pspgl_context_writereg(c, CMD_VERTEXTYPE, vtxfmt);

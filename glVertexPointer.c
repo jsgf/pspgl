@@ -27,6 +27,12 @@ void glVertexPointer (GLint size, GLenum type, GLsizei stride, const GLvoid *poi
 		pointer, __pspgl_bufferobj_deref(pspgl_curctx->vertex_array.arraybuffer, (void *)pointer),
 		size, type, stride, native);
 
+	/* If we're changed vertex formats, then mark the modelview matrix
+	   as dirty, so that any adjustment for this format can be
+	   applied. */
+	if (va->type != type)
+		pspgl_curctx->modelview_stack.flags |= MF_DIRTY;
+
 	va->size = size;
 	va->type = type;
 	va->stride = stride;
